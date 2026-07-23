@@ -1,0 +1,54 @@
+{
+  "min_original_images_before_augmentation": 1700,
+  "target_open_dataset_images_minimum": 2000,
+  "target_after_augmentation_minimum": 5000,
+  "required_splits": {
+    "train": 0.7,
+    "validation": 0.15,
+    "test": 0.15
+  },
+  "target_metrics_from_report": {
+    "accuracy_overall": ">= 0.85",
+    "macro_f1": ">= 0.80",
+    "precision_grade_c": ">= 0.90",
+    "recall_grade_c": ">= 0.85",
+    "response_time": "< 3 seconds"
+  },
+  "image_quality_acceptance": {
+    "min_resolution": "1024x1024 recommended, 640x640 minimum after crop",
+    "allowed_formats": [
+      "jpg",
+      "jpeg",
+      "png",
+      "webp"
+    ],
+    "reject_if": [
+      "ภาพเบลอจนมองไม่เห็น cue หลัก",
+      "อาหารทะเลถูกบังเกิน 30% ของพื้นที่สำคัญ",
+      "มี filter สีหนักหรือแต่งภาพจนสีไม่ตรงจริง",
+      "ภาพซ้ำหรือใกล้เคียงกันมากเกินไปใน split เดียวกัน",
+      "label จากผู้เชี่ยวชาญ 2 คนไม่ตรงกันและยังไม่ได้ review"
+    ]
+  },
+  "annotation_acceptance": {
+    "expert_agreement_required": true,
+    "allowed_disagreement_handling": "ส่งให้ผู้เชี่ยวชาญคนที่ 3 หรือคัดออก",
+    "grade_c_safety_rule": "ถ้าพบสัญญาณเน่าชัดเจนจากกลิ่น/เมือก/เนื้อเละ ให้จัดเป็น C แม้ภาพบางมุมยังดูดี",
+    "no_synthetic_training_images": "ไม่ใช้ภาพ AI-generated เป็นภาพ train/test จริง ใช้ได้เฉพาะ mockup UI เท่านั้น"
+  },
+  "augmentation_rules": {
+    "apply_after_split": true,
+    "recommended": [
+      "RandomHorizontalFlip",
+      "ColorJitter brightness +/-20%",
+      "ColorJitter contrast +/-20%",
+      "RandomRotation +/-15deg",
+      "RandomResizedCrop หรือ RandomCrop แบบไม่ตัด cue สำคัญ"
+    ],
+    "avoid": [
+      "เปลี่ยนสีแรงจนเหงือก/เปลือก/เนื้อผิดจากความจริง",
+      "blur หนักเกินไป",
+      "crop ตัดตา เหงือก หัวกุ้ง เปลือกหอย หรือผิวปลาหมึกออกหมด"
+    ]
+  }
+}

@@ -1,0 +1,153 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ocean: var(--ocean);
+  --color-ocean-deep: var(--ocean-deep);
+  --color-coral: var(--coral);
+  --color-seafoam: var(--seafoam);
+  --color-sand: var(--sand);
+  --color-grade-a: var(--grade-a);
+  --color-grade-b: var(--grade-b);
+  --color-grade-c: var(--grade-c);
+  --font-display: "Prompt", "Sarabun", system-ui, sans-serif;
+  --font-sans: "Sarabun", system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.875rem;
+
+  --background: oklch(0.985 0.008 220);
+  --foreground: oklch(0.18 0.04 235);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.04 235);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.04 235);
+
+  --primary: oklch(0.45 0.11 215);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.95 0.02 210);
+  --secondary-foreground: oklch(0.22 0.05 230);
+
+  --muted: oklch(0.96 0.01 220);
+  --muted-foreground: oklch(0.48 0.03 235);
+
+  --accent: oklch(0.72 0.16 35);
+  --accent-foreground: oklch(0.99 0 0);
+
+  --destructive: oklch(0.6 0.22 27);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.91 0.012 220);
+  --input: oklch(0.93 0.012 220);
+  --ring: oklch(0.55 0.12 215);
+
+  /* Brand */
+  --ocean: oklch(0.55 0.12 215);
+  --ocean-deep: oklch(0.28 0.08 240);
+  --coral: oklch(0.72 0.18 32);
+  --seafoam: oklch(0.82 0.09 175);
+  --sand: oklch(0.95 0.03 85);
+
+  /* Grades */
+  --grade-a: oklch(0.68 0.16 155);
+  --grade-b: oklch(0.78 0.15 80);
+  --grade-c: oklch(0.62 0.2 25);
+
+  --gradient-hero: radial-gradient(ellipse at top left, oklch(0.55 0.12 215 / 0.18), transparent 55%),
+                   radial-gradient(ellipse at bottom right, oklch(0.72 0.18 32 / 0.12), transparent 55%),
+                   linear-gradient(180deg, oklch(0.985 0.008 220), oklch(0.96 0.02 210));
+  --gradient-ocean: linear-gradient(135deg, oklch(0.28 0.08 240), oklch(0.45 0.11 215) 55%, oklch(0.62 0.12 200));
+  --gradient-coral: linear-gradient(135deg, oklch(0.72 0.18 32), oklch(0.78 0.15 50));
+
+  --shadow-elegant: 0 20px 50px -25px oklch(0.28 0.08 240 / 0.35);
+  --shadow-glow: 0 0 60px -10px oklch(0.55 0.12 215 / 0.35);
+  --shadow-card: 0 10px 30px -15px oklch(0.28 0.08 240 / 0.18);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv01";
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+}
+
+@utility text-gradient-ocean {
+  background: var(--gradient-ocean);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-hero {
+  background: var(--gradient-hero);
+}
+
+@utility bg-ocean-gradient {
+  background: var(--gradient-ocean);
+}
+
+@utility bg-coral-gradient {
+  background: var(--gradient-coral);
+}
+
+@utility shadow-elegant {
+  box-shadow: var(--shadow-elegant);
+}
+@utility shadow-glow {
+  box-shadow: var(--shadow-glow);
+}
+@utility shadow-card-soft {
+  box-shadow: var(--shadow-card);
+}
+
+@utility glass {
+  background: color-mix(in oklab, white 70%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in oklab, white 60%, transparent);
+}

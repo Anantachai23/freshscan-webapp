@@ -1,0 +1,237 @@
+{
+  "project": "FreshScan",
+  "source_report": {
+    "file": "28P23W01274_ข้อเสนอโครงการ.pdf",
+    "extracted_alignment": [
+      "รองรับอาหารทะเลสด 4 ประเภทหลักในระยะแรก: ปลา กุ้ง หอย ปลาหมึก",
+      "ชนิดที่ระบุ: ปลากะพง ปลาทู ปลานิล / กุ้งขาว กุ้งแวนนาไม / หอยแมลงภู่ หอยลาย / ปลาหมึกกล้วย ปลาหมึกกระดอง",
+      "ประเมินระดับความสดเป็น Grade A/B/C",
+      "เป้าหมาย Open Dataset ไม่น้อยกว่า 2,000 ภาพ และภาพต้นฉบับก่อน augmentation รวม 1,700 ภาพ",
+      "หลัง augmentation คาดว่ารวมไม่น้อยกว่า 5,000 ภาพ",
+      "โมเดลในรูปเล่ม: EfficientNet-B0, PyTorch, train/validation/test = 70/15/15"
+    ]
+  },
+  "task_type": "image_classification_with_explainable_cues",
+  "recommended_model_outputs": {
+    "seafood_type": "fish | shrimp | shellfish | squid",
+    "grade": "A | B | C",
+    "confidence": "0.0-1.0",
+    "cues": "array of visible reasons, e.g. eye clarity, gill color, shell color",
+    "recommendation": "Thai user-facing recommendation"
+  },
+  "labels": {
+    "seafood_types": [
+      {
+        "id": "fish",
+        "th": "ปลา",
+        "en": "Fish",
+        "species_th": [
+          "ปลากะพง",
+          "ปลาทู",
+          "ปลานิล"
+        ],
+        "criteria": [
+          "ความใสของตา",
+          "สีเหงือก",
+          "กลิ่น",
+          "ความยืดหยุ่นของเนื้อ"
+        ]
+      },
+      {
+        "id": "shrimp",
+        "th": "กุ้ง",
+        "en": "Shrimp",
+        "species_th": [
+          "กุ้งขาว",
+          "กุ้งแวนนาไม"
+        ],
+        "criteria": [
+          "สีเปลือก",
+          "ความโปร่งใสของเนื้อ",
+          "กลิ่น"
+        ]
+      },
+      {
+        "id": "shellfish",
+        "th": "หอย",
+        "en": "Shellfish",
+        "species_th": [
+          "หอยแมลงภู่",
+          "หอยลาย"
+        ],
+        "criteria": [
+          "ความสมบูรณ์ของเปลือก",
+          "กลิ่น",
+          "ลักษณะเนื้อ"
+        ]
+      },
+      {
+        "id": "squid",
+        "th": "ปลาหมึก",
+        "en": "Squid",
+        "species_th": [
+          "ปลาหมึกกล้วย",
+          "ปลาหมึกกระดอง"
+        ],
+        "criteria": [
+          "สีผิว",
+          "ความใส",
+          "กลิ่น",
+          "ความแน่นของเนื้อ"
+        ]
+      }
+    ],
+    "grades": [
+      {
+        "id": "A",
+        "label_th": "สดมาก",
+        "label_en": "very_fresh",
+        "score": "80-100",
+        "action": "เหมาะสำหรับบริโภคหรือปรุงอาหารตามปกติ",
+        "risk": "ต่ำ",
+        "ui_color": "#16A34A"
+      },
+      {
+        "id": "B",
+        "label_th": "ยังใช้ได้",
+        "label_en": "acceptable",
+        "score": "55-79",
+        "action": "ควรเก็บเย็นและปรุงสุกภายในวันเดียวกัน",
+        "risk": "ปานกลาง",
+        "ui_color": "#F59E0B"
+      },
+      {
+        "id": "C",
+        "label_th": "เริ่มเสื่อมคุณภาพ",
+        "label_en": "not_fresh",
+        "score": "0-54",
+        "action": "ไม่แนะนำให้บริโภค โดยเฉพาะเมื่อมีกลิ่นผิดปกติหรือเนื้อเละ",
+        "risk": "สูง",
+        "ui_color": "#DC2626"
+      }
+    ]
+  },
+  "annotation_fields": {
+    "image_id": {
+      "type": "string",
+      "required": true,
+      "example": "FS_00001"
+    },
+    "image_path": {
+      "type": "string",
+      "required": true,
+      "example": "images/train/fish/A/FS_00001.jpg"
+    },
+    "split": {
+      "type": "enum",
+      "values": [
+        "train",
+        "val",
+        "test"
+      ],
+      "required": true
+    },
+    "seafood_type_id": {
+      "type": "enum",
+      "values": [
+        "fish",
+        "shrimp",
+        "shellfish",
+        "squid"
+      ],
+      "required": true
+    },
+    "species_th": {
+      "type": "string",
+      "required": true
+    },
+    "grade": {
+      "type": "enum",
+      "values": [
+        "A",
+        "B",
+        "C"
+      ],
+      "required": true
+    },
+    "freshness_score": {
+      "type": "integer",
+      "min": 0,
+      "max": 100,
+      "required": false
+    },
+    "source_market": {
+      "type": "string",
+      "required": true
+    },
+    "province": {
+      "type": "string",
+      "required": true
+    },
+    "capture_datetime": {
+      "type": "ISO-8601 string",
+      "required": false
+    },
+    "lighting": {
+      "type": "enum",
+      "values": [
+        "แสงธรรมชาติ",
+        "แสงไฟตลาด",
+        "แสงโคมร้านค้า",
+        "แสงผสม",
+        "ไม่ทราบ"
+      ],
+      "required": true
+    },
+    "camera_angle": {
+      "type": "enum",
+      "values": [
+        "top",
+        "45deg",
+        "side",
+        "closeup"
+      ],
+      "required": true
+    },
+    "expert_1_grade": {
+      "type": "enum",
+      "values": [
+        "A",
+        "B",
+        "C"
+      ],
+      "required": true
+    },
+    "expert_2_grade": {
+      "type": "enum",
+      "values": [
+        "A",
+        "B",
+        "C"
+      ],
+      "required": true
+    },
+    "label_status": {
+      "type": "enum",
+      "values": [
+        "accepted",
+        "needs_review",
+        "rejected"
+      ],
+      "required": true
+    },
+    "visible_regions": {
+      "type": "array",
+      "required": true
+    },
+    "notes": {
+      "type": "string",
+      "required": false
+    }
+  },
+  "leakage_prevention": [
+    "แยก train/val/test ตาม lot_id หรือ session_id ก่อนทำ augmentation",
+    "ห้ามนำภาพ augmentation ของภาพต้นฉบับเดียวกันไปอยู่คนละ split",
+    "ภาพจากร้านเดียวกัน วันเดียวกัน และถาดเดียวกันควรถูกจัดเป็น lot เดียวกัน"
+  ]
+}
