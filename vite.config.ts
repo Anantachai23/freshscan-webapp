@@ -5,4 +5,7 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (SSR error wrapper)
     server: { entry: "server" },
   },
+  nitro: {
+    preset: process.env.NITRO_PRESET || "vercel",
+  },
 });
