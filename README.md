@@ -1,97 +1,54 @@
-<div align="center">
+# FreshScan
 
-# 🐟 FreshScan
+เว็บแอปช่วยดูความสดของอาหารทะเลจากรูปถ่าย ใช้ได้กับปลา กุ้ง หอย และปลาหมึก
+ทำขึ้นเพื่อส่งแข่งโครงการ NSC ครั้งที่ 28
 
-**ประเมินความสดของอาหารทะเลจากภาพถ่ายภายในไม่กี่วินาที**
-<br/>
-Seafood freshness assessment from a single photo — fast, explainable, and mobile-friendly.
+เว็บที่ใช้งานได้: https://freshscan-webapp-8svx.vercel.app
 
-[![Live Demo](https://img.shields.io/badge/demo-live-0ea5e9?style=for-the-badge&logo=vercel&logoColor=white)](https://freshscan-webapp-8svx.vercel.app)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![React](https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+## ทำอะไรได้บ้าง
 
-</div>
+- ถ่ายรูปจากกล้องมือถือ หรือเลือกรูปจากเครื่อง
+- ได้ผลเป็นเกรด A, B หรือ C พร้อมคะแนนแต่ละข้อ (เต็ม 20) และเหตุผลว่าทำไมได้เกรดนั้น
+- มีหน้ารวมข้อมูลสัตว์น้ำแต่ละชนิด และวิธีสังเกตความสดด้วยตาเอง
+- สมัครสมาชิกและเข้าสู่ระบบผ่าน Supabase
 
----
+## วิเคราะห์ยังไง
 
-## 📖 ภาพรวม (Overview)
+ระบบอ่านค่าสีจากพิกเซลในรูปจริง เช่น ความสว่าง ความสดของสี รอยดำ สีเหลืองหรือน้ำตาลหม่น ความสม่ำเสมอของสี และความคมของผิว แล้วเอามาคิดเป็นคะแนน
+นอกจากนี้ยังปรับผลให้แม่นขึ้นได้ด้วยรูปอ้างอิงที่เราใส่เอง (`npm run calibrate`) รายละเอียดอยู่ใน [Datasetimage/README.md](Datasetimage/README.md)
 
-**FreshScan** เป็นเว็บแอปพลิเคชันที่ช่วยผู้บริโภคและผู้ค้าประเมินความสดของอาหารทะเล (ปลา กุ้ง หอย ปลาหมึก) จากภาพถ่าย
-ระบบจะวิเคราะห์ค่าพิกเซลจริงของภาพ แล้วให้ผลเป็น **เกรดความสด (A / B / C)** พร้อมคะแนนรายเกณฑ์และคำอธิบายที่เข้าใจง่าย
-พัฒนาเพื่อเข้าร่วม **โครงการแข่งขันพัฒนาโปรแกรมคอมพิวเตอร์แห่งประเทศไทย (NSC) ครั้งที่ 28**
+ส่วนนี้ไม่ใช่โมเดล deep learning ที่เทรนจากรูปจำนวนมาก
 
-FreshScan is a web app that helps consumers and vendors evaluate seafood freshness from a photo.
-It analyzes real pixel-level features of the uploaded image and returns a **freshness grade (A/B/C)**, a per-criterion score breakdown and human-readable reasoning.
+## สร้างด้วย
 
-## ✨ Features
+TanStack Start (React 19), TypeScript, Vite, Tailwind CSS 4, shadcn/ui, Supabase และ deploy บน Vercel
 
-| | Feature | Description |
-|---|---|---|
-| 📸 | **Scan / Upload** | ถ่ายภาพด้วยกล้องมือถือหรืออัปโหลดจากแกลเลอรี รองรับปลา กุ้ง หอย ปลาหมึก |
-| 🔬 | **Explainable analysis** | วิเคราะห์ความสว่าง ความอิ่มของสี สัดส่วนรอยดำ สีเหลือง/น้ำตาลหม่น ความสม่ำเสมอของสี และความคมของพื้นผิว |
-| 🏷️ | **Freshness grade** | ให้เกรด A/B/C พร้อม Confidence Score และคะแนนรายเกณฑ์ (เต็ม 20) |
-| 🎯 | **Calibration** | ปรับเทียบผลด้วยชุดภาพอ้างอิงจริง (`npm run calibrate`) ดู [Datasetimage/README.md](Datasetimage/README.md) |
-| 📚 | **Species knowledge** | ข้อมูลชนิดสัตว์น้ำและวิธีสังเกตความสดด้วยตนเอง |
-| 🔐 | **Authentication** | สมัครสมาชิก / เข้าสู่ระบบ / รีเซ็ตรหัสผ่าน ผ่าน Supabase Auth |
-
-## 🛠️ Tech Stack
-
-- **Framework:** [TanStack Start](https://tanstack.com/start) (React 19, file-based routing) + Vite
-- **Language:** TypeScript
-- **UI:** Tailwind CSS 4, shadcn/ui (Radix UI), Motion, Lucide Icons
-- **Data & Auth:** Supabase, TanStack Query, Zod
-- **Hosting:** Vercel
-
-## 📁 Project Structure
+## โครงสร้างโฟลเดอร์
 
 ```
-freshscan-webapp/
-├── Datasetimage/          # ชุดภาพอ้างอิงสำหรับ calibration (ใส่ภาพเอง)
-├── scripts/
-│   └── calibrate.mjs      # สร้าง src/data/calibration.json จากชุดภาพอ้างอิง
-├── src/
-│   ├── components/
-│   │   ├── freshscan/     # ส่วนประกอบหน้า Landing (Hero, HowItWorks, Stats, Team ...)
-│   │   └── ui/            # shadcn/ui components
-│   ├── data/              # taxonomy, species knowledge, calibration data
-│   ├── integrations/      # Supabase client
-│   ├── lib/               # freshnessAnalyzer, imageFeatures, imageResize
-│   └── routes/            # หน้าเว็บ: /, /scan, /analyze, /species, /dataset, /auth
-└── supabase/              # config & SQL migrations
+Datasetimage/     รูปอ้างอิงสำหรับปรับเทียบผล
+scripts/          สคริปต์ calibrate
+src/components/   ส่วนประกอบของหน้าเว็บ
+src/data/         ข้อมูลชนิดสัตว์น้ำและค่าปรับเทียบ
+src/lib/          โค้ดวิเคราะห์รูป
+src/routes/       หน้าต่าง ๆ ของเว็บ
+supabase/         ตั้งค่าฐานข้อมูล
 ```
 
-## 🚀 Getting Started
+## รันในเครื่อง
 
 ```bash
-# 1. ติดตั้ง dependencies
 npm install
-
-# 2. รันโหมดพัฒนา
 npm run dev
-
-# 3. Build สำหรับ production
-npm run build
-
-# 4. (ทางเลือก) ปรับเทียบด้วยชุดภาพอ้างอิง
-npm run calibrate
 ```
 
-ตั้งค่า environment variables ในไฟล์ `.env`:
+ต้องมีไฟล์ `.env` ที่ใส่ค่าเหล่านี้
 
 ```env
-VITE_SUPABASE_URL=your-supabase-url
-VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_PUBLISHABLE_KEY=...
 ```
 
-## ⚠️ Disclaimer
+## หมายเหตุ
 
-ผลการประเมินเป็นเพียงข้อมูลประกอบการตัดสินใจ ไม่สามารถใช้แทนการตรวจสอบทางห้องปฏิบัติการได้
-Results are for guidance only and are not a substitute for laboratory food-safety testing.
-
----
-
-<div align="center">
-Made with 💙 by <a href="https://github.com/Anantachai23">Anantachai</a> · Samut Prakan, Thailand
-</div>
+ผลที่ได้ใช้ประกอบการตัดสินใจเท่านั้น แทนการตรวจในห้องแล็บไม่ได้
