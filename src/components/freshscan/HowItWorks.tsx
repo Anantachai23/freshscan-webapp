@@ -12,8 +12,8 @@ const steps = [
   {
     n: "02",
     icon: Brain,
-    title: "AI วิเคราะห์ภายใน 3 วินาที",
-    desc: "โมเดล CNN (EfficientNet-B0) ที่ฝึกบน Dataset 5,000+ ภาพ ประมวลผลคุณลักษณะของตา เหงือก สี และเนื้อ",
+    title: "วิเคราะห์ภาพภายใน 3 วินาที",
+    desc: "ประมวลผลคุณลักษณะสีและพิกเซลจริง ทั้งความใสของตา สีเหงือก/เปลือก รอยช้ำ และความสดของผิวสัมผัส",
   },
   {
     n: "03",
@@ -37,8 +37,7 @@ export function HowItWorks() {
             </h2>
           </div>
           <p className="md:max-w-sm text-muted-foreground">
-            ออกแบบให้ใช้งานได้ทั้งบนสมาร์ทโฟนและคอมพิวเตอร์
-            ไม่ต้องติดตั้งแอป เปิดผ่านเว็บได้ทันที
+            ออกแบบให้ใช้งานได้ทั้งบนสมาร์ทโฟนและคอมพิวเตอร์ ไม่ต้องติดตั้งแอป เปิดผ่านเว็บได้ทันที
           </p>
         </div>
 
@@ -52,7 +51,14 @@ export function HowItWorks() {
           >
             <div className="absolute -inset-8 bg-coral/20 blur-3xl rounded-full" />
             <div className="relative rounded-3xl overflow-hidden shadow-elegant aspect-square">
-              <img src={fishImg} alt="ตัวอย่างปลาสด" className="size-full object-cover" loading="lazy" width={1024} height={1024} />
+              <img
+                src={fishImg}
+                alt="ตัวอย่างปลาสด"
+                className="size-full object-cover"
+                loading="lazy"
+                width={1024}
+                height={1024}
+              />
               <div className="absolute top-4 left-4 glass rounded-xl px-3 py-1.5 text-xs font-medium">
                 📷 Sample input
               </div>
@@ -62,7 +68,10 @@ export function HowItWorks() {
                   { label: "เหงือกแดง", val: 88 },
                   { label: "เนื้อยืดหยุ่น", val: 91 },
                 ].map((f) => (
-                  <div key={f.label} className="glass rounded-lg px-2.5 py-1.5 text-[10px] font-medium">
+                  <div
+                    key={f.label}
+                    className="glass rounded-lg px-2.5 py-1.5 text-[10px] font-medium"
+                  >
                     <div className="text-muted-foreground">{f.label}</div>
                     <div className="text-grade-a font-bold">{f.val}%</div>
                   </div>

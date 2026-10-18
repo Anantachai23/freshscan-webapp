@@ -31,9 +31,12 @@ import {
   Cell,
 } from "recharts";
 import { SEAFOOD_TYPES, FRESHNESS_GRADES, type SeafoodTypeId } from "@/data/freshscan_taxonomy";
-import { analyzeImage, LOW_CONFIDENCE_THRESHOLD, type AnalyzeResult } from "@/lib/freshnessAnalyzer";
+import {
+  analyzeImage,
+  LOW_CONFIDENCE_THRESHOLD,
+  type AnalyzeResult,
+} from "@/lib/freshnessAnalyzer";
 import { prepareImageForAnalysis, formatBytes } from "@/lib/imageResize";
-import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/analyze")({
   head: () => ({
@@ -56,11 +59,9 @@ const TYPE_ICONS: Record<SeafoodTypeId, React.ReactNode> = {
   squid: <Sparkles className="size-5" />,
 };
 
-const gradeColor = (id: string) =>
-  FRESHNESS_GRADES.find((g) => g.id === id)?.ui_color ?? "#0ea5e9";
+const gradeColor = (id: string) => FRESHNESS_GRADES.find((g) => g.id === id)?.ui_color ?? "#0ea5e9";
 
 function AnalyzePage() {
-  const { user, loading: authLoading } = useAuth();
   const [type, setType] = useState<SeafoodTypeId | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -76,7 +77,7 @@ function AnalyzePage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (f?: File) => {
-    if (!f || !type || !user) return;
+    if (!f || !type) return;
     setStatus("compressing");
     setResult(null);
     setResizeInfo(null);
@@ -92,7 +93,9 @@ function AnalyzePage() {
         finalDimensions: prepared.finalDimensions,
       });
       setStatus("analyzing");
-      const analyzed = await analyzeImage(type, prepared.file, { imageWasResized: prepared.wasResized });
+      const analyzed = await analyzeImage(type, prepared.file, {
+        imageWasResized: prepared.wasResized,
+      });
       setResult(analyzed);
       setStatus("done");
     } catch (err) {
@@ -123,10 +126,10 @@ function AnalyzePage() {
             <ArrowLeft className="size-4" /> กลับหน้าแรก
           </Link>
           <Link
-            to="/dataset"
+            to="/species"
             className="text-xs font-medium text-ocean-deep hover:text-ocean transition"
           >
-            ดูสถานะ Dataset →
+            ดูคู่มืออาหารทะเล →
           </Link>
         </div>
       </header>
@@ -138,8 +141,7 @@ function AnalyzePage() {
             AI Freshness Analyzer · v1.0
           </div>
           <h1 className="mt-5 text-4xl md:text-5xl font-bold tracking-tight">
-            เลือกประเภท · อัปโหลดภาพ ·{" "}
-            <span className="text-gradient-ocean">ดูผลลัพธ์</span>
+            เลือกประเภท · อัปโหลดภาพ · <span className="text-gradient-ocean">ดูผลลัพธ์</span>
           </h1>
           <p className="mt-4 text-muted-foreground">
             รองรับอาหารทะเลสด 4 ประเภทในระยะแรก เลือกประเภทก่อนเพื่อให้ระบบใช้
@@ -195,7 +197,10 @@ function AnalyzePage() {
         {/* Step 2 + 3 */}
         <section className="mt-10 grid lg:grid-cols-2 gap-5">
           {/* Upload */}
-          <motion.div layout className="rounded-3xl border border-border bg-card p-5 shadow-card-soft">
+          <motion.div
+            layout
+            className="rounded-3xl border border-border bg-card p-5 shadow-card-soft"
+          >
             <div className="flex items-center gap-3 mb-3">
               <StepBadge n={2} active={!!type} />
               <div className="font-display font-bold">อัปโหลดภาพ</div>
@@ -203,40 +208,22 @@ function AnalyzePage() {
 
             <div
               onDragOver={(e) => {
-                if (!type || !user) return;
+                if (!type) return;
                 e.preventDefault();
               }}
               onDrop={(e) => {
-                if (!type || !user) return;
+                if (!type) return;
                 e.preventDefault();
                 handleFile(e.dataTransfer.files?.[0]);
               }}
-              onClick={() => type && user && inputRef.current?.click()}
+              onClick={() => type && inputRef.current?.click()}
               className={`relative aspect-square rounded-2xl border-2 border-dashed bg-secondary/40 overflow-hidden grid place-items-center transition-all ${
-                type && user
+                type
                   ? "border-border hover:border-ocean/50 hover:bg-secondary cursor-pointer"
                   : "border-border opacity-60 cursor-not-allowed"
               }`}
             >
-              {!user && !authLoading ? (
-                <div className="text-center px-6">
-                  <div className="mx-auto size-16 rounded-2xl bg-ocean-gradient grid place-items-center shadow-card-soft">
-                    <ShieldCheck className="size-7 text-white" />
-                  </div>
-                  <div className="mt-5 font-display font-bold text-lg">
-                    ต้องเข้าสู่ระบบก่อนใช้งานสแกน
-                  </div>
-                  <div className="mt-2 text-sm text-muted-foreground max-w-xs mx-auto">
-                    เข้าสู่ระบบเพื่อวิเคราะห์ความสดและบันทึกประวัติการสแกนของคุณ
-                  </div>
-                  <Link
-                    to="/auth"
-                    className="mt-4 inline-flex items-center gap-2 bg-ocean-gradient text-white px-4 py-2.5 rounded-xl font-medium shadow-card-soft hover:shadow-glow transition"
-                  >
-                    เข้าสู่ระบบ / สมัครสมาชิก
-                  </Link>
-                </div>
-              ) : image ? (
+              {image ? (
                 <img src={image} alt="uploaded" className="size-full object-cover" />
               ) : (
                 <div className="text-center px-6">
@@ -247,7 +234,8 @@ function AnalyzePage() {
                     {type ? "ลากไฟล์มาวาง หรือคลิกเพื่อเลือก" : "กรุณาเลือกประเภทก่อน"}
                   </div>
                   <div className="mt-2 text-sm text-muted-foreground">
-                    รองรับ JPG / PNG / WEBP · ไฟล์ใหญ่แค่ไหนก็ได้ ระบบจะบีบอัด/ย่อภาพให้อัตโนมัติก่อนวิเคราะห์
+                    รองรับ JPG / PNG / WEBP · ไฟล์ใหญ่แค่ไหนก็ได้
+                    ระบบจะบีบอัด/ย่อภาพให้อัตโนมัติก่อนวิเคราะห์
                   </div>
                 </div>
               )}
@@ -277,7 +265,7 @@ function AnalyzePage() {
 
             <div className="mt-4 flex gap-2">
               <button
-                disabled={!type || !user}
+                disabled={!type}
                 onClick={() => inputRef.current?.click()}
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-ocean-gradient text-white px-4 py-3 rounded-xl font-medium shadow-card-soft hover:shadow-glow transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -295,10 +283,10 @@ function AnalyzePage() {
 
             {selectedType && (
               <div className="mt-4 rounded-xl bg-secondary/60 p-3 text-xs leading-relaxed">
-                <div className="font-bold text-foreground mb-1">เกณฑ์ตรวจ ({selectedType.labelTh})</div>
-                <div className="text-muted-foreground">
-                  {selectedType.criteriaTh.join(" · ")}
+                <div className="font-bold text-foreground mb-1">
+                  เกณฑ์ตรวจ ({selectedType.labelTh})
                 </div>
+                <div className="text-muted-foreground">{selectedType.criteriaTh.join(" · ")}</div>
               </div>
             )}
 
@@ -309,11 +297,13 @@ function AnalyzePage() {
                     <span className="font-medium text-foreground">บีบอัดภาพอัตโนมัติแล้ว</span> —{" "}
                     {resizeInfo.originalDimensions.width}×{resizeInfo.originalDimensions.height}px (
                     {formatBytes(resizeInfo.originalSize)}) → {resizeInfo.finalDimensions.width}×
-                    {resizeInfo.finalDimensions.height}px ({formatBytes(resizeInfo.finalSize)}) เพื่อให้ AI
-                    ประมวลผลได้ครบทุกส่วนของภาพโดยไม่เสียรายละเอียดสำคัญ
+                    {resizeInfo.finalDimensions.height}px ({formatBytes(resizeInfo.finalSize)})
+                    เพื่อให้ AI ประมวลผลได้ครบทุกส่วนของภาพโดยไม่เสียรายละเอียดสำคัญ
                   </>
                 ) : (
-                  <>ขนาดภาพเหมาะสมอยู่แล้ว ({formatBytes(resizeInfo.finalSize)}) ไม่ต้องบีบอัดเพิ่ม</>
+                  <>
+                    ขนาดภาพเหมาะสมอยู่แล้ว ({formatBytes(resizeInfo.finalSize)}) ไม่ต้องบีบอัดเพิ่ม
+                  </>
                 )}
               </div>
             )}
@@ -338,9 +328,7 @@ function AnalyzePage() {
                   <div className="size-16 rounded-2xl bg-secondary grid place-items-center text-muted-foreground">
                     <Sparkles className="size-7" />
                   </div>
-                  <div className="mt-5 font-display font-bold text-lg">
-                    ผลลัพธ์จะปรากฏที่นี่
-                  </div>
+                  <div className="mt-5 font-display font-bold text-lg">ผลลัพธ์จะปรากฏที่นี่</div>
                   <p className="mt-2 text-sm text-muted-foreground max-w-xs">
                     หลังเลือกประเภทและอัปโหลดภาพ ระบบจะแสดง grade · confidence · cues · คำแนะนำ
                   </p>
@@ -383,10 +371,9 @@ function AnalyzePage() {
           <div className="flex items-start gap-2">
             <ShieldCheck className="size-4 mt-0.5 shrink-0" />
             <div>
-              <span className="font-bold">คำแนะนำการใช้งาน:</span>{" "}
-              เพื่อผลลัพธ์ที่แม่นยำที่สุด ควรถ่ายภาพในแสงธรรมชาติ ระยะใกล้ ให้เห็น
-              ตา/เหงือก/ผิว/เนื้อชัดเจน และตรวจสอบกลิ่น–เนื้อสัมผัสร่วมด้วยเสมอ
-              ก่อนตัดสินใจบริโภคอาหารทะเลที่มีความเสี่ยงสูง
+              <span className="font-bold">คำแนะนำการใช้งาน:</span> เพื่อผลลัพธ์ที่แม่นยำที่สุด
+              ควรถ่ายภาพในแสงธรรมชาติ ระยะใกล้ ให้เห็น ตา/เหงือก/ผิว/เนื้อชัดเจน
+              และตรวจสอบกลิ่น–เนื้อสัมผัสร่วมด้วยเสมอ ก่อนตัดสินใจบริโภคอาหารทะเลที่มีความเสี่ยงสูง
             </div>
           </div>
         </div>
@@ -399,9 +386,7 @@ function StepBadge({ n, active }: { n: number; active?: boolean }) {
   return (
     <div
       className={`size-7 rounded-full grid place-items-center text-xs font-bold transition-all ${
-        active
-          ? "bg-ocean-gradient text-white shadow-glow"
-          : "bg-secondary text-muted-foreground"
+        active ? "bg-ocean-gradient text-white shadow-glow" : "bg-secondary text-muted-foreground"
       }`}
     >
       {n}
@@ -444,15 +429,12 @@ function ResultView({ result }: { result: AnalyzeResult }) {
               </span>
             )}
           </div>
-          <div
-            className="mt-1 font-display font-bold text-2xl"
-            style={{ color }}
-          >
+          <div className="mt-1 font-display font-bold text-2xl" style={{ color }}>
             {result.gradeTh}
           </div>
           <div className="text-sm text-muted-foreground mt-1">
-            คะแนนความสด {result.score20}/{result.score20Max} คะแนน · เกรด {result.grade} · confidence{" "}
-            {(result.confidence * 100).toFixed(1)}%
+            คะแนนความสด {result.score20}/{result.score20Max} คะแนน · เกรด {result.grade} ·
+            confidence {(result.confidence * 100).toFixed(1)}%
           </div>
           {result.imageWasResized && (
             <div className="text-[11px] text-ocean-deep/70 mt-0.5">
@@ -569,9 +551,7 @@ function ResultView({ result }: { result: AnalyzeResult }) {
           </ResponsiveContainer>
         </div>
         <div className="rounded-2xl border border-border p-3">
-          <div className="text-xs text-muted-foreground mb-1 px-1">
-            ความน่าจะเป็นแต่ละ Grade
-          </div>
+          <div className="text-xs text-muted-foreground mb-1 px-1">ความน่าจะเป็นแต่ละ Grade</div>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={probData} layout="vertical" margin={{ left: 10, right: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />

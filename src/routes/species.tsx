@@ -1,6 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
-import { ArrowLeft, ExternalLink, Fish, Thermometer, Calendar, Sparkles, Database } from "lucide-react";
+import {
+  ArrowLeft,
+  ExternalLink,
+  Fish,
+  Thermometer,
+  Calendar,
+  Sparkles,
+  Database,
+} from "lucide-react";
 import { useState } from "react";
 import { SPECIES, DATASET_REFERENCES } from "@/data/species_knowledge";
 
@@ -52,14 +60,14 @@ function SpeciesPage() {
         <div className="text-center max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-2 rounded-full border border-ocean/20 bg-white/60 px-3.5 py-1.5 text-xs font-medium text-ocean-deep">
             <Sparkles className="size-3.5 text-coral" />
-            Species Knowledge Base
+            คู่มือเลือกซื้อและฐานความรู้
           </div>
           <h1 className="mt-5 text-4xl md:text-5xl font-bold tracking-tight">
-            ฐานความรู้<span className="text-gradient-ocean">อาหารทะเลไทย</span>
+            คู่มือสังเกตความสด<span className="text-gradient-ocean">อาหารทะเลไทย</span>
           </h1>
           <p className="mt-4 text-muted-foreground">
-            รวบรวมชนิดที่ระบบรองรับ พร้อมเกณฑ์คุณภาพ อุณหภูมิเก็บรักษา ฤดูกาล
-            และแหล่งอ้างอิง Dataset สาธารณะที่ใช้ในการออกแบบ taxonomy
+            รวบรวมชนิดสัตว์น้ำยอดนิยม จุดสังเกตความสดด้วยตนเอง อุณหภูมิจัดเก็บที่เหมาะสม
+            และอายุการเก็บรักษา เพื่อความปลอดภัยและคุณภาพที่ดีที่สุดในทุกมื้อ
           </p>
         </div>
 
@@ -106,9 +114,7 @@ function SpeciesPage() {
                     {s.scientific}
                   </span>
                 </div>
-                <h3 className="mt-3 font-display font-bold text-lg leading-tight">
-                  {s.nameTh}
-                </h3>
+                <h3 className="mt-3 font-display font-bold text-lg leading-tight">{s.nameTh}</h3>
                 <div className="text-xs text-muted-foreground">{s.nameEn}</div>
 
                 <div className="mt-4 space-y-2 text-xs">
@@ -120,7 +126,9 @@ function SpeciesPage() {
                   </div>
                   <div className="flex items-start gap-2">
                     <Calendar className="size-3.5 mt-0.5 text-coral shrink-0" />
-                    <span>ฤดูกาล: {s.peakSeasonTh} · {s.habitat}</span>
+                    <span>
+                      ฤดูกาล: {s.peakSeasonTh} · {s.habitat}
+                    </span>
                   </div>
                 </div>
 
@@ -130,19 +138,14 @@ function SpeciesPage() {
                   </div>
                   <ul className="flex flex-wrap gap-1.5">
                     {s.keyIndicators.map((k) => (
-                      <li
-                        key={k}
-                        className="text-[11px] bg-secondary/70 rounded-full px-2 py-0.5"
-                      >
+                      <li key={k} className="text-[11px] bg-secondary/70 rounded-full px-2 py-0.5">
                         {k}
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                <div className="mt-3 text-[11px] text-muted-foreground italic">
-                  {s.nutrition}
-                </div>
+                <div className="mt-3 text-[11px] text-muted-foreground italic">{s.nutrition}</div>
               </motion.article>
             );
           })}
@@ -175,14 +178,10 @@ function SpeciesPage() {
                 className="group rounded-2xl border border-border bg-card p-4 hover:border-ocean/40 hover:-translate-y-0.5 transition-all"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className="font-display font-bold text-sm leading-snug">
-                    {d.name}
-                  </div>
+                  <div className="font-display font-bold text-sm leading-snug">{d.name}</div>
                   <ExternalLink className="size-3.5 text-muted-foreground group-hover:text-ocean shrink-0 mt-1" />
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                  {d.desc}
-                </p>
+                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">{d.desc}</p>
                 <div className="mt-2 inline-block text-[10px] font-medium text-ocean-deep bg-ocean/5 rounded-full px-2 py-0.5">
                   {d.usage}
                 </div>

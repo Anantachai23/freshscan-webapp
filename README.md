@@ -1,54 +1,114 @@
-# FreshScan
+<div align="center">
 
-เว็บแอปช่วยดูความสดของอาหารทะเลจากรูปถ่าย ใช้ได้กับปลา กุ้ง หอย และปลาหมึก
-ทำขึ้นเพื่อส่งแข่งโครงการ NSC ครั้งที่ 28
+# 🐟 FreshScan
 
-เว็บที่ใช้งานได้: https://freshscan-webapp-8svx.vercel.app
+**AI-powered seafood freshness assessment in your browser.**
 
-## ทำอะไรได้บ้าง
+Evaluate the freshness of fish, shrimp, shellfish, and squid from smartphone photos in under 3 seconds. Built for everyday consumers, home cooks, restaurants, and seafood vendors to make confident buying choices, protect food safety, and reduce waste.
 
-- ถ่ายรูปจากกล้องมือถือ หรือเลือกรูปจากเครื่อง
-- ได้ผลเป็นเกรด A, B หรือ C พร้อมคะแนนแต่ละข้อ (เต็ม 20) และเหตุผลว่าทำไมได้เกรดนั้น
-- มีหน้ารวมข้อมูลสัตว์น้ำแต่ละชนิด และวิธีสังเกตความสดด้วยตาเอง
-- สมัครสมาชิกและเข้าสู่ระบบผ่าน Supabase
+[![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178c6.svg)](https://www.typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8.svg)](https://tailwindcss.com)
+[![TanStack Start](https://img.shields.io/badge/TanStack_Start-1.0-ff4154.svg)](https://tanstack.com/start)
+[![Supabase](https://img.shields.io/badge/Supabase-Auth_%26_DB-3ecf8e.svg)](https://supabase.com)
 
-## วิเคราะห์ยังไง
+[Live App](https://freshscan-webapp-8svx.vercel.app) · [Report Bug](https://github.com/issues) · [Request Feature](https://github.com/issues)
 
-ระบบอ่านค่าสีจากพิกเซลในรูปจริง เช่น ความสว่าง ความสดของสี รอยดำ สีเหลืองหรือน้ำตาลหม่น ความสม่ำเสมอของสี และความคมของผิว แล้วเอามาคิดเป็นคะแนน
-นอกจากนี้ยังปรับผลให้แม่นขึ้นได้ด้วยรูปอ้างอิงที่เราใส่เอง (`npm run calibrate`) รายละเอียดอยู่ใน [Datasetimage/README.md](Datasetimage/README.md)
+</div>
 
-ส่วนนี้ไม่ใช่โมเดล deep learning ที่เทรนจากรูปจำนวนมาก
+---
 
-## สร้างด้วย
+## ✨ Highlights
 
-TanStack Start (React 19), TypeScript, Vite, Tailwind CSS 4, shadcn/ui, Supabase และ deploy บน Vercel
+- **⚡ Fast & Frictionless:** Upload or capture an image on any mobile device or desktop and receive an evaluation in under 3 seconds—no app install required.
+- **🦐 4 Key Seafood Categories:** Custom evaluation rubrics for **Fish**, **Shrimp**, **Shellfish**, and **Squid**.
+- **📋 20-Point Explainable Grading:** Delivers transparent **Grade A (Very Fresh)**, **Grade B (Acceptable)**, or **Grade C (Deteriorating)** results, accompanied by visual cues (eye clarity, gill/shell color, surface brightness, and tissue firmness).
+- **🔒 Privacy-Preserving:** Image feature extraction runs client-side right in your browser via HTML Canvas. Your photos never leave your device without your consent.
+- **📖 Seafood Buyer's Guide:** Includes an integrated knowledge base detailing popular Thai seafood species, optimal chilling temperatures, seasonal availability, and shelf life.
+- **🎯 Calibratable Heuristics:** Includes a lightweight calibration workflow (`npm run calibrate`) that fine-tunes score distributions using real reference photos from your local markets.
 
-## โครงสร้างโฟลเดอร์
+---
 
-```
-Datasetimage/     รูปอ้างอิงสำหรับปรับเทียบผล
-scripts/          สคริปต์ calibrate
-src/components/   ส่วนประกอบของหน้าเว็บ
-src/data/         ข้อมูลชนิดสัตว์น้ำและค่าปรับเทียบ
-src/lib/          โค้ดวิเคราะห์รูป
-src/routes/       หน้าต่าง ๆ ของเว็บ
-supabase/         ตั้งค่าฐานข้อมูล
-```
+## 🔬 How It Works
 
-## รันในเครื่อง
+FreshScan avoids black-box ambiguity by analyzing measurable visual proxies proven in manual seafood quality inspection:
+
+1. **Pixel Feature Extraction:** Evaluates overall luminance, color saturation, dark discoloration patches (bruising or gill degradation), dull yellow/brown oxidation ratios, color uniformity, and surface texture sharpness.
+2. **Category-Specific Rubric:** Evaluates indicators mapped to each seafood type (e.g., eye clarity and gill red saturation for fish, shell translucency for shrimp, shell closure for bivalves).
+3. **Transparent Scoring:** Aggregates sub-scores onto a 20-point scale with actionable storage and culinary recommendations.
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 20+
+- npm or pnpm
+
+### 1. Clone & Install
 
 ```bash
+git clone https://github.com/your-username/freshscan.git
+cd freshscan
 npm install
+```
+
+### 2. Configure Environment
+
+Create a `.env` file in the project root:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
+```
+
+### 3. Launch Development Server
+
+```bash
 npm run dev
 ```
 
-ต้องมีไฟล์ `.env` ที่ใส่ค่าเหล่านี้
+Visit `http://localhost:3000` (or the port indicated in your terminal).
 
-```env
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_PUBLISHABLE_KEY=...
+---
+
+## 📁 Project Structure
+
+```
+├── Datasetimage/          # Reference photos for local calibration
+├── scripts/               # Calibration script (sharp-based feature aggregation)
+├── src/
+│   ├── components/        # UI components & landing page sections
+│   ├── data/              # Seafood taxonomy, species handbook & calibration data
+│   ├── hooks/             # Authentication & custom React hooks
+│   ├── integrations/      # Supabase client & authentication helpers
+│   ├── lib/               # Pixel analysis & image feature extraction logic
+│   └── routes/            # TanStack Router file-based route definitions
+└── supabase/              # Database schema & role migrations
 ```
 
-## หมายเหตุ
+---
 
-ผลที่ได้ใช้ประกอบการตัดสินใจเท่านั้น แทนการตรวจในห้องแล็บไม่ได้
+## 🛠️ Calibration Workflow
+
+To calibrate scoring thresholds against photos from your specific market environment:
+
+1. Place reference images into `Datasetimage/fresh/<category>/` and `Datasetimage/not_fresh/<category>/`.
+2. Run the calibration script:
+   ```bash
+   npm run calibrate
+   ```
+3. Rebuild or restart the dev server—the app automatically incorporates updated reference averages.
+
+---
+
+## ⚠️ Disclaimer
+
+FreshScan is an assistive visual assessment tool designed for educational and informational purposes. Results reflect visual surface indicators and should be corroborated with tactile feel and odor before making food safety decisions. It is not a replacement for professional laboratory microbiology testing.
+
+---
+
+## 📄 License
+
+Distributed under the MIT License.

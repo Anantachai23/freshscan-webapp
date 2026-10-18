@@ -103,7 +103,6 @@ export function parseManifestCSV(csv: string): ManifestRow[] {
   }));
 }
 
-
 export const MANIFEST: ManifestRow[] = toRecords(manifestRaw).map((r) => ({
   image_id: r.image_id,
   split: r.split as Split,
@@ -149,18 +148,25 @@ export function validateManifest(rows: ManifestRow[]): ValidationIssue[] {
   // duplicates
   const ids = new Set<string>();
   for (const r of rows) {
-    if (ids.has(r.image_id)) issues.push({ level: "error", message: `image_id ซ้ำ: ${r.image_id}` });
+    if (ids.has(r.image_id))
+      issues.push({ level: "error", message: `image_id ซ้ำ: ${r.image_id}` });
     ids.add(r.image_id);
 
     if (!validTypes.has(r.seafood_type_id))
-      issues.push({ level: "error", message: `${r.image_id}: seafood_type_id ไม่ถูกต้อง (${r.seafood_type_id})` });
+      issues.push({
+        level: "error",
+        message: `${r.image_id}: seafood_type_id ไม่ถูกต้อง (${r.seafood_type_id})`,
+      });
     if (!validGrades.has(r.grade))
       issues.push({ level: "error", message: `${r.image_id}: grade ต้องเป็น A/B/C` });
     if (!validSplits.has(r.split))
       issues.push({ level: "error", message: `${r.image_id}: split ต้องเป็น train/val/test` });
 
     if (r.freshness_score < 0 || r.freshness_score > 100)
-      issues.push({ level: "error", message: `${r.image_id}: freshness_score ต้องอยู่ระหว่าง 0–100` });
+      issues.push({
+        level: "error",
+        message: `${r.image_id}: freshness_score ต้องอยู่ระหว่าง 0–100`,
+      });
 
     // Grade vs score range
     const inRange =
@@ -190,11 +196,20 @@ export function validateManifest(rows: ManifestRow[]): ValidationIssue[] {
     const r = qualityRules.required_splits;
     const tol = 0.05;
     if (Math.abs(train - r.train) > tol)
-      issues.push({ level: "info", message: `สัดส่วน train = ${(train * 100).toFixed(1)}% (เป้า ${r.train * 100}%)` });
+      issues.push({
+        level: "info",
+        message: `สัดส่วน train = ${(train * 100).toFixed(1)}% (เป้า ${r.train * 100}%)`,
+      });
     if (Math.abs(val - r.validation) > tol)
-      issues.push({ level: "info", message: `สัดส่วน val = ${(val * 100).toFixed(1)}% (เป้า ${r.validation * 100}%)` });
+      issues.push({
+        level: "info",
+        message: `สัดส่วน val = ${(val * 100).toFixed(1)}% (เป้า ${r.validation * 100}%)`,
+      });
     if (Math.abs(test - r.test) > tol)
-      issues.push({ level: "info", message: `สัดส่วน test = ${(test * 100).toFixed(1)}% (เป้า ${r.test * 100}%)` });
+      issues.push({
+        level: "info",
+        message: `สัดส่วน test = ${(test * 100).toFixed(1)}% (เป้า ${r.test * 100}%)`,
+      });
   }
 
   if (total < qualityRules.min_original_images_before_augmentation)

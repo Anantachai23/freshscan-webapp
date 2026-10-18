@@ -15,10 +15,7 @@ import {
   FileJson,
   FileSpreadsheet,
   RotateCcw,
-  Lock,
-  LogIn,
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
 
 import {
   BarChart,
@@ -33,7 +30,12 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { SEAFOOD_TYPES, FRESHNESS_GRADES, type SeafoodTypeId, type FreshnessGrade } from "@/data/freshscan_taxonomy";
+import {
+  SEAFOOD_TYPES,
+  FRESHNESS_GRADES,
+  type SeafoodTypeId,
+  type FreshnessGrade,
+} from "@/data/freshscan_taxonomy";
 import {
   MANIFEST,
   TARGETS,
@@ -44,15 +46,13 @@ import {
   type ManifestRow,
 } from "@/lib/datasetManifest";
 
-
 export const Route = createFileRoute("/dataset")({
   head: () => ({
     meta: [
       { title: "สถานะ Dataset · FreshScan" },
       {
         name: "description",
-        content:
-          "ภาพรวมจำนวนภาพต่อประเภทอาหารทะเล เกรด และ split พร้อมผลตรวจคุณภาพข้อมูล",
+        content: "ภาพรวมจำนวนภาพต่อประเภทอาหารทะเล เกรด และ split พร้อมผลตรวจคุณภาพข้อมูล",
       },
     ],
   }),
@@ -66,7 +66,6 @@ const splitLabel: Record<Split, string> = {
 };
 
 function DatasetPage() {
-  const { user, isAdmin, loading: authLoading } = useAuth();
   const [typeFilter, setTypeFilter] = useState<SeafoodTypeId | "all">("all");
   const [manifest, setManifest] = useState<ManifestRow[]>(MANIFEST);
   const [importedName, setImportedName] = useState<string | null>(null);
@@ -82,7 +81,8 @@ function DatasetPage() {
   const warnings = issues.filter((i) => i.level === "warning");
   const infos = issues.filter((i) => i.level === "info");
 
-  const rows = typeFilter === "all" ? manifest : manifest.filter((r) => r.seafood_type_id === typeFilter);
+  const rows =
+    typeFilter === "all" ? manifest : manifest.filter((r) => r.seafood_type_id === typeFilter);
 
   // Aggregations
   const byTypeGrade = useMemo(() => {
@@ -100,7 +100,8 @@ function DatasetPage() {
     return m;
   }, []);
 
-  const typesToShow = typeFilter === "all" ? SEAFOOD_TYPES : SEAFOOD_TYPES.filter((t) => t.id === typeFilter);
+  const typesToShow =
+    typeFilter === "all" ? SEAFOOD_TYPES : SEAFOOD_TYPES.filter((t) => t.id === typeFilter);
 
   const splitData: { name: string; value: number; color: string }[] = (
     ["train", "val", "test"] as Split[]
@@ -147,7 +148,9 @@ function DatasetPage() {
       const parsed = parseManifestCSV(text);
       if (!parsed.length) throw new Error("ไม่พบข้อมูลใน CSV (ต้องมี header + อย่างน้อย 1 แถว)");
       const required = ["image_id", "split", "seafood_type_id", "grade", "freshness_score"];
-      const missing = required.filter((k) => !(k in parsed[0]) && !(parsed[0] as never)[k as never]);
+      const missing = required.filter(
+        (k) => !(k in parsed[0]) && !(parsed[0] as never)[k as never],
+      );
       // rudimentary sanity check
       if (parsed.some((r) => !r.image_id)) missing.push("image_id (บางแถวว่าง)");
       if (missing.length) throw new Error(`ไม่ครบคอลัมน์จำเป็น: ${missing.join(", ")}`);
@@ -176,7 +179,6 @@ function DatasetPage() {
     setPendingImport(null);
     setImportError(null);
   };
-
 
   const buildSummary = () => {
     const perType = SEAFOOD_TYPES.map((t) => {
@@ -288,7 +290,6 @@ function DatasetPage() {
     );
   };
 
-
   return (
     <div className="min-h-screen bg-hero">
       <header className="px-4 pt-6">
@@ -318,97 +319,61 @@ function DatasetPage() {
             ความคืบหน้า <span className="text-gradient-ocean">ข้อมูลภาพจริง</span>
           </h1>
           <p className="mt-4 text-muted-foreground">
-            ตรวจสอบจำนวนภาพต่อประเภท เกรด และ split เทียบกับเป้าหมายในรูปเล่มโครงการ
+            ตรวจสอบจำนวนภาพต่อประเภท เกรด และ split เทียบกับเป้าหมายมาตรฐานคุณภาพ
             พร้อมผลตรวจคุณภาพอัตโนมัติตาม quality_rules.json
           </p>
         </div>
 
-        {/* Import / Export toolbar — admin only */}
-        {isAdmin ? (
-          <div className="mt-8 rounded-3xl border border-border bg-card p-4 shadow-card-soft flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-700 bg-emerald-50 rounded-full px-2.5 py-1">
-              <ShieldCheck className="size-3" /> โหมดผู้ดูแล
-            </div>
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".csv,text/csv"
-              onChange={handleImport}
-              className="hidden"
-            />
+        {/* Import / Export toolbar */}
+        <div className="mt-8 rounded-3xl border border-border bg-card p-4 shadow-card-soft flex flex-wrap items-center gap-3">
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".csv,text/csv"
+            onChange={handleImport}
+            className="hidden"
+          />
+          <button
+            onClick={() => fileRef.current?.click()}
+            className="inline-flex items-center gap-2 rounded-xl bg-ocean-gradient text-white px-4 py-2 text-sm font-medium shadow-card-soft hover:opacity-95 transition"
+          >
+            <Upload className="size-4" /> นำเข้า Manifest (CSV)
+          </button>
+          <button
+            onClick={exportCSV}
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary transition"
+          >
+            <FileSpreadsheet className="size-4" /> ส่งออก Summary (CSV)
+          </button>
+          <button
+            onClick={exportJSON}
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary transition"
+          >
+            <FileJson className="size-4" /> ส่งออก Summary (JSON)
+          </button>
+          {importedName && (
             <button
-              onClick={() => fileRef.current?.click()}
-              className="inline-flex items-center gap-2 rounded-xl bg-ocean-gradient text-white px-4 py-2 text-sm font-medium shadow-card-soft hover:opacity-95 transition"
+              onClick={resetManifest}
+              className="inline-flex items-center gap-2 rounded-xl border border-dashed border-border px-3 py-2 text-xs text-muted-foreground hover:bg-secondary transition"
             >
-              <Upload className="size-4" /> นำเข้า Manifest (CSV)
+              <RotateCcw className="size-3.5" /> คืนค่าเริ่มต้น
             </button>
-            <button
-              onClick={exportCSV}
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary transition"
-            >
-              <FileSpreadsheet className="size-4" /> ส่งออก Summary (CSV)
-            </button>
-            <button
-              onClick={exportJSON}
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary transition"
-            >
-              <FileJson className="size-4" /> ส่งออก Summary (JSON)
-            </button>
-            {importedName && (
-              <button
-                onClick={resetManifest}
-                className="inline-flex items-center gap-2 rounded-xl border border-dashed border-border px-3 py-2 text-xs text-muted-foreground hover:bg-secondary transition"
-              >
-                <RotateCcw className="size-3.5" /> คืนค่าเริ่มต้น
-              </button>
-            )}
-            <div className="ml-auto text-xs text-muted-foreground flex items-center gap-2">
-              <Download className="size-3.5" />
-              แหล่งข้อมูล: <span className="font-medium text-foreground/80">{importedName ?? "sample_manifest.csv"}</span>
-              <span className="mx-1 opacity-40">·</span>
-              {manifest.length.toLocaleString()} แถว
-            </div>
-            {importError && (
-              <div className="w-full text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
-                นำเข้าไม่สำเร็จ: {importError}
-              </div>
-            )}
+          )}
+          <div className="ml-auto text-xs text-muted-foreground flex items-center gap-2">
+            <Download className="size-3.5" />
+            แหล่งข้อมูล:{" "}
+            <span className="font-medium text-foreground/80">
+              {importedName ?? "sample_manifest.csv"}
+            </span>
+            <span className="mx-1 opacity-40">·</span>
+            {manifest.length.toLocaleString()} แถว
           </div>
-        ) : (
-          <div className="mt-8 rounded-3xl border border-dashed border-border bg-card/60 p-5 shadow-card-soft flex flex-wrap items-center gap-3">
-            <div className="size-10 rounded-xl bg-secondary grid place-items-center text-foreground/60">
-              <Lock className="size-5" />
+          {importError && (
+            <div className="w-full text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
+              นำเข้าไม่สำเร็จ: {importError}
             </div>
-            <div className="flex-1 min-w-[220px]">
-              <div className="text-sm font-semibold text-foreground">
-                การนำเข้า / ส่งออก / รี-validate จำกัดเฉพาะทีมงาน
-              </div>
-              <div className="text-xs text-muted-foreground mt-0.5">
-                {authLoading
-                  ? "กำลังตรวจสอบสิทธิ์..."
-                  : user
-                    ? `บัญชี ${user.email} มีสิทธิ์ระดับ member — ต้องได้รับอนุมัติเป็น admin จากผู้ดูแลระบบก่อน`
-                    : "กรุณาเข้าสู่ระบบเพื่อจัดการ Dataset"}
-              </div>
-            </div>
-            <div className="text-xs text-muted-foreground flex items-center gap-2">
-              <Download className="size-3.5" />
-              แหล่งข้อมูล: <span className="font-medium text-foreground/80">{importedName ?? "sample_manifest.csv"}</span>
-              <span className="mx-1 opacity-40">·</span>
-              {manifest.length.toLocaleString()} แถว
-            </div>
-            {!user && (
-              <Link
-                to="/auth"
-                className="inline-flex items-center gap-2 rounded-xl bg-ocean-gradient text-white px-4 py-2 text-sm font-medium shadow-card-soft hover:opacity-95 transition"
-              >
-                <LogIn className="size-4" /> เข้าสู่ระบบทีมงาน
-              </Link>
-            )}
-          </div>
-        )}
-
-
+          )}
+        </div>
 
         {/* KPI cards */}
         <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -553,9 +518,15 @@ function DatasetPage() {
                           {g} · {meta.label_th}
                         </span>
                       </td>
-                      <td className="py-3 pr-3 text-center text-muted-foreground">{tr?.train ?? "-"}</td>
-                      <td className="py-3 pr-3 text-center text-muted-foreground">{tr?.val ?? "-"}</td>
-                      <td className="py-3 pr-3 text-center text-muted-foreground">{tr?.test ?? "-"}</td>
+                      <td className="py-3 pr-3 text-center text-muted-foreground">
+                        {tr?.train ?? "-"}
+                      </td>
+                      <td className="py-3 pr-3 text-center text-muted-foreground">
+                        {tr?.val ?? "-"}
+                      </td>
+                      <td className="py-3 pr-3 text-center text-muted-foreground">
+                        {tr?.test ?? "-"}
+                      </td>
                       <td className="py-3 pr-3 text-right font-display font-bold">{present}</td>
                       <td className="py-3 pr-3 text-right text-muted-foreground">{target}</td>
                       <td className="py-3 pl-3">
@@ -621,8 +592,12 @@ function DatasetPage() {
             </div>
             <h3 className="font-display font-bold text-lg mt-0.5 mb-3">Rules (จากเอกสาร)</h3>
             <ul className="space-y-2 text-sm">
-              <RuleRow text={`Train / Val / Test = ${QUALITY_RULES.required_splits.train} / ${QUALITY_RULES.required_splits.validation} / ${QUALITY_RULES.required_splits.test}`} />
-              <RuleRow text={`ภาพต้นฉบับขั้นต่ำ ${minOriginals.toLocaleString()} ภาพ ก่อน augmentation`} />
+              <RuleRow
+                text={`Train / Val / Test = ${QUALITY_RULES.required_splits.train} / ${QUALITY_RULES.required_splits.validation} / ${QUALITY_RULES.required_splits.test}`}
+              />
+              <RuleRow
+                text={`ภาพต้นฉบับขั้นต่ำ ${minOriginals.toLocaleString()} ภาพ ก่อน augmentation`}
+              />
               <RuleRow text={`Open Dataset เป้าหมาย ≥ ${minDataset.toLocaleString()} ภาพ`} />
               <RuleRow text="ต้องมีผู้เชี่ยวชาญ 2 คน label ตรงกัน หากไม่ตรง ส่งคนที่ 3 หรือคัดออก" />
               <RuleRow text="Grade C: ถ้ามีสัญญาณเน่าชัดเจน → จัดเป็น C ทันที" />
@@ -906,7 +881,6 @@ function ImportPreviewDialog({
   );
 }
 
-
 function KpiCard({
   icon,
   label,
@@ -957,15 +931,7 @@ function KpiCard({
   );
 }
 
-function Chip({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-}) {
+function Chip({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
   return (
     <button
       onClick={onClick}

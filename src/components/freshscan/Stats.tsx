@@ -28,26 +28,31 @@ const typeData = [
 ];
 
 const targets = [
-  { k: "≥ 85%", v: "Accuracy บน Test Set" },
-  { k: "≥ 0.85", v: "Recall ของ Class C" },
-  { k: "< 3s", v: "Response Time" },
-  { k: "≥ 70", v: "SUS Score" },
+  { k: "เกรด A/B/C", v: "ระบบตัดเกรดชัดเจน เข้าใจง่าย" },
+  { k: "< 3 วินาที", v: "ความเร็วในการวิเคราะห์ผล" },
+  { k: "4 หมวดหลัก", v: "ปลา · กุ้ง · หอย · ปลาหมึก" },
+  { k: "100%", v: "ปลอดภัย ไร้กังวลเรื่องข้อมูลส่วนตัว" },
 ];
 
 export function Stats() {
   return (
-    <section id="stats" className="py-24 md:py-32 bg-gradient-to-b from-background to-secondary/30">
+    <section
+      id="standards"
+      className="py-24 md:py-32 bg-gradient-to-b from-background to-secondary/30"
+    >
       <div className="mx-auto max-w-6xl px-4">
         <div className="max-w-2xl">
           <div className="text-xs uppercase tracking-[0.2em] text-coral font-semibold">
-            เกณฑ์ความสำเร็จ
+            มาตรฐานการประเมิน
           </div>
           <h2 className="mt-3 text-4xl md:text-5xl font-bold tracking-tight">
-            วัดผลด้วยตัวเลขที่ชัดเจน
+            เกณฑ์คุณภาพที่โปร่งใส
+            <br />
+            และตรวจสอบได้
           </h2>
           <p className="mt-5 text-muted-foreground leading-relaxed">
-            ตั้งเป้าหมายที่ท้าทายแต่วัดผลได้ ทั้งด้านความแม่นยำของโมเดล ความเร็วในการตอบสนอง
-            และความพึงพอใจของผู้ใช้
+            เราออกแบบเกณฑ์การประเมินให้ผู้บริโภค แม่บ้าน และร้านอาหารสามารถตัดสินใจได้อย่างมั่นใจ
+            พร้อมกราฟวิเคราะห์คุณลักษณะรอบด้านในทุกการสแกน
           </p>
         </div>
 
@@ -61,7 +66,7 @@ export function Stats() {
               transition={{ duration: 0.4, delay: i * 0.08 }}
               className="rounded-2xl p-6 bg-card border border-border"
             >
-              <div className="text-4xl font-display font-bold text-gradient-ocean">{t.k}</div>
+              <div className="text-3xl font-display font-bold text-gradient-ocean">{t.k}</div>
               <div className="mt-2 text-sm text-muted-foreground">{t.v}</div>
             </motion.div>
           ))}
@@ -109,10 +114,7 @@ export function Stats() {
               <ul className="space-y-3">
                 {gradeData.map((d) => (
                   <li key={d.name} className="flex items-center gap-3">
-                    <span
-                      className="size-3 rounded-sm"
-                      style={{ backgroundColor: d.color }}
-                    />
+                    <span className="size-3 rounded-sm" style={{ backgroundColor: d.color }} />
                     <div className="flex-1 text-sm">{d.name}</div>
                     <div className="font-display font-bold">{d.value}%</div>
                   </li>
@@ -136,8 +138,17 @@ export function Stats() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={typeData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                  <XAxis dataKey="type" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+                  <XAxis
+                    dataKey="type"
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
                   <Tooltip
                     cursor={{ fill: "var(--secondary)" }}
                     contentStyle={{

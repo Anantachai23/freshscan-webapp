@@ -37,10 +37,10 @@ export type SeafoodResult = {
   /** คะแนนละเอียดสำหรับกราฟแท่ง (Composition) */
   composition: {
     freshness: number; // ความสดโดยรวม
-    texture: number;   // ลักษณะเนื้อ
-    color: number;     // สีและลักษณะภายนอก
-    odor: number;      // กลิ่น
-    moisture: number;  // ความชุ่มชื้น
+    texture: number; // ลักษณะเนื้อ
+    color: number; // สีและลักษณะภายนอก
+    odor: number; // กลิ่น
+    moisture: number; // ความชุ่มชื้น
   };
 };
 
@@ -103,7 +103,8 @@ export const PRODUCT_TYPES: ProductType[] = [
           { name: "กลิ่นทะเลธรรมชาติ", score: 92 },
         ],
         composition: { freshness: 92, texture: 90, color: 91, odor: 94, moisture: 87 },
-        reason: "กุ้งขาวสดมาก เปลือกใส หัวไม่หลุดจากลำตัว เหมาะสำหรับเมนูซาชิมิและปรุงอาหารทุกรูปแบบ",
+        reason:
+          "กุ้งขาวสดมาก เปลือกใส หัวไม่หลุดจากลำตัว เหมาะสำหรับเมนูซาชิมิและปรุงอาหารทุกรูปแบบ",
       },
       {
         grade: "B",

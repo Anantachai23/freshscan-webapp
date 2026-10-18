@@ -95,11 +95,9 @@ export async function prepareImageForAnalysis(file: File): Promise<ResizeOutcome
     blob = await canvasToBlob(canvas, quality);
   }
 
-  const resizedFile = new File(
-    [blob],
-    file.name.replace(/\.\w+$/, "") + "-optimized.jpg",
-    { type: "image/jpeg" },
-  );
+  const resizedFile = new File([blob], file.name.replace(/\.\w+$/, "") + "-optimized.jpg", {
+    type: "image/jpeg",
+  });
   const dataUrl = await readAsDataUrl(resizedFile);
 
   return {

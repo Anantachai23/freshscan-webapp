@@ -52,19 +52,26 @@ export interface AnalyzeResult {
  */
 
 type Calibration = {
-  categories: Record<
-    string,
-    { count: number; mean: Record<keyof ImageFeatures, number> }
-  >;
+  categories: Record<string, { count: number; mean: Record<keyof ImageFeatures, number> }>;
 };
 
 const calibration = calibrationData as unknown as Calibration;
 
-function calibrationScoreNudge(seafoodType: SeafoodTypeId, features: ImageFeatures): { nudge: number; used: boolean } {
+function calibrationScoreNudge(
+  seafoodType: SeafoodTypeId,
+  features: ImageFeatures,
+): { nudge: number; used: boolean } {
   const grades: FreshnessGrade[] = ["A", "B", "C"];
   const entries = grades
     .map((g) => ({ grade: g, cat: calibration.categories?.[`${seafoodType}:${g}`] }))
-    .filter((e): e is { grade: FreshnessGrade; cat: { count: number; mean: Record<keyof ImageFeatures, number> } } => !!e.cat && e.cat.count >= 3);
+    .filter(
+      (
+        e,
+      ): e is {
+        grade: FreshnessGrade;
+        cat: { count: number; mean: Record<keyof ImageFeatures, number> };
+      } => !!e.cat && e.cat.count >= 3,
+    );
 
   if (entries.length < 2) return { nudge: 0, used: false };
 
@@ -88,7 +95,14 @@ function calibrationScoreNudge(seafoodType: SeafoodTypeId, features: ImageFeatur
 }
 
 function featureScore(features: ImageFeatures): number {
-  const { brightness, saturation, darkSpotRatio, dullYellowBrownRatio, colorUniformity, edgeSharpness } = features;
+  const {
+    brightness,
+    saturation,
+    darkSpotRatio,
+    dullYellowBrownRatio,
+    colorUniformity,
+    edgeSharpness,
+  } = features;
   let s = 0.5;
   s += (brightness - 0.45) * 0.55;
   s += (saturation - 0.25) * 0.65;
@@ -109,8 +123,10 @@ export async function analyzeImage(
   const signal = featureScore(features);
 
   const criteriaScores: CriterionScore[] = type.scoreCriteria.map((c, i) => {
-    const colorLeaning = 0.6 * signal + 0.4 * (1 - features.dullYellowBrownRatio) * 0.5 + 0.4 * features.saturation;
-    const textureLeaning = 0.6 * signal + 0.4 * features.edgeSharpness * 0.6 + 0.4 * (1 - features.darkSpotRatio) * 0.5;
+    const colorLeaning =
+      0.6 * signal + 0.4 * (1 - features.dullYellowBrownRatio) * 0.5 + 0.4 * features.saturation;
+    const textureLeaning =
+      0.6 * signal + 0.4 * features.edgeSharpness * 0.6 + 0.4 * (1 - features.darkSpotRatio) * 0.5;
     const blended = i % 2 === 0 ? colorLeaning : textureLeaning;
     const norm = Math.max(0, Math.min(1, blended));
     const score = Math.round(norm * c.max * 10) / 10;
@@ -144,17 +160,27 @@ export async function analyzeImage(
     `จุดสังเกตเพิ่มเติม: ${cuesData.reject}`,
   ];
   if (features.darkSpotRatio > 0.08) {
-    cues.push("ตรวจพบบริเวณสีเข้ม/รอยดำในภาพมากกว่าปกติ (วิเคราะห์จากพิกเซลจริง) อาจเป็นรอยช้ำหรือการเสื่อมคุณภาพ");
+    cues.push(
+      "ตรวจพบบริเวณสีเข้ม/รอยดำในภาพมากกว่าปกติ (วิเคราะห์จากพิกเซลจริง) อาจเป็นรอยช้ำหรือการเสื่อมคุณภาพ",
+    );
   }
   if (features.dullYellowBrownRatio > 0.08) {
-    cues.push("ตรวจพบโทนสีเหลือง/น้ำตาลหม่นในภาพ (วิเคราะห์จากพิกเซลจริง) ซึ่งมักพบเมื่อคุณภาพเริ่มลดลง");
+    cues.push(
+      "ตรวจพบโทนสีเหลือง/น้ำตาลหม่นในภาพ (วิเคราะห์จากพิกเซลจริง) ซึ่งมักพบเมื่อคุณภาพเริ่มลดลง",
+    );
   }
   if (usedCalibration) {
     cues.push("ผลลัพธ์นี้ปรับเทียบเพิ่มเติมด้วยชุดภาพอ้างอิงจริงใน Datasetimage");
   }
 
   const freshnessScore = Math.round((score20 / score20Max) * 100);
-  const species = type.supportedSpeciesTh[Math.min(type.supportedSpeciesTh.length - 1, Math.round(signal * (type.supportedSpeciesTh.length - 1)))];
+  const species =
+    type.supportedSpeciesTh[
+      Math.min(
+        type.supportedSpeciesTh.length - 1,
+        Math.round(signal * (type.supportedSpeciesTh.length - 1)),
+      )
+    ];
 
   return {
     seafoodType,

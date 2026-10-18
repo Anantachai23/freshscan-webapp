@@ -221,9 +221,9 @@ export const DATASET_REFERENCES: DatasetRef[] = [
     usage: "ground truth (TH)",
   },
   {
-    name: "In-house Field Collection (28P23W01274)",
-    desc: "ภาพถ่ายจากตลาดสด/แพปลาชายฝั่งไทย ที่ทีมงานจัดเก็บและติดป้ายโดยผู้เชี่ยวชาญ",
+    name: "In-house Field Collection (FreshScan Reference)",
+    desc: "ภาพถ่ายจากตลาดสด/แพปลาชายฝั่งไทย ที่จัดเก็บและประเมินเกณฑ์โดยผู้เชี่ยวชาญ",
     url: "#",
-    usage: "primary training set",
+    usage: "primary reference set",
   },
 ];

@@ -16,12 +16,7 @@
   },
   "image_quality_acceptance": {
     "min_resolution": "1024x1024 recommended, 640x640 minimum after crop",
-    "allowed_formats": [
-      "jpg",
-      "jpeg",
-      "png",
-      "webp"
-    ],
+    "allowed_formats": ["jpg", "jpeg", "png", "webp"],
     "reject_if": [
       "ภาพเบลอจนมองไม่เห็น cue หลัก",
       "อาหารทะเลถูกบังเกิน 30% ของพื้นที่สำคัญ",

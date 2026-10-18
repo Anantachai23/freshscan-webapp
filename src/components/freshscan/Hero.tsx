@@ -21,7 +21,7 @@ export function Hero() {
             className="inline-flex items-center gap-2 rounded-full border border-ocean/20 bg-white/60 px-3.5 py-1.5 text-xs font-medium text-ocean-deep"
           >
             <Sparkles className="size-3.5 text-coral" />
-            โครงการ NSC ครั้งที่ 28 · ระดับนักเรียน
+            นวัตกรรม AI ช่วยตรวจประเมินคุณภาพอาหารทะเล
           </motion.div>
 
           <motion.h1
@@ -31,7 +31,8 @@ export function Hero() {
             className="mt-5 text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight"
           >
             ประเมิน<span className="text-gradient-ocean">ความสด</span>
-            <br />อาหารทะเล
+            <br />
+            อาหารทะเล
             <br />
             <span className="relative inline-block">
               ใน 3 วินาที
@@ -60,8 +61,8 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mt-7 text-lg text-muted-foreground max-w-xl leading-relaxed"
           >
-            ถ่ายภาพจากสมาร์ทโฟน แล้วให้ Machine Learning วิเคราะห์ระดับความสด
-            พร้อมคำอธิบายแบบเข้าใจง่าย ช่วยลด Food Waste และปกป้องสุขภาพผู้บริโภค
+            ถ่ายภาพจากสมาร์ทโฟน แล้วให้ระบบวิเคราะห์ระดับความสด เกรด A / B / C
+            พร้อมเหตุผลและคำแนะนำทันที ช่วยเลือกซื้อวัตถุดิบคุณภาพ คุ้มราคา และปลอดภัยต่อสุขภาพ
           </motion.p>
 
           <motion.div
@@ -93,9 +94,9 @@ export function Hero() {
             className="mt-12 flex flex-wrap items-end gap-x-10 gap-y-5"
           >
             {[
-              { k: "≥ 85%", v: "Accuracy" },
-              { k: "< 3s", v: "Response time" },
-              { k: "5,000+", v: "Training images" },
+              { k: "4 หมวด", v: "ปลา · กุ้ง · หอย · หมึก" },
+              { k: "< 3s", v: "วิเคราะห์ผลทันใจ" },
+              { k: "20 คะแนน", v: "เกณฑ์ประเมินละเอียด" },
             ].map((s) => (
               <div key={s.v}>
                 <div className="text-3xl font-bold font-display text-ocean-deep">{s.k}</div>

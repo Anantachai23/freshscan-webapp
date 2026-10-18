@@ -155,7 +155,14 @@ export function extractFeaturesFromRGBA(data: Uint8ClampedArray | Uint8Array): I
   }
   const edgeSharpness = Math.min(1, (gradSum / gradWeight) * 8);
 
-  return { brightness, saturation, darkSpotRatio, dullYellowBrownRatio, colorUniformity, edgeSharpness };
+  return {
+    brightness,
+    saturation,
+    darkSpotRatio,
+    dullYellowBrownRatio,
+    colorUniformity,
+    edgeSharpness,
+  };
 }
 
 /** Browser entry point: draws the file onto an offscreen canvas at SIZE x SIZE and extracts features. */
