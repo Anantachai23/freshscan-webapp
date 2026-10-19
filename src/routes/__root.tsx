@@ -73,23 +73,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Scroll Tied Video Section — FreshScan Marine" },
+      { title: "FreshScan AI — Seafood Freshness Assessment" },
       {
         name: "description",
         content:
-          "Cinematic scroll-tied video experience for AI seafood freshness evaluation with living coral reef and optical computer vision.",
+          "FreshScan AI — Seafood Freshness Assessment service. Know how fresh, before it reaches your table.",
       },
-      { property: "og:title", content: "Scroll Tied Video Section — FreshScan Marine" },
+      { property: "og:title", content: "FreshScan AI — Seafood Freshness Assessment" },
       {
         property: "og:description",
-        content: "Professional-grade seafood quality assessment powered by computer vision and QIM standards.",
+        content: "AI-powered seafood freshness grading from ocean surface to coral depth.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Scroll Tied Video Section — FreshScan Marine" },
+      { name: "twitter:title", content: "FreshScan AI — Seafood Freshness Assessment" },
       {
         name: "twitter:description",
-        content: "Professional-grade seafood quality assessment powered by computer vision and QIM standards.",
+        content: "AI-powered seafood freshness grading from ocean surface to coral depth.",
       },
     ],
     links: [

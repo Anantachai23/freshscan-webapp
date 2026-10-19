@@ -4,11 +4,11 @@ import { App } from "@/App";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Scroll Tied Video Section — FreshScan Marine" },
+      { title: "FreshScan AI — Seafood Freshness Assessment" },
       {
         name: "description",
         content:
-          "Cinematic scroll-tied video experience for AI seafood freshness evaluation with living coral reef and optical computer vision.",
+          "FreshScan AI — Seafood Freshness Assessment. Know how fresh, before it reaches your table.",
       },
     ],
   }),

@@ -113,9 +113,8 @@
     scroll-behavior: smooth;
   }
   body {
-    background: var(--background);
-    color: var(--foreground);
-    font-family: var(--font-sans);
+    overflow-x: hidden;
+    font-family: 'Helvetica Neue ME', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-feature-settings: "ss01", "cv01";
     -webkit-font-smoothing: antialiased;
   }

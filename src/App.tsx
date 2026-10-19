@@ -1,15 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
-import { ArrowRight, ArrowDown, ChevronUp, Info, X, Camera, Upload, Sparkles, CheckCircle2, AlertTriangle, RefreshCw } from "lucide-react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { ArrowRight, ArrowDown, ChevronUp, Info, X, Camera, Upload, Sparkles } from "lucide-react";
 import { useVideoScrub } from "./useVideoScrub";
 import { analyzeImage, type AnalyzeResult } from "@/lib/freshnessAnalyzer";
 import { type SeafoodTypeId } from "@/data/freshscan_taxonomy";
 import sampleFishImg from "@/assets/fish-sample.jpg";
-import heroSeafoodImg from "@/assets/hero-seafood.jpg";
 
-const VIDEO_URL =
-  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260821_114821_a8ca298f-be2c-4613-a4dd-51b69e16bbde.mp4";
-
-const DARK = "#1D3045";
+// ============================================================================
+// CONSTANTS & COLOR PALETTE
+// ============================================================================
+const VIDEO_URL = "https://screenapp.io/app/share/vYumBXufE6yNlu_4opIu4mfS";
+const DARK = "#0B2A3C"; // deep navy-teal, text on light/bright frames
+const ACCENT = "#FF6B5B"; // coral, used ONLY for small accents (freshness badge, active dot)
+const LIGHT_UNTIL = 0.45; // while p <= LIGHT_UNTIL text is DARK, after that text is white
 
 // Stagger Animation Component
 function Stagger({
@@ -44,14 +46,11 @@ export function App() {
     canvasRef,
     scrollProgress,
     canvasLive,
-    isLight,
   } = useVideoScrub(VIDEO_URL);
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [navMounted, setNavMounted] = useState(false);
-
-  // Theme toggle: Seafood FreshScan (user requested) vs Exact Vectrus Spec
-  const [themeMode, setThemeMode] = useState<"seafood" | "vectrus">("seafood");
+  const [activeNav, setActiveNav] = useState("FRESHSCAN AI");
 
   // Scanner Modal state
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -61,9 +60,6 @@ export function App() {
   const [analyzeResult, setAnalyzeResult] = useState<AnalyzeResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hiddenImgRef = useRef<HTMLImageElement>(null);
-
-  // Coral Canvas Ref for Living Marine Reef Effect
-  const coralCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Entrance animation for Navbar
   useEffect(() => {
@@ -85,164 +81,184 @@ export function App() {
     };
   }, [mobileOpen, scannerOpen]);
 
-  // Section Opacities derived from scrollProgress p
+  // Scroll progress p clamped [0, 1]
   const p = scrollProgress;
 
-  const s1Opacity = p < 0.2 ? 1 : Math.max(0, 1 - (p - 0.2) / 0.08);
+  // Color follows text color (DARK → white at LIGHT_UNTIL)
+  const currentTextColor = p <= LIGHT_UNTIL ? DARK : "#ffffff";
+  const navColor = currentTextColor;
+  const navInvertedText = p <= LIGHT_UNTIL ? "#ffffff" : DARK;
+
+  // =========================================================================
+  // TEXT SECTIONS ARE SEQUENTIAL (previous fully fades out before next appears)
+  // =========================================================================
+  const s1Opacity = p < 0.15 ? 1 : Math.max(0, 1 - (p - 0.15) / 0.07);
 
   const s2Opacity =
-    p < 0.32
+    p < 0.22
       ? 0
-      : p < 0.4
-      ? (p - 0.32) / 0.08
-      : p < 0.55
+      : p < 0.29
+      ? (p - 0.22) / 0.07
+      : p < 0.40
       ? 1
-      : Math.max(0, 1 - (p - 0.55) / 0.08);
+      : Math.max(0, 1 - (p - 0.40) / 0.07);
 
-  const s3Opacity = p < 0.67 ? 0 : p < 0.75 ? (p - 0.67) / 0.08 : 1;
+  const s3Opacity =
+    p < 0.53
+      ? 0
+      : p < 0.60
+      ? (p - 0.53) / 0.07
+      : p < 0.70
+      ? 1
+      : Math.max(0, 1 - (p - 0.70) / 0.07);
 
-  const navColor = isLight ? DARK : "#ffffff";
+  const s4Opacity =
+    p < 0.82
+      ? 0
+      : p < 0.90
+      ? (p - 0.82) / 0.08
+      : 1;
 
-  // Scroll Progress ref for 60fps canvas simulation
-  const progressRef = useRef(0);
+  // =========================================================================
+  // PROCEDURAL UNDERWATER DESCENT CANVAS ENGINE
+  // Renders continuous vertical descent if video source is loading/fallback
+  // =========================================================================
+  const underwaterCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  const marineElements = useMemo(() => {
+    const bubbles = Array.from({ length: 45 }, () => ({
+      x: Math.random() * 1920,
+      y: Math.random() * 1080,
+      r: Math.random() * 3 + 1,
+      speed: Math.random() * 1.8 + 0.8,
+      wobble: Math.random() * Math.PI * 2,
+    }));
+
+    const silverFish = Array.from({ length: 18 }, () => ({
+      x: Math.random() * 1920,
+      y: 260 + Math.random() * 540,
+      size: Math.random() * 7 + 6,
+      vx: Math.random() * 1.5 + 1.2,
+      phase: Math.random() * Math.PI * 2,
+    }));
+
+    const marineSnow = Array.from({ length: 60 }, () => ({
+      x: Math.random() * 1920,
+      y: Math.random() * 1080,
+      r: Math.random() * 2 + 0.8,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: Math.random() * 0.7 + 0.4,
+      opacity: Math.random() * 0.5 + 0.2,
+    }));
+
+    const turtle = {
+      x: 350,
+      y: 620,
+      vx: 0.75,
+      flipperAngle: 0,
+      draw(ctx: CanvasRenderingContext2D, time: number, alpha: number) {
+        this.x += this.vx;
+        if (this.x > 2100) this.x = -200;
+        this.flipperAngle = Math.sin(time * 2.2) * 0.45;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(this.x, this.y + Math.sin(time * 0.8) * 12);
+        ctx.scale(1.15, 1.15);
+
+        // Shell
+        const shellGrad = ctx.createRadialGradient(0, 0, 8, 0, 0, 32);
+        shellGrad.addColorStop(0, "rgba(56, 189, 248, 0.45)");
+        shellGrad.addColorStop(0.7, "rgba(14, 116, 144, 0.65)");
+        shellGrad.addColorStop(1, "rgba(8, 47, 73, 0.85)");
+        ctx.fillStyle = shellGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 32, 22, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Front flipper
+        ctx.save();
+        ctx.translate(14, -10);
+        ctx.rotate(this.flipperAngle);
+        ctx.fillStyle = "rgba(14, 116, 144, 0.7)";
+        ctx.beginPath();
+        ctx.ellipse(14, -8, 20, 6, -0.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Head
+        ctx.fillStyle = "rgba(14, 116, 144, 0.75)";
+        ctx.beginPath();
+        ctx.ellipse(36, 0, 10, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      },
+    };
+
+    return { bubbles, silverFish, marineSnow, turtle };
+  }, []);
+
   useEffect(() => {
-    progressRef.current = scrollProgress;
-  }, [scrollProgress]);
-
-  // Seamless Continuous Vertical Descent Simulation (Active when themeMode === 'seafood')
-  useEffect(() => {
-    const canvas = coralCanvasRef.current;
-    if (!canvas || themeMode !== "seafood") return;
+    const canvas = underwaterCanvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     let animId: number;
-    let w = (canvas.width = window.innerWidth);
-    let h = (canvas.height = window.innerHeight);
-
-    const onResize = () => {
-      w = canvas.width = window.innerWidth;
-      h = canvas.height = window.innerHeight;
-    };
-    window.addEventListener("resize", onResize);
-
-    // 1. Schools of Small Silver Fish (Teleostei)
-    const silverFish: { x: number; y: number; vx: number; size: number; phase: number }[] = [];
-    for (let i = 0; i < 28; i++) {
-      silverFish.push({
-        x: Math.random() * w,
-        y: h * 0.35 + Math.random() * (h * 0.4),
-        vx: 0.9 + Math.random() * 0.7,
-        size: 3 + Math.random() * 2.2,
-        phase: Math.random() * Math.PI * 2,
-      });
-    }
-
-    // 2. Rising Bubbles from Surface Plunge
-    const bubbles: { x: number; y: number; r: number; speed: number; wobble: number }[] = [];
-    for (let b = 0; b < 35; b++) {
-      bubbles.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        r: 1.2 + Math.random() * 3.5,
-        speed: 0.6 + Math.random() * 1.2,
-        wobble: Math.random() * 10,
-      });
-    }
-
-    // 3. Deep Marine Snow Particles (Hadal / Deep Reef Base)
-    const marineSnow: { x: number; y: number; r: number; vy: number; vx: number; opacity: number }[] = [];
-    for (let s = 0; s < 60; s++) {
-      marineSnow.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        r: 0.8 + Math.random() * 1.8,
-        vy: 0.2 + Math.random() * 0.4,
-        vx: (Math.random() - 0.5) * 0.2,
-        opacity: 0.2 + Math.random() * 0.6,
-      });
-    }
-
-    // 4. Sea Turtle passing through the vibrant reef
-    const turtle = {
-      x: -160,
-      y: h * 0.48,
-      vx: 0.5,
-      draw(c: CanvasRenderingContext2D, t: number, alpha: number) {
-        if (alpha <= 0.02) return;
-        this.x += this.vx;
-        if (this.x > w + 200) this.x = -200;
-
-        c.save();
-        c.globalAlpha = alpha;
-        c.translate(this.x, this.y + Math.sin(t * 1.5) * 6);
-        c.scale(0.85, 0.85);
-
-        const flap = Math.sin(t * 2) * 0.3;
-
-        // Shell (Carapace)
-        c.fillStyle = "rgba(15, 76, 92, 0.65)";
-        c.beginPath();
-        c.ellipse(0, 0, 38, 28, 0, 0, Math.PI * 2);
-        c.fill();
-        c.strokeStyle = "rgba(56, 189, 248, 0.45)";
-        c.lineWidth = 1.5;
-        c.stroke();
-
-        // Flippers
-        c.fillStyle = "rgba(20, 90, 110, 0.55)";
-        c.save();
-        c.translate(14, -18);
-        c.rotate(-0.4 + flap);
-        c.beginPath();
-        c.ellipse(12, -4, 22, 7, 0.4, 0, Math.PI * 2);
-        c.fill();
-        c.restore();
-
-        c.save();
-        c.translate(14, 18);
-        c.rotate(0.4 - flap);
-        c.beginPath();
-        c.ellipse(12, 4, 22, 7, -0.4, 0, Math.PI * 2);
-        c.fill();
-        c.restore();
-
-        // Head
-        c.beginPath();
-        c.ellipse(44, 0, 10, 7, 0, 0, Math.PI * 2);
-        c.fill();
-        c.restore();
-      },
-    };
-
     let time = 0;
+
     const render = () => {
       time += 0.016;
-      const p = progressRef.current; // 0 (surface) -> 1 (deep reef base)
+      const w = canvas.width;
+      const h = canvas.height;
+      const { bubbles, silverFish, marineSnow, turtle } = marineElements;
 
       ctx.clearRect(0, 0, w, h);
 
-      // =====================================================================
-      // STAGE 1: SURFACE (p < 0.25) — Sunlit ripples & pale aqua highlights
-      // =====================================================================
+      // BASE CONTINUOUS WATER GRADIENT (Surface pale aqua → Deep dark indigo)
+      const waterGrad = ctx.createLinearGradient(0, 0, 0, h);
+      if (p < 0.25) {
+        // Sunlit ocean surface
+        waterGrad.addColorStop(0, "#bae6fd");
+        waterGrad.addColorStop(0.4, "#7dd3fc");
+        waterGrad.addColorStop(1, "#38bdf8");
+      } else if (p < 0.55) {
+        // Clear turquoise shallow water
+        waterGrad.addColorStop(0, "#38bdf8");
+        waterGrad.addColorStop(0.5, "#0284c7");
+        waterGrad.addColorStop(1, "#0369a1");
+      } else if (p < 0.8) {
+        // Vibrant coral reef water
+        waterGrad.addColorStop(0, "#0284c7");
+        waterGrad.addColorStop(0.5, "#0369a1");
+        waterGrad.addColorStop(1, "#075985");
+      } else {
+        // Deep blue ocean water
+        waterGrad.addColorStop(0, "#075985");
+        waterGrad.addColorStop(0.5, "#0c4a6e");
+        waterGrad.addColorStop(1, "#082f49");
+      }
+      ctx.fillStyle = waterGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // STAGE 1: SURFACE (p < 0.35) — Sunlit ripples & pale aqua highlights
       if (p < 0.35) {
         const surfaceAlpha = Math.max(0, 1 - p / 0.35);
         ctx.save();
-        ctx.globalAlpha = surfaceAlpha * 0.4;
+        ctx.globalAlpha = surfaceAlpha * 0.55;
         ctx.globalCompositeOperation = "screen";
 
-        // Gentle surface ripple lines
-        ctx.strokeStyle = "rgba(224, 242, 254, 0.5)";
-        ctx.lineWidth = 1.5;
-        for (let r = 0; r < 4; r++) {
-          const yOffset = (r * 35) + Math.sin(time * 1.5 + r) * 10;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+        ctx.lineWidth = 1.8;
+        for (let r = 0; r < 5; r++) {
+          const yOffset = r * 45 + Math.sin(time * 1.5 + r) * 12;
           ctx.beginPath();
           ctx.moveTo(0, yOffset);
-          for (let x = 0; x < w; x += 50) {
+          for (let x = 0; x < w; x += 60) {
             ctx.quadraticCurveTo(
-              x + 25,
-              yOffset + Math.sin(x * 0.01 + time * 2) * 8,
-              x + 50,
+              x + 30,
+              yOffset + Math.sin(x * 0.01 + time * 2) * 10,
+              x + 60,
               yOffset
             );
           }
@@ -251,27 +267,25 @@ export function App() {
         ctx.restore();
       }
 
-      // =====================================================================
-      // STAGE 2: PLUNGE & GOD RAYS (p 0.15 - 0.70)
-      // =====================================================================
+      // STAGE 2: PLUNGE & GOD RAYS (p 0.12 - 0.75)
       if (p > 0.1 && p < 0.8) {
-        const rayAlpha = Math.sin(((p - 0.1) / 0.7) * Math.PI) * 0.25;
+        const rayAlpha = Math.sin(((p - 0.1) / 0.7) * Math.PI) * 0.35;
         ctx.save();
         ctx.globalAlpha = rayAlpha;
         ctx.globalCompositeOperation = "screen";
 
-        for (let i = 0; i < 5; i++) {
-          const beamX = w * 0.45 + Math.sin(time * 0.4 + i * 1.4) * (w * 0.3);
+        for (let i = 0; i < 6; i++) {
+          const beamX = w * 0.45 + Math.sin(time * 0.4 + i * 1.3) * (w * 0.32);
           const g = ctx.createLinearGradient(w * 0.5, 0, beamX, h);
-          g.addColorStop(0, "rgba(224, 242, 254, 0.22)");
-          g.addColorStop(0.5, "rgba(56, 189, 248, 0.08)");
+          g.addColorStop(0, "rgba(255, 255, 255, 0.32)");
+          g.addColorStop(0.4, "rgba(186, 230, 253, 0.18)");
           g.addColorStop(1, "rgba(56, 189, 248, 0)");
           ctx.fillStyle = g;
           ctx.beginPath();
-          ctx.moveTo(w * 0.5 - 30, 0);
-          ctx.lineTo(w * 0.5 + 30, 0);
-          ctx.lineTo(beamX + 130, h);
-          ctx.lineTo(beamX - 130, h);
+          ctx.moveTo(w * 0.5 - 35, 0);
+          ctx.lineTo(w * 0.5 + 35, 0);
+          ctx.lineTo(beamX + 160, h);
+          ctx.lineTo(beamX - 160, h);
           ctx.closePath();
           ctx.fill();
         }
@@ -279,10 +293,10 @@ export function App() {
 
         // Rising bubbles during plunge
         ctx.save();
-        ctx.globalAlpha = Math.min(1, rayAlpha * 3.5);
+        ctx.globalAlpha = Math.min(1, rayAlpha * 3.2);
         ctx.fillStyle = "rgba(224, 242, 254, 0.45)";
-        ctx.strokeStyle = "rgba(186, 230, 253, 0.8)";
-        ctx.lineWidth = 0.8;
+        ctx.strokeStyle = "rgba(186, 230, 253, 0.85)";
+        ctx.lineWidth = 1;
         for (const b of bubbles) {
           b.y -= b.speed;
           b.x += Math.sin(time * 2 + b.wobble) * 0.4;
@@ -298,59 +312,57 @@ export function App() {
         ctx.restore();
       }
 
-      // =====================================================================
-      // STAGE 3: VIBRANT CORAL REEF & FISH (p 0.28 - 0.85)
-      // =====================================================================
-      if (p > 0.2) {
-        const reefAlpha = Math.min(1, (p - 0.2) / 0.25);
-        const depthDescent = p * 60; // Parallax vertical rise as camera descends
+      // STAGE 3: VIBRANT CORAL REEF & FISH (p 0.25 - 0.88)
+      if (p > 0.22) {
+        const reefAlpha = Math.min(1, (p - 0.22) / 0.22);
+        const depthDescent = p * 70;
 
         ctx.save();
-        ctx.globalAlpha = reefAlpha * 0.75;
+        ctx.globalAlpha = reefAlpha * 0.85;
 
         // Sea Anemones & Colorful Coral Polyps
-        const coralBase = h + 20 - depthDescent * 0.4;
+        const coralBase = h + 25 - depthDescent * 0.35;
         const coralColors = [
-          "rgba(244, 63, 94, 0.55)",  // Coral Rose
-          "rgba(251, 191, 36, 0.55)", // Golden Fan
-          "rgba(56, 189, 248, 0.65)", // Cyan Sea Fan
-          "rgba(168, 85, 247, 0.5)",  // Purple Anemone
+          "rgba(244, 63, 94, 0.7)",   // Coral Rose
+          "rgba(251, 146, 60, 0.7)",  // Coral Orange
+          "rgba(56, 189, 248, 0.75)", // Cyan Sea Fan
+          "rgba(168, 85, 247, 0.65)", // Purple Anemone
         ];
 
-        ctx.lineWidth = 2.2;
-        for (let i = 0; i < 24; i++) {
-          const x = i * (w / 24) + 18;
-          const sway = Math.sin(time * 1.8 + i) * 14;
+        ctx.lineWidth = 2.4;
+        for (let i = 0; i < 28; i++) {
+          const x = i * (w / 28) + 16;
+          const sway = Math.sin(time * 1.8 + i) * 16;
           ctx.strokeStyle = coralColors[i % coralColors.length];
           ctx.beginPath();
           ctx.moveTo(x, coralBase);
-          ctx.quadraticCurveTo(x + sway * 0.5, coralBase - 50, x + sway, coralBase - 90);
+          ctx.quadraticCurveTo(x + sway * 0.5, coralBase - 60, x + sway, coralBase - 110);
           ctx.stroke();
 
           // Bioluminescent polyp tip
           ctx.fillStyle = ctx.strokeStyle;
           ctx.beginPath();
-          ctx.arc(x + sway, coralBase - 90, 2.5, 0, Math.PI * 2);
+          ctx.arc(x + sway, coralBase - 110, 3, 0, Math.PI * 2);
           ctx.fill();
         }
         ctx.restore();
 
         // Schools of Silver Fish Swimming
         ctx.save();
-        ctx.globalAlpha = reefAlpha * 0.85;
+        ctx.globalAlpha = reefAlpha * 0.9;
         for (const f of silverFish) {
           f.x += f.vx;
           f.y += Math.sin(time * 2.5 + f.phase) * 0.35;
-          if (f.x > w + 40) f.x = -40;
+          if (f.x > w + 50) f.x = -50;
 
           ctx.save();
           ctx.translate(f.x, f.y);
 
           // Gleaming Silver body with iridescent highlight
           const fishGrad = ctx.createLinearGradient(-f.size * 2, 0, f.size * 2, 0);
-          fishGrad.addColorStop(0, "rgba(224, 242, 254, 0.7)");
-          fishGrad.addColorStop(0.5, "rgba(255, 255, 255, 0.95)");
-          fishGrad.addColorStop(1, "rgba(56, 189, 248, 0.6)");
+          fishGrad.addColorStop(0, "rgba(224, 242, 254, 0.75)");
+          fishGrad.addColorStop(0.5, "rgba(255, 255, 255, 0.98)");
+          fishGrad.addColorStop(1, "rgba(56, 189, 248, 0.7)");
           ctx.fillStyle = fishGrad;
 
           ctx.beginPath();
@@ -359,7 +371,7 @@ export function App() {
           ctx.quadraticCurveTo(0, f.size * 0.8, f.size * 2, 0);
           ctx.fill();
 
-          // Fin wiggle
+          // Tail wiggle
           const tailWiggle = Math.sin(time * 8 + f.phase) * 3;
           ctx.beginPath();
           ctx.moveTo(-f.size * 1.6, 0);
@@ -373,28 +385,26 @@ export function App() {
         ctx.restore();
 
         // Sea Turtle passing gracefully
-        turtle.draw(ctx, time, reefAlpha * 0.8);
+        turtle.draw(ctx, time, reefAlpha * 0.85);
       }
 
-      // =====================================================================
-      // STAGE 4: DEEPER BLUE WATER & MARINE SNOW (p > 0.60)
-      // =====================================================================
-      if (p > 0.55) {
-        const deepAlpha = Math.min(1, (p - 0.55) / 0.35);
+      // STAGE 4: DEEPER BLUE WATER & MARINE SNOW (p > 0.55)
+      if (p > 0.52) {
+        const deepAlpha = Math.min(1, (p - 0.52) / 0.35);
 
-        // Deeper ambient dark veil overlay
+        // Deeper ambient dark navy veil
         ctx.save();
-        ctx.globalAlpha = deepAlpha * 0.45;
+        ctx.globalAlpha = deepAlpha * 0.55;
         const deepGrad = ctx.createLinearGradient(0, 0, 0, h);
         deepGrad.addColorStop(0, "rgba(1, 10, 25, 0)");
-        deepGrad.addColorStop(1, "rgba(2, 6, 23, 0.85)");
+        deepGrad.addColorStop(1, "#071b28");
         ctx.fillStyle = deepGrad;
         ctx.fillRect(0, 0, w, h);
         ctx.restore();
 
         // Soft floating marine snow particles
         ctx.save();
-        ctx.globalAlpha = deepAlpha * 0.7;
+        ctx.globalAlpha = deepAlpha * 0.75;
         for (const s of marineSnow) {
           s.y += s.vy;
           s.x += s.vx + Math.sin(time * 0.8 + s.y * 0.01) * 0.2;
@@ -415,454 +425,488 @@ export function App() {
     };
 
     animId = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(animId);
+  }, [p, marineElements]);
 
-    return () => {
-      window.removeEventListener("resize", onResize);
-      cancelAnimationFrame(animId);
-    };
-  }, [themeMode]);
+  // Handle Photo Upload & Freshness Analysis
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string;
+        setSelectedImage(dataUrl);
+        runFreshnessTest(dataUrl, selectedType);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
-  // Image Analysis Handler
-  const handleAnalyzeFile = (file: File) => {
-    const url = URL.createObjectURL(file);
-    setSelectedImage(url);
+  const runFreshnessTest = (imgSrc: string, species: SeafoodTypeId) => {
     setIsAnalyzing(true);
     setAnalyzeResult(null);
 
     const img = new Image();
-    img.src = url;
+    img.crossOrigin = "anonymous";
+    img.src = imgSrc;
     img.onload = () => {
-      setTimeout(() => {
-        try {
-          const res = analyzeImage(img, selectedType);
-          setAnalyzeResult(res);
-        } catch (e) {
-          console.error(e);
-        } finally {
-          setIsAnalyzing(false);
-        }
-      }, 500);
+      const res = analyzeImage(img, species);
+      setAnalyzeResult(res);
+      setIsAnalyzing(false);
+    };
+    img.onerror = () => {
+      setIsAnalyzing(false);
     };
   };
 
-  const handleSampleAnalyze = (sampleSrc: string) => {
-    setSelectedImage(sampleSrc);
-    setIsAnalyzing(true);
-    setAnalyzeResult(null);
-
-    const img = new Image();
-    img.src = sampleSrc;
-    img.onload = () => {
-      setTimeout(() => {
-        try {
-          const res = analyzeImage(img, selectedType);
-          setAnalyzeResult(res);
-        } catch (e) {
-          console.error(e);
-        } finally {
-          setIsAnalyzing(false);
-        }
-      }, 500);
-    };
-  };
-
-  // Nav links based on theme
-  const navLinks =
-    themeMode === "seafood"
-      ? [
-          { name: "FRESHSCAN AI", active: true },
-          { name: "SEAFOOD LABS", active: false },
-          { name: "CORAL REEF ATLAS", active: false },
-          { name: "QIM METRICS", active: false },
-          { name: "FRESHSCAN+", active: false },
-        ]
-      : [
-          { name: "VECTRUS ENERGY", active: true },
-          { name: "VECTRUS UPSTREAM", active: false },
-          { name: "VECTRUS MARKETS", active: false },
-          { name: "VECTRUS SYSTEMS", active: false },
-          { name: "VECTRUS+", active: false },
-        ];
+  const navLinks = [
+    "FRESHSCAN AI",
+    "SEAFOOD GUIDE",
+    "FRESHNESS GRADES",
+    "REEF & ORIGIN",
+    "FRESHSCAN+",
+  ];
 
   return (
     <div
       ref={containerRef}
-      className="relative h-[500vh] w-full font-helvetica select-none"
+      className="relative h-[600vh] bg-[#090807] font-['Helvetica_Neue_ME','Helvetica_Neue',Helvetica,Arial,sans-serif]"
     >
-      {/* Hidden Image for Analysis Reference */}
-      <img ref={hiddenImgRef} className="hidden" alt="analysis-ref" />
-
-      {/* Sticky Full-Viewport Stage */}
+      {/* ===================================================================
+          STICKY FULL-VIEWPORT SCENE (100vh)
+          =================================================================== */}
       <div className="sticky top-0 w-full h-screen overflow-hidden">
-        {/* 1) Looping/Scrub Video full cover */}
+        {/* 1) Underlying Video Element */}
         <video
           ref={videoRef}
           src={VIDEO_URL}
           muted
           playsInline
           preload="auto"
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          className="absolute inset-0 w-full h-full object-cover"
         />
 
-        {/* 2) Canvas 1920x1080 for smooth decoded frame scrubbing */}
+        {/* 2) Canvas for Decoded WebCodecs Frame Bank */}
         <canvas
           ref={canvasRef}
           width={1920}
           height={1080}
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 pointer-events-none"
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
           style={{ opacity: canvasLive ? 1 : 0 }}
         />
 
-        {/* Living Coral Reef & Marine Canvas Layer (Seafood Mode) */}
-        {themeMode === "seafood" && (
+        {/* Procedural Continuous Underwater Descent Canvas (Active when video is fallback/syncing) */}
+        {!canvasLive && (
           <canvas
-            ref={coralCanvasRef}
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none z-[5]"
+            ref={underwaterCanvasRef}
+            width={1920}
+            height={1080}
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
           />
         )}
 
-        {/* 3) Text & UI Overlay sits directly on video */}
-        <div className="absolute inset-0 pointer-events-none z-10">
-          {/* ===================================================================
-              NAVBAR (absolute top, z-50, pointer-events-auto)
-              =================================================================== */}
-          <nav className="absolute top-0 inset-x-0 z-50 pointer-events-auto px-6 sm:px-8 md:px-12 pt-8 sm:pt-12 pb-6 flex items-center justify-between">
-            {/* Left Cluster Desktop lg+ (5 links) */}
-            <div className="hidden lg:flex items-center gap-8 xl:gap-10">
-              {navLinks.map((link, idx) => (
-                <a
-                  key={link.name}
-                  href={`#${link.name.toLowerCase().replace(/\s+/g, "-")}`}
-                  className="relative text-xs tracking-[0.15em] uppercase font-medium hover:opacity-70 transition-colors duration-500"
+        {/* ===================================================================
+            DEPTH GAUGE (Signature Left Edge Element)
+            =================================================================== */}
+        <div
+          className="hidden md:flex fixed left-6 lg:left-8 top-1/2 -translate-y-1/2 z-40 items-center gap-3 pointer-events-none select-none transition-colors duration-500"
+          style={{ color: currentTextColor }}
+        >
+          {/* Thin vertical line 1px, 160px height at 30% alpha */}
+          <div
+            className="relative w-[1px] h-[160px]"
+            style={{
+              backgroundColor: currentTextColor,
+              opacity: 0.3,
+            }}
+          >
+            {/* Small 8px dot that moves down the line according to p */}
+            <div
+              className="absolute -left-[3.5px] w-2 h-2 rounded-full"
+              style={{
+                backgroundColor: ACCENT,
+                top: `${Math.min(152, p * 152)}px`,
+                transition: "top 0.08s linear",
+              }}
+            />
+          </div>
+          {/* Depth Label: "SURFACE" when p < 0.03, else Math.round(p * 30) + " m" */}
+          <span
+            className="text-xs tracking-[0.2em] font-medium tabular-nums transition-colors duration-500"
+            style={{ color: currentTextColor }}
+          >
+            {p < 0.03 ? "SURFACE" : `${Math.round(p * 30)} m`}
+          </span>
+        </div>
+
+        {/* ===================================================================
+            NAVBAR (Absolute Top, z-50, pointer-events-auto)
+            =================================================================== */}
+        <nav
+          className="absolute top-0 inset-x-0 z-50 pointer-events-auto flex items-center justify-between px-6 sm:px-8 md:px-12 pt-8 sm:pt-12 pb-6 transition-colors duration-500"
+          style={{ color: navColor }}
+        >
+          {/* Mobile <lg Hamburger (Left) */}
+          <div className="flex lg:hidden items-center">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="flex flex-col justify-center gap-[5px] p-2 -ml-2 cursor-pointer focus:outline-none"
+              aria-label="Open menu"
+            >
+              <span
+                className="w-6 h-[2px] transition-colors duration-500"
+                style={{ backgroundColor: navColor }}
+              />
+              <span
+                className="w-6 h-[2px] transition-colors duration-500"
+                style={{ backgroundColor: navColor }}
+              />
+              <span
+                className="w-4 h-[2px] transition-colors duration-500"
+                style={{ backgroundColor: navColor }}
+              />
+            </button>
+          </div>
+
+          {/* Desktop lg+ Left Cluster of 5 Links (pl-24 to clear depth gauge) */}
+          <div className="hidden lg:flex items-center gap-8 xl:gap-10 pl-24">
+            {navLinks.map((item, idx) => {
+              const isActive = activeNav === item;
+              return (
+                <button
+                  key={item}
+                  onClick={() => {
+                    setActiveNav(item);
+                    if (item === "FRESHSCAN AI") {
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    } else if (item === "SEAFOOD GUIDE") {
+                      const c = containerRef.current;
+                      if (c) window.scrollTo({ top: (c.offsetHeight - window.innerHeight) * 0.3, behavior: "smooth" });
+                    } else if (item === "FRESHNESS GRADES" || item === "REEF & ORIGIN") {
+                      const c = containerRef.current;
+                      if (c) window.scrollTo({ top: (c.offsetHeight - window.innerHeight) * 0.65, behavior: "smooth" });
+                    } else {
+                      setScannerOpen(true);
+                    }
+                  }}
+                  className="relative text-xs tracking-[0.15em] uppercase font-medium hover:opacity-70 transition-opacity cursor-pointer py-1"
                   style={{
                     color: navColor,
                     opacity: navMounted ? 1 : 0,
                     transform: navMounted ? "translateY(0)" : "translateY(-12px)",
-                    transition: `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${
-                      idx * 80 + 100
-                    }ms, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${
-                      idx * 80 + 100
-                    }ms, color 0.5s ease`,
+                    transition: `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 80 + 100}ms, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 80 + 100}ms, color 0.5s ease`,
                   }}
                 >
-                  {link.name}
-                  {link.active && (
+                  {item}
+                  {isActive && (
                     <span
-                      className="absolute left-0 -bottom-3 w-full h-[2px] transition-colors duration-500"
+                      className="absolute -bottom-3 left-0 right-0 h-[2px] transition-colors duration-500"
                       style={{ backgroundColor: navColor }}
                     />
                   )}
-                </a>
-              ))}
-            </div>
+                </button>
+              );
+            })}
+          </div>
 
-            {/* Mobile <lg Hamburger (Left side) */}
+          {/* Right Cluster (Hidden below sm) */}
+          <div
+            className="hidden sm:flex items-center gap-5 md:gap-7"
+            style={{
+              opacity: navMounted ? 1 : 0,
+              transform: navMounted ? "translateY(0)" : "translateY(-12px)",
+              transition: `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 500ms, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 500ms`,
+            }}
+          >
+            {/* PHOTO SCAN Pill Button */}
             <button
-              type="button"
-              onClick={() => setMobileOpen(true)}
-              className="lg:hidden flex flex-col justify-center items-start gap-[5px] p-2 focus:outline-none"
-              aria-label="Open menu"
-            >
-              <span
-                className="h-[2px] w-[24px] transition-colors duration-500"
-                style={{ backgroundColor: navColor }}
-              />
-              <span
-                className="h-[2px] w-[24px] transition-colors duration-500"
-                style={{ backgroundColor: navColor }}
-              />
-              <span
-                className="h-[2px] w-[16px] transition-colors duration-500"
-                style={{ backgroundColor: navColor }}
-              />
-            </button>
-
-            {/* Right Cluster */}
-            <div
-              className="flex items-center gap-6"
+              onClick={() => setScannerOpen(true)}
+              className="rounded-full px-4 py-2 flex items-center gap-2 cursor-pointer transition-all duration-300 hover:scale-105 shadow-sm"
               style={{
-                opacity: navMounted ? 1 : 0,
-                transform: navMounted ? "translateY(0)" : "translateY(-12px)",
-                transition:
-                  "opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 500ms, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 500ms",
+                backgroundColor: navColor,
+                color: navInvertedText,
               }}
             >
-              {/* Theme Switcher Pill (Switch between Seafood FreshScan and Exact Benchmark Spec) */}
-              <button
-                type="button"
-                onClick={() =>
-                  setThemeMode((prev) => (prev === "seafood" ? "vectrus" : "seafood"))
-                }
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] tracking-[0.1em] font-medium uppercase border transition-all duration-300 hover:scale-105"
-                style={{
-                  color: navColor,
-                  borderColor: isLight ? "rgba(29, 48, 69, 0.3)" : "rgba(255, 255, 255, 0.3)",
-                  backgroundColor: isLight ? "rgba(29, 48, 69, 0.06)" : "rgba(255, 255, 255, 0.1)",
-                }}
-                title="Switch Theme"
-              >
-                <span>{themeMode === "seafood" ? "🌊 SEAFOOD REEF" : "⚡ VECTRUS SPEC"}</span>
-              </button>
+              <Camera size={14} />
+              <span className="text-xs tracking-[0.15em] uppercase font-medium">
+                Photo Scan
+              </span>
+            </button>
 
-              {/* Instant Photo Scanner Launcher Button */}
-              <button
-                type="button"
-                onClick={() => setScannerOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] tracking-[0.15em] font-bold uppercase transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm"
+            {/* NEWS Label + 20px Info Circle */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs tracking-[0.2em] uppercase font-medium">
+                News
+              </span>
+              <div
+                className="w-5 h-5 rounded-full flex items-center justify-center transition-colors duration-500"
                 style={{
-                  backgroundColor: isLight ? DARK : "#ffffff",
-                  color: isLight ? "#ffffff" : DARK,
+                  backgroundColor: navColor,
+                  color: navInvertedText,
                 }}
               >
-                <Camera className="size-3.5" />
-                <span className="hidden sm:inline">PHOTO SCAN</span>
-              </button>
-
-              {/* Right Cluster elements: NEWS + Info circle + MENU */}
-              <div className="hidden sm:flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="text-xs tracking-[0.2em] uppercase font-medium transition-colors duration-500"
-                    style={{ color: navColor }}
-                  >
-                    NEWS
-                  </span>
-                  <div
-                    className="size-5 rounded-full flex items-center justify-center transition-colors duration-500"
-                    style={{ backgroundColor: navColor }}
-                  >
-                    <Info
-                      size={10}
-                      className="transition-colors duration-500"
-                      style={{ color: isLight ? "#ffffff" : DARK }}
-                    />
-                  </div>
-                </div>
-
-                {/* MENU label: span on lg+, button below lg */}
-                <button
-                  type="button"
-                  onClick={() => setMobileOpen(true)}
-                  className="lg:hidden text-xs tracking-[0.2em] uppercase font-medium focus:outline-none transition-colors duration-500"
-                  style={{ color: navColor }}
-                >
-                  MENU
-                </button>
-                <span
-                  className="hidden lg:inline text-xs tracking-[0.2em] uppercase font-medium transition-colors duration-500"
-                  style={{ color: navColor }}
-                >
-                  MENU
-                </span>
+                <Info size={10} />
               </div>
             </div>
-          </nav>
 
-          {/* ===================================================================
-              SECTION 1 (Hero, left aligned, vertically centered)
-              =================================================================== */}
-          <section
-            className="absolute inset-0 px-6 sm:px-8 md:px-20 lg:px-32 flex flex-col justify-center pointer-events-none"
+            {/* MENU Label (lg+: span, below lg: button that opens overlay) */}
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="text-xs tracking-[0.15em] uppercase font-medium hover:opacity-70 transition-opacity cursor-pointer lg:cursor-default"
+            >
+              Menu
+            </button>
+          </div>
+        </nav>
+
+        {/* ===================================================================
+            3) OVERLAY (Pointer-events-none, 4 Sequential Text Sections)
+            =================================================================== */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* ---------------------------------------------------------------
+              SECTION 1 — SURFACE (Hero, Left Aligned, Vertically Centered, DARK text)
+              --------------------------------------------------------------- */}
+          <div
+            className="absolute inset-0 flex items-center px-6 sm:px-8 md:px-20 lg:px-32 md:pl-28"
             style={{
               opacity: s1Opacity,
               transition: "opacity 0.1s ease-out",
+              pointerEvents: s1Opacity > 0.3 ? "auto" : "none",
             }}
           >
-            <div className="max-w-4xl">
+            <div className="max-w-4xl text-left">
               <Stagger visible={s1Opacity > 0.3} delay={0}>
                 <h1
-                  className="text-[clamp(2rem,5vw,5rem)] font-light uppercase leading-[1.2] tracking-tight"
+                  className="font-light uppercase leading-[1.2] text-[clamp(2rem,5vw,5rem)]"
                   style={{ color: DARK }}
                 >
-                  {themeMode === "seafood"
-                    ? "ADVANCING SEAFOOD PURITY FOR A HEALTHIER FUTURE"
-                    : "ADVANCING RESOURCES FOR A CLEANER FUTURE"}
+                  Know how fresh, before it reaches your table
                 </h1>
               </Stagger>
-
               <Stagger visible={s1Opacity > 0.3} delay={150}>
                 <p
-                  className="mt-6 text-sm tracking-[0.3em] uppercase font-medium"
-                  style={{ color: `${DARK}E6` }} // 90% alpha
+                  className="mt-6 text-sm tracking-[0.3em] uppercase"
+                  style={{ color: `${DARK}e6` }} // 90% alpha
                 >
-                  {themeMode === "seafood"
-                    ? "AI-POWERED FRESHNESS GRADING WITH OPTICAL PRECISION"
-                    : "SUSTAINABLE POWER WITH PURPOSE"}
+                  AI-powered seafood freshness grading
                 </p>
               </Stagger>
             </div>
 
-            {/* Bottom-right 48px circle button */}
-            <div className="absolute bottom-12 right-6 sm:right-8 md:right-12 pointer-events-auto">
+            {/* Bottom-right 48px circle button (invites the dive) */}
+            <div className="absolute bottom-12 right-6 sm:right-8 md:right-12">
               <Stagger visible={s1Opacity > 0.3} delay={300}>
                 <button
-                  type="button"
                   onClick={() => {
-                    if (themeMode === "seafood") setScannerOpen(true);
-                    else window.scrollTo({ top: window.innerHeight * 1.5, behavior: "smooth" });
+                    const c = containerRef.current;
+                    if (c) {
+                      const targetY = (c.offsetHeight - window.innerHeight) * 0.28;
+                      window.scrollTo({ top: targetY, behavior: "smooth" });
+                    }
                   }}
-                  className="size-12 rounded-full flex items-center justify-center border transition-all duration-300 hover:opacity-70 hover:scale-105 active:scale-95"
-                  style={{ borderColor: `${DARK}80`, color: DARK }}
-                  aria-label="Next or Scan"
+                  className="w-12 h-12 rounded-full flex items-center justify-center transition-opacity hover:opacity-70 pointer-events-auto cursor-pointer"
+                  style={{
+                    border: `1px solid ${DARK}80`,
+                    color: DARK,
+                  }}
+                  aria-label="Scroll down to dive"
                 >
-                  <ArrowRight size={18} />
+                  <ArrowDown size={18} />
                 </button>
               </Stagger>
             </div>
-          </section>
+          </div>
 
-          {/* ===================================================================
-              SECTION 2 (Center, max-w-[900px])
-              =================================================================== */}
-          <section
-            className="absolute inset-0 px-6 sm:px-8 flex items-center justify-center pointer-events-none"
+          {/* ---------------------------------------------------------------
+              SECTION 2 — SHALLOW WATER (Center, DARK text)
+              --------------------------------------------------------------- */}
+          <div
+            className="absolute inset-0 flex items-center justify-center px-6 sm:px-8"
             style={{
               opacity: s2Opacity,
               transition: "opacity 0.1s ease-out",
+              pointerEvents: s2Opacity > 0.3 ? "auto" : "none",
             }}
           >
             <div className="max-w-[900px] text-center">
               <Stagger visible={s2Opacity > 0.3} delay={0}>
                 <h2
-                  className="text-[clamp(1.5rem,4.5vw,4.5rem)] font-extralight tracking-wide leading-[1.3] uppercase"
+                  className="font-extralight tracking-wide leading-[1.3] text-center uppercase text-[clamp(1.5rem,4.5vw,4.5rem)]"
                   style={{ color: DARK }}
                 >
-                  {themeMode === "seafood" ? (
-                    <>
-                      We inspect marine harvests with vision{" "}
-                      <span style={{ color: `${DARK}CC` }}>and precision</span>{" "}
-                      <span style={{ color: `${DARK}80` }}>across every species</span>
-                    </>
-                  ) : (
-                    <>
-                      We build lasting partnerships with vision{" "}
-                      <span style={{ color: `${DARK}CC` }}>and precision</span>{" "}
-                      <span style={{ color: `${DARK}80` }}>across every frontier</span>
-                    </>
-                  )}
+                  Every eye, every gill{" "}
+                  <span style={{ color: `${DARK}cc` }}>tells a story</span>{" "}
+                  <span style={{ color: `${DARK}80` }}>of how fresh it is</span>
                 </h2>
               </Stagger>
             </div>
 
-            {/* Right column absolute bottom-16 right-6 sm:right-8 md:right-12 */}
-            <div className="absolute bottom-16 right-6 sm:right-8 md:right-12 flex flex-col items-center gap-4 pointer-events-auto">
-              {/* 48px circle with ArrowDown 18 */}
+            {/* Right Column: 48px circle, 3 dots, 40px circle */}
+            <div className="absolute bottom-16 right-6 sm:right-8 md:right-12 flex flex-col items-center gap-4">
               <Stagger visible={s2Opacity > 0.3} delay={200}>
                 <button
-                  type="button"
-                  onClick={() => window.scrollTo({ top: window.innerHeight * 3.5, behavior: "smooth" })}
-                  className="size-12 rounded-full flex items-center justify-center border transition-all duration-300 hover:opacity-70"
-                  style={{ borderColor: `${DARK}66`, color: DARK }}
-                  aria-label="Scroll down"
+                  onClick={() => {
+                    const c = containerRef.current;
+                    if (c) {
+                      const targetY = (c.offsetHeight - window.innerHeight) * 0.62;
+                      window.scrollTo({ top: targetY, behavior: "smooth" });
+                    }
+                  }}
+                  className="w-12 h-12 rounded-full flex items-center justify-center hover:opacity-70 pointer-events-auto cursor-pointer"
+                  style={{
+                    border: `1px solid ${DARK}66`,
+                    color: DARK,
+                  }}
+                  aria-label="Dive deeper"
                 >
                   <ArrowDown size={18} />
                 </button>
               </Stagger>
 
-              {/* Three dots: 8px solid DARK (active), 6px DARK 40%, 6px DARK 40% */}
               <Stagger visible={s2Opacity > 0.3} delay={350}>
-                <div className="flex flex-col items-center gap-2 mt-4">
-                  <span className="size-2 rounded-full" style={{ backgroundColor: DARK }} />
-                  <span className="size-1.5 rounded-full" style={{ backgroundColor: `${DARK}66` }} />
-                  <span className="size-1.5 rounded-full" style={{ backgroundColor: `${DARK}66` }} />
+                <div className="mt-4 flex items-center gap-2">
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: ACCENT }}
+                  />
+                  <div
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: `${DARK}66` }}
+                  />
+                  <div
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: `${DARK}66` }}
+                  />
                 </div>
               </Stagger>
 
-              {/* 40px circle with ChevronUp 16 */}
               <Stagger visible={s2Opacity > 0.3} delay={500}>
                 <button
-                  type="button"
-                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                  className="size-10 rounded-full flex items-center justify-center border mt-2 transition-all duration-300 hover:opacity-70"
-                  style={{ borderColor: `${DARK}4D`, color: `${DARK}CC` }}
-                  aria-label="Scroll top"
+                  onClick={() => {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-70 mt-2 pointer-events-auto cursor-pointer"
+                  style={{
+                    border: `1px solid ${DARK}4d`,
+                    color: `${DARK}cc`,
+                  }}
+                  aria-label="Scroll back to surface"
                 >
                   <ChevronUp size={16} />
                 </button>
               </Stagger>
             </div>
-          </section>
+          </div>
 
-          {/* ===================================================================
-              SECTION 3 (Right aligned, white type — video is dark here)
-              =================================================================== */}
-          <section
-            className="absolute inset-0 px-6 sm:px-8 md:px-20 lg:px-32 flex items-center justify-end pointer-events-none"
+          {/* ---------------------------------------------------------------
+              SECTION 3 — CORAL REEF (Right Aligned, WHITE text)
+              --------------------------------------------------------------- */}
+          <div
+            className="absolute inset-0 flex items-center justify-end px-6 sm:px-8 md:px-20 lg:px-32"
             style={{
               opacity: s3Opacity,
               transition: "opacity 0.1s ease-out",
+              pointerEvents: s3Opacity > 0.3 ? "auto" : "none",
             }}
           >
-            <div className="max-w-2xl text-left pointer-events-auto">
+            <div className="max-w-2xl text-left">
               <Stagger visible={s3Opacity > 0.3} delay={0}>
-                <p className="text-white/60 text-lg tracking-wide mb-4 uppercase">
-                  {themeMode === "seafood" ? "FreshScan Marine | QIM Certified" : "Halder | Nordvik"}
-                </p>
+                <div className="flex items-center gap-2 mb-4">
+                  <div
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: ACCENT }}
+                  />
+                  <span className="text-white/60 text-lg tracking-wide">
+                    Grade A | Excellent Fresh
+                  </span>
+                </div>
               </Stagger>
 
               <Stagger visible={s3Opacity > 0.3} delay={150}>
                 <h2 className="text-[clamp(2rem,4vw,4rem)] font-light text-white leading-[1.2] uppercase tracking-wide mb-8">
-                  {themeMode === "seafood" ? (
-                    <>
-                      Empowering consumers,<br />
-                      protecting freshness.
-                    </>
-                  ) : (
-                    <>
-                      Fueling ambition,<br />
-                      shaping tomorrow.
-                    </>
-                  )}
+                  Clear eyes, bright gills,
+                  <br />
+                  firm flesh.
                 </h2>
               </Stagger>
 
-              {/* CTA Row */}
-              <Stagger visible={s3Opacity > 0.3} delay={300}>
-                <div className="flex items-center gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setScannerOpen(true)}
-                    className="text-sm tracking-[0.3em] text-white/80 uppercase font-medium hover:text-white transition-colors"
-                  >
-                    {themeMode === "seafood" ? "Inspect Seafood Now" : "Contact Nordvik"}
-                  </button>
+              <Stagger visible={s3Opacity > 0.3} delay={250}>
+                <p className="text-white/70 text-base max-w-md mb-8">
+                  Snap a photo. Our AI reads color, texture and clarity in seconds.
+                </p>
+              </Stagger>
+            </div>
+          </div>
 
+          {/* ---------------------------------------------------------------
+              SECTION 4 — DEEP BLUE (Final CTA, Centered, WHITE text)
+              --------------------------------------------------------------- */}
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 sm:px-8"
+            style={{
+              opacity: s4Opacity,
+              transition: "opacity 0.1s ease-out",
+              pointerEvents: s4Opacity > 0.3 ? "auto" : "none",
+            }}
+          >
+            <div className="flex flex-col items-center justify-center">
+              <Stagger visible={s4Opacity > 0.3} delay={0}>
+                <span className="text-white/60 text-lg tracking-wide mb-4 block">
+                  FreshScan AI
+                </span>
+              </Stagger>
+
+              <Stagger visible={s4Opacity > 0.3} delay={150}>
+                <h2 className="text-[clamp(2rem,4.5vw,4.5rem)] font-light text-white leading-[1.2] uppercase tracking-wide mb-10">
+                  From the sea
+                  <br />
+                  to your table, verified.
+                </h2>
+              </Stagger>
+
+              <Stagger visible={s4Opacity > 0.3} delay={300}>
+                <div className="pointer-events-auto flex items-center justify-center gap-4">
                   <button
-                    type="button"
                     onClick={() => setScannerOpen(true)}
-                    className="size-10 rounded-full bg-white flex items-center justify-center transition-transform duration-300 hover:scale-110 active:scale-95 shadow-lg"
-                    aria-label="Open Scanner CTA"
+                    className="text-sm tracking-[0.3em] text-white/80 uppercase font-medium hover:text-white transition-colors cursor-pointer"
                   >
-                    <ArrowRight size={16} className="text-gray-800" />
+                    Start Photo Scan
+                  </button>
+                  <button
+                    onClick={() => setScannerOpen(true)}
+                    className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-800 transition-transform duration-300 hover:scale-110 cursor-pointer shadow-lg"
+                    aria-label="Start Photo Scan"
+                  >
+                    <ArrowRight size={16} />
                   </button>
                 </div>
               </Stagger>
             </div>
-          </section>
+          </div>
         </div>
       </div>
 
-      {/* =====================================================================
-          MOBILE MENU OVERLAY
-          ===================================================================== */}
+      {/* ===================================================================
+          MOBILE MENU OVERLAY (fixed inset-0, z-[100], background DARK)
+          =================================================================== */}
       <div
         className={`fixed inset-0 z-[100] transition-opacity duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-          mobileOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+          mobileOpen
+            ? "opacity-100 visible pointer-events-auto"
+            : "opacity-0 invisible pointer-events-none"
         }`}
         style={{ backgroundColor: DARK }}
       >
-        {/* Inner Panel */}
         <div
-          className={`flex h-full flex-col justify-between transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          className={`relative h-full flex flex-col justify-between transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             mobileOpen ? "translate-y-0" : "-translate-y-8"
           }`}
         >
-          {/* Close Button top-right */}
+          {/* Close Button (Top-Right) */}
           <div className="flex justify-end px-6 sm:px-8 pt-8 sm:pt-12">
             <button
-              type="button"
               onClick={() => setMobileOpen(false)}
-              className="size-10 rounded-full border border-white/30 flex items-center justify-center text-white hover:border-white transition-colors focus:outline-none"
+              className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center text-white hover:border-white transition-colors cursor-pointer"
               aria-label="Close menu"
             >
               <X size={18} />
@@ -870,230 +914,217 @@ export function App() {
           </div>
 
           {/* Links Centered Vertically */}
-          <div className="flex flex-col justify-center px-8 sm:px-12 py-3 space-y-4">
-            {navLinks.map((link, idx) => (
-              <a
-                key={link.name}
-                href={`#${link.name.toLowerCase().replace(/\s+/g, "-")}`}
-                onClick={() => setMobileOpen(false)}
-                className={`text-2xl sm:text-3xl font-light tracking-wide uppercase transition-all duration-300 ${
-                  link.active ? "text-white" : "text-white/60 hover:text-white"
-                }`}
-                style={{
-                  transform: mobileOpen ? "translateY(0)" : "translateY(20px)",
-                  transition: `transform 0.5s ease ${idx * 60}ms, color 0.3s ease`,
-                }}
-              >
-                {link.name}
-              </a>
-            ))}
-
-            {/* Quick action button inside mobile menu */}
-            <div className="pt-4">
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileOpen(false);
-                  setScannerOpen(true);
-                }}
-                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-[#1D3045] hover:scale-105 active:scale-95 transition-transform"
-              >
-                <Camera size={14} />
-                <span>Launch Photo Scanner</span>
-              </button>
-            </div>
+          <div className="flex flex-col items-center justify-center px-8 sm:px-12 py-3 text-center gap-5">
+            {navLinks.map((item, i) => {
+              const isActive = activeNav === item;
+              return (
+                <button
+                  key={item}
+                  onClick={() => {
+                    setActiveNav(item);
+                    setMobileOpen(false);
+                    if (item === "FRESHSCAN AI") {
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    } else if (item === "SEAFOOD GUIDE") {
+                      const c = containerRef.current;
+                      if (c) window.scrollTo({ top: (c.offsetHeight - window.innerHeight) * 0.3, behavior: "smooth" });
+                    } else if (item === "FRESHNESS GRADES" || item === "REEF & ORIGIN") {
+                      const c = containerRef.current;
+                      if (c) window.scrollTo({ top: (c.offsetHeight - window.innerHeight) * 0.65, behavior: "smooth" });
+                    } else {
+                      setScannerOpen(true);
+                    }
+                  }}
+                  className={`text-2xl sm:text-3xl font-light tracking-wide uppercase transition-colors py-2 cursor-pointer ${
+                    isActive ? "text-white" : "text-white/60 hover:text-white"
+                  }`}
+                  style={{
+                    transform: mobileOpen ? "translateY(0)" : "translateY(20px)",
+                    transition: `transform 0.5s ease ${i * 60}ms, color 0.2s ease`,
+                  }}
+                >
+                  {item}
+                </button>
+              );
+            })}
           </div>
 
           {/* Footer: NEWS and CONTACT */}
-          <div className="flex items-center justify-between px-8 sm:px-12 pb-10 text-xs tracking-[0.2em] uppercase text-white/60">
-            <span>NEWS</span>
-            <span
-              onClick={() => {
-                setMobileOpen(false);
-                setScannerOpen(true);
-              }}
-              className="cursor-pointer hover:text-white"
-            >
-              CONTACT & SCAN
-            </span>
+          <div className="flex justify-between items-center px-8 sm:px-12 pb-10 text-xs tracking-[0.2em] uppercase text-white/60">
+            <span>News</span>
+            <span>Contact</span>
           </div>
         </div>
       </div>
 
-      {/* =====================================================================
-          AI SEAFOOD FRESHNESS SCANNER MODAL
-          Allows consumers to inspect seafood freshness from photos (Grade A-D)
-          ===================================================================== */}
+      {/* ===================================================================
+          PHOTO SCAN MODAL (Interactive AI Seafood Quality Analysis)
+          =================================================================== */}
       {scannerOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-slide-up">
-          <div className="relative w-full max-w-2xl bg-slate-900 border border-sky-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl text-white max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="size-10 rounded-xl bg-gradient-to-tr from-sky-400 to-cyan-500 flex items-center justify-center text-slate-950 font-bold">
-                  <Camera size={20} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold tracking-tight">AI Seafood Freshness Scanner</h3>
-                  <p className="text-xs text-sky-300">European QIM Standard · Real-time Optical Analysis</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setScannerOpen(false)}
-                className="size-8 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 text-white transition-colors"
+        <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-xl bg-[#0B2A3C] border border-white/20 rounded-2xl p-6 sm:p-8 text-white shadow-2xl overflow-y-auto max-h-[90vh]">
+            <button
+              onClick={() => {
+                setScannerOpen(false);
+                setSelectedImage(null);
+                setAnalyzeResult(null);
+              }}
+              className="absolute top-5 right-5 w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:text-white hover:border-white transition-colors cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="flex items-center gap-3 mb-6">
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: ACCENT }}
               >
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Step 1: Species Selection */}
-            <div className="mt-5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                1. Select Seafood Type (เลือกชนิดสัตว์น้ำ)
-              </label>
-              <div className="grid grid-cols-4 gap-2 mt-2">
-                {[
-                  { id: "fish", name: "ปลา (Fish)" },
-                  { id: "shrimp", name: "กุ้ง (Shrimp)" },
-                  { id: "squid", name: "หมึก (Squid)" },
-                  { id: "shellfish", name: "หอย (Shellfish)" },
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedType(item.id as SeafoodTypeId);
-                      if (selectedImage) handleSampleAnalyze(selectedImage);
-                    }}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all text-center ${
-                      selectedType === item.id
-                        ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-md"
-                        : "bg-slate-800/60 border-white/10 text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    {item.name}
-                  </button>
-                ))}
+                <Camera size={18} className="text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium uppercase tracking-wide">
+                  FreshScan AI Scanner
+                </h3>
+                <p className="text-xs text-white/60 tracking-wider">
+                  Select species & evaluate freshness
+                </p>
               </div>
             </div>
 
-            {/* Step 2: Upload or Select Sample */}
-            <div className="mt-5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                2. Upload Photo (อัปโหลดรูปภาพเพื่อประเมิน)
-              </label>
+            {/* Species Selector */}
+            <div className="grid grid-cols-4 gap-2 mb-6">
+              {[
+                { id: "fish", label: "Fish (ปลา)" },
+                { id: "shrimp", label: "Shrimp (กุ้ง)" },
+                { id: "squid", label: "Squid (หมึก)" },
+                { id: "shellfish", label: "Shellfish (หอย)" },
+              ].map((sp) => (
+                <button
+                  key={sp.id}
+                  onClick={() => {
+                    setSelectedType(sp.id as SeafoodTypeId);
+                    if (selectedImage) runFreshnessTest(selectedImage, sp.id as SeafoodTypeId);
+                  }}
+                  className={`py-2 px-2 text-xs font-medium rounded-lg border transition-all text-center cursor-pointer ${
+                    selectedType === sp.id
+                      ? "border-[#FF6B5B] bg-[#FF6B5B]/20 text-white font-semibold"
+                      : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
+                  }`}
+                >
+                  {sp.label}
+                </button>
+              ))}
+            </div>
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleAnalyzeFile(file);
-                }}
-              />
+            {/* Upload Area */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageUpload}
+            />
 
+            {!selectedImage ? (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="mt-2 border-2 border-dashed border-sky-500/30 hover:border-cyan-400 rounded-2xl p-6 text-center cursor-pointer transition-colors bg-slate-950/40"
+                className="border-2 border-dashed border-white/20 hover:border-white/50 rounded-xl p-8 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-3 bg-white/5"
               >
-                {selectedImage ? (
-                  <div className="flex flex-col items-center">
-                    <img
-                      src={selectedImage}
-                      alt="Uploaded seafood"
-                      className="h-40 max-w-full rounded-xl object-contain border border-white/20"
-                    />
-                    <span className="mt-3 text-xs text-cyan-300 underline">คลิกเพื่อเปลี่ยนรูปภาพใหม่</span>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <Upload className="size-8 text-cyan-400 mb-2" />
-                    <p className="text-sm font-semibold">ลากและวางรูปภาพที่นี่ หรือคลิกเพื่อถ่ายรูป/เลือกไฟล์</p>
-                    <p className="text-xs text-slate-400 mt-1">รองรับ JPEG, PNG, WebP (ประมวลผลทันทีในเครื่อง ปลอดภัย 100%)</p>
-                  </div>
-                )}
+                <Upload size={32} className="text-white/50" />
+                <p className="text-sm font-medium tracking-wide">
+                  Click to upload or drag photo of seafood
+                </p>
+                <p className="text-xs text-white/50">
+                  Supports JPG, PNG, WEBP (Eyes, gills or body)
+                </p>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedImage(sampleFishImg);
+                    runFreshnessTest(sampleFishImg, selectedType);
+                  }}
+                  className="mt-2 text-xs text-[#FF6B5B] underline hover:opacity-80"
+                >
+                  Or test with sample fresh fish photo
+                </button>
               </div>
-
-              {/* Sample Photo Shortcuts */}
-              <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
-                <span>หรือคลิกภาพตัวอย่าง:</span>
-                <div className="flex gap-2">
+            ) : (
+              <div className="space-y-4">
+                <div className="relative rounded-xl overflow-hidden max-h-56 border border-white/20">
+                  <img
+                    src={selectedImage}
+                    alt="Uploaded seafood"
+                    className="w-full h-full object-cover"
+                  />
                   <button
-                    type="button"
-                    onClick={() => handleSampleAnalyze(sampleFishImg)}
-                    className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute bottom-3 right-3 bg-black/70 hover:bg-black text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm cursor-pointer"
                   >
-                    ตัวอย่างปลาสด (Sample Fish)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSampleAnalyze(heroSeafoodImg)}
-                    className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
-                  >
-                    รวมอาหารทะเล (Seafood Platter)
+                    Change photo
                   </button>
                 </div>
-              </div>
-            </div>
 
-            {/* Step 3: Analysis Result */}
-            {isAnalyzing && (
-              <div className="mt-6 flex flex-col items-center justify-center p-6 bg-slate-950/60 rounded-2xl border border-white/10">
-                <RefreshCw className="size-8 text-cyan-400 animate-spin mb-3" />
-                <p className="text-sm font-semibold">AI กำลังวิเคราะห์พิกเซลทางชีวภาพและระดับความสด...</p>
-              </div>
-            )}
-
-            {analyzeResult && !isAnalyzing && (
-              <div className="mt-6 p-5 rounded-2xl bg-slate-950/70 border border-sky-500/30 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-xs text-slate-400 uppercase tracking-wider font-mono">QIM Quality Index</span>
-                    <h4 className="text-xl font-bold text-white flex items-center gap-2">
-                      <span>{analyzeResult.gradeTh}</span>
-                      <span
-                        className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${
-                          analyzeResult.grade === "A"
-                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-400/40"
-                            : analyzeResult.grade === "B"
-                            ? "bg-cyan-500/20 text-cyan-400 border border-cyan-400/40"
-                            : "bg-amber-500/20 text-amber-400 border border-amber-400/40"
-                        }`}
-                      >
-                        GRADE {analyzeResult.grade}
-                      </span>
-                    </h4>
+                {isAnalyzing ? (
+                  <div className="p-6 text-center text-sm text-white/70 flex items-center justify-center gap-2">
+                    <Sparkles className="animate-spin text-[#FF6B5B]" size={18} />
+                    Analyzing pixels, color temperature & QIM clarity...
                   </div>
-                  <div className="text-right">
-                    <span className="text-xs text-slate-400">Freshness Index</span>
-                    <div className="text-2xl font-mono font-black text-cyan-300">
-                      {analyzeResult.freshnessIndex}%
+                ) : analyzeResult ? (
+                  <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="px-2.5 py-1 rounded text-xs font-bold"
+                          style={{
+                            backgroundColor:
+                              analyzeResult.overallGrade === "A"
+                                ? "#10b981"
+                                : analyzeResult.overallGrade === "B"
+                                ? "#06b6d4"
+                                : analyzeResult.overallGrade === "C"
+                                ? "#f59e0b"
+                                : "#ef4444",
+                            color: "#fff",
+                          }}
+                        >
+                          GRADE {analyzeResult.overallGrade}
+                        </span>
+                        <span className="font-semibold text-sm">
+                          {analyzeResult.overallGrade === "A"
+                            ? "Very Fresh (สดมาก)"
+                            : analyzeResult.overallGrade === "B"
+                            ? "Fresh (สด)"
+                            : analyzeResult.overallGrade === "C"
+                            ? "Moderate (พอใช้)"
+                            : "Spoiled (เริ่มเสื่อมสภาพ)"}
+                        </span>
+                      </div>
+                      <span className="text-xs font-mono text-white/60">
+                        QIM Demerit: {analyzeResult.qimScore} / 20
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-white/80 leading-relaxed">
+                      {analyzeResult.verdict}
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10 text-xs">
+                      <div className="p-2 rounded bg-black/20">
+                        <span className="text-white/50 block">Confidence</span>
+                        <span className="font-medium text-emerald-400">
+                          {Math.round(analyzeResult.confidence * 100)}%
+                        </span>
+                      </div>
+                      <div className="p-2 rounded bg-black/20">
+                        <span className="text-white/50 block">Recommended</span>
+                        <span className="font-medium text-white/90">
+                          {analyzeResult.recommendedAction}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 text-xs pt-3 border-t border-white/10">
-                  <div className="p-3 rounded-xl bg-slate-900 border border-white/5">
-                    <span className="text-slate-400">คะแนนจุดด้อย (Demerit):</span>
-                    <p className="text-sm font-bold text-white mt-0.5">
-                      {analyzeResult.totalDemerit} / {analyzeResult.maxDemerit} คะแนน
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-slate-900 border border-white/5">
-                    <span className="text-slate-400">ความเชื่อมั่นทางสถิติ:</span>
-                    <p className="text-sm font-bold text-emerald-400 mt-0.5">
-                      {(analyzeResult.confidence * 100).toFixed(1)}% Confirmed
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-cyan-950/30 border border-cyan-500/20 text-xs">
-                  <span className="font-bold text-cyan-300">คำแนะนำการบริโภคและการปรุง:</span>
-                  <p className="text-slate-300 mt-1 leading-relaxed">{analyzeResult.recommendationTh}</p>
-                </div>
+                ) : null}
               </div>
             )}
           </div>
@@ -1102,5 +1133,3 @@ export function App() {
     </div>
   );
 }
-
-export default App;
