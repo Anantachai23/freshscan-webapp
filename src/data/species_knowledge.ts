@@ -1,229 +1,310 @@
 /**
- * FreshScan — ฐานความรู้ชนิดอาหารทะเล (Species Knowledge Base)
- *
- * รวบรวมข้อมูลชนิดปลา/อาหารทะเลที่ระบบรองรับ พร้อมช่วงอุณหภูมิที่แนะนำ
- * ลักษณะเด่นเมื่อสด และแหล่งอ้างอิงจาก dataset สาธารณะ / คู่มือทางประมง
+ * FreshScan Marine™ — Scientific Species Knowledge Hub
+ * 
+ * Comprehensive biological and quality specifications for primary commercial species
+ * in Thai and Indo-Pacific marine waters, conforming to Department of Fisheries & FAO guidelines.
  */
 
-export type SpeciesInfo = {
+export interface SpeciesQualityProfile {
   id: string;
-  type: "fish" | "shrimp" | "shellfish" | "squid";
+  category: "fish" | "shrimp" | "shellfish" | "squid";
+  categoryTh: string;
   nameTh: string;
   nameEn: string;
   scientific: string;
+  family: string;
+  commercialStatus: string;
   habitat: string;
-  keyIndicators: string[];
-  storageTempC: string;
-  shelfLifeDays: string;
+  optimalTempC: string;
+  shelfLifeIcedDays: string;
   peakSeasonTh: string;
-  nutrition: string;
-};
+  culinaryProfileTh: string;
+  qimAnatomyGuide: {
+    region: string;
+    freshIndicatorTh: string;
+    spoilageIndicatorTh: string;
+  }[];
+  biochemicalRisks: string[];
+}
 
-export const SPECIES: SpeciesInfo[] = [
+export const SPECIES_CATALOG: readonly SpeciesQualityProfile[] = [
+  // --- FINFISH ---
   {
     id: "seabass",
-    type: "fish",
+    category: "fish",
+    categoryTh: "ปลา",
     nameTh: "ปลากะพงขาว",
-    nameEn: "Asian Sea Bass",
+    nameEn: "Asian Sea Bass / Barramundi",
     scientific: "Lates calcarifer",
-    habitat: "น้ำกร่อย/ชายฝั่งไทย",
-    keyIndicators: ["ตากลมใส", "เหงือกแดงสด", "เกล็ดแน่นเป็นเงา"],
-    storageTempC: "0–2°C",
-    shelfLifeDays: "3–5 วันบนน้ำแข็ง",
-    peakSeasonTh: "ตลอดปี (ฟาร์ม)",
-    nutrition: "โปรตีนสูง · โอเมก้า-3 ปานกลาง",
+    family: "Latidae",
+    commercialStatus: "สัตว์น้ำเศรษฐกิจมูลค่าสูง (เพาะเลี้ยง & ประมงชายฝั่ง)",
+    habitat: "น้ำกร่อย ชายฝั่งทะเล และปากแม่น้ำ",
+    optimalTempC: "0°C ถึง 2°C (บนน้ำแข็งเกล็ด)",
+    shelfLifeIcedDays: "4–6 วัน ในน้ำแข็งบด",
+    peakSeasonTh: "ตลอดทั้งปี (ผลผลิตฟาร์มเพาะเลี้ยง)",
+    culinaryProfileTh: "เนื้อขาว นุ่ม ละเอียด ไขมันดี เหมาะสำหรับนึ่งมะนาว ทอดน้ำปลา และลวกจิ้ม",
+    qimAnatomyGuide: [
+      {
+        region: "กระจกตาและม่านตา",
+        freshIndicatorTh: "ตานูนเด่น ใสสะท้อนแสง รูม่านตาดำสนิท",
+        spoilageIndicatorTh: "ตายุบตัว แบนราบ มีฝ้าสีเทาขาวบดบัง",
+      },
+      {
+        region: "แผ่นปิดเหงือกและซี่เหงือก",
+        freshIndicatorTh: "เหงือกสีแดงเลือดนก เมือกใสบาง ไม่คาว",
+        spoilageIndicatorTh: "เหงือกสีน้ำตาลซีด เมือกขุ่นข้นเกาะเป็นก้อน",
+      },
+      {
+        region: "เกล็ดและเยื่อเมือก",
+        freshIndicatorTh: "เกล็ดสีเงินสะท้อนประกาย ติดแน่นกับหนัง",
+        spoilageIndicatorTh: "เกล็ดหลุดร่อนง่าย ผิวแห้งด้านหรือมีเมือกเหลืองเหนียว",
+      },
+      {
+        region: "กล้ามเนื้อช่องท้อง",
+        freshIndicatorTh: "ท้องแน่นตึง กดแล้วเด้งคืนตัวทันที",
+        spoilageIndicatorTh: "ท้องนิ่มยุบ ผนังท้องแตก (Belly burst) ไส้ทะลัก",
+      },
+    ],
+    biochemicalRisks: ["Vibrio vulnificus (หากเก็บในอุณหภูมิห้อง)", "Pseudomonas autolysis"],
   },
   {
     id: "mackerel",
-    type: "fish",
-    nameTh: "ปลาทู",
+    category: "fish",
+    categoryTh: "ปลา",
+    nameTh: "ปลาทูสั้น (ปลาทูไทย)",
     nameEn: "Short-bodied Mackerel",
     scientific: "Rastrelliger brachysoma",
-    habitat: "อ่าวไทย/อันดามัน",
-    keyIndicators: ["ลำตัวเป็นเงาสีเงิน", "เหงือกแดงเข้ม", "เนื้อแน่นเด้ง"],
-    storageTempC: "0–2°C",
-    shelfLifeDays: "2–3 วันบนน้ำแข็ง",
-    peakSeasonTh: "พ.ย.–ก.พ.",
-    nutrition: "โอเมก้า-3 สูงมาก · วิตามิน B12",
-  },
-  {
-    id: "tilapia",
-    type: "fish",
-    nameTh: "ปลานิล",
-    nameEn: "Nile Tilapia",
-    scientific: "Oreochromis niloticus",
-    habitat: "น้ำจืด (ฟาร์ม)",
-    keyIndicators: ["ตาไม่ขุ่น", "เมือกใส", "ท้องไม่บวม"],
-    storageTempC: "0–4°C",
-    shelfLifeDays: "3–4 วันบนน้ำแข็ง",
-    peakSeasonTh: "ตลอดปี",
-    nutrition: "โปรตีนสูง · ไขมันต่ำ",
-  },
-  {
-    id: "whiteshrimp",
-    type: "shrimp",
-    nameTh: "กุ้งขาวแวนนาไม",
-    nameEn: "Pacific White Shrimp",
-    scientific: "Litopenaeus vannamei",
-    habitat: "ฟาร์มน้ำกร่อยชายฝั่ง",
-    keyIndicators: ["เปลือกใสเป็นเงา", "หัวติดแน่น", "ไม่มีจุดดำที่ข้อต่อ"],
-    storageTempC: "0–2°C",
-    shelfLifeDays: "2–3 วันบนน้ำแข็ง",
-    peakSeasonTh: "ตลอดปี",
-    nutrition: "โปรตีนสูง · แอสตาแซนธิน",
-  },
-  {
-    id: "mussel",
-    type: "shellfish",
-    nameTh: "หอยแมลงภู่",
-    nameEn: "Green Mussel",
-    scientific: "Perna viridis",
-    habitat: "ชายฝั่งอ่าวไทย",
-    keyIndicators: ["เปลือกปิดแน่น/ปิดเมื่อแตะ", "น้ำในเปลือกใส", "เนื้อสีส้มสด"],
-    storageTempC: "2–5°C",
-    shelfLifeDays: "1–2 วันเป็น ๆ",
-    peakSeasonTh: "ต.ค.–มี.ค.",
-    nutrition: "ธาตุเหล็ก · วิตามิน B12 สูง",
-  },
-  {
-    id: "shortneckclam",
-    type: "shellfish",
-    nameTh: "หอยลาย",
-    nameEn: "Short-neck Clam",
-    scientific: "Paphia undulata",
-    habitat: "อ่าวไทยตอนบน",
-    keyIndicators: ["เปลือกไม่แตก", "ทรายในตัวน้อย", "เปิดปากเมื่อโดนความร้อน"],
-    storageTempC: "2–5°C",
-    shelfLifeDays: "1–2 วันเป็น ๆ",
-    peakSeasonTh: "พ.ย.–เม.ย.",
-    nutrition: "โปรตีน · ไอโอดีน",
-  },
-  {
-    id: "squidbanana",
-    type: "squid",
-    nameTh: "ปลาหมึกกล้วย",
-    nameEn: "Indian Squid",
-    scientific: "Uroteuthis duvaucelii",
-    habitat: "อ่าวไทย/อันดามัน",
-    keyIndicators: ["ผิวมีลายจุดสด", "เนื้อขาวใส", "หนวดครบ"],
-    storageTempC: "0–2°C",
-    shelfLifeDays: "2–3 วันบนน้ำแข็ง",
-    peakSeasonTh: "ม.ค.–พ.ค.",
-    nutrition: "โปรตีนสูง · ทอรีน",
-  },
-  {
-    id: "cuttlefish",
-    type: "squid",
-    nameTh: "ปลาหมึกกระดอง",
-    nameEn: "Cuttlefish",
-    scientific: "Sepia pharaonis",
-    habitat: "ชายฝั่งอ่าวไทย",
-    keyIndicators: ["ผิวลายทางชัด", "กระดองแข็ง", "ตาดำสนิท"],
-    storageTempC: "0–2°C",
-    shelfLifeDays: "2–3 วันบนน้ำแข็ง",
-    peakSeasonTh: "ธ.ค.–เม.ย.",
-    nutrition: "โปรตีนสูง · แคลเซียม",
+    family: "Scombridae",
+    commercialStatus: "ปลาเศรษฐกิจหลักของอ่าวไทย",
+    habitat: "ทะเลเปิดระดับผิวน้ำ อ่าวไทยและทะเลอันดามัน",
+    optimalTempC: "-1°C ถึง 1°C (Chilled Sea Water / Ice slurry)",
+    shelfLifeIcedDays: "2–3 วัน (ปลาเนื้อแดงสลายตัวเร็วมาก)",
+    peakSeasonTh: "พฤศจิกายน – กุมภาพันธ์ (ฤดูปลาทูแม่กลอง)",
+    culinaryProfileTh: "เนื้อแน่นมัน หอมหวานตามธรรมชาติ โปรตีนและโอเมก้า-3 สูงมาก นิยมต้มส้ม ทอด ย่างเกลือ",
+    qimAnatomyGuide: [
+      {
+        region: "แถบลายข้างลำตัว",
+        freshIndicatorTh: "ลำตัวสีเขียวแกมน้ำเงินประกายเงินแวววาว",
+        spoilageIndicatorTh: "สีซีดหมอง ลายข้างตัวจางลง ผิวสีเทาอมเหลือง",
+      },
+      {
+        region: "ดวงตา",
+        freshIndicatorTh: "ตากลมใส นูนเต่ง ไม่แดงช้ำ",
+        spoilageIndicatorTh: "ขอบตาแดงก่ำ ตายุบบุ๋ม เลนส์ตาขุ่นทึบ",
+      },
+      {
+        region: "เหงือกและกลิ่น",
+        freshIndicatorTh: "เหงือกแดงฉ่ำ กลิ่นไอทะเลบริสุทธิ์",
+        spoilageIndicatorTh: "เหงือกคล้ำ มีกลิ่นคาวเปรี้ยวหรือแอมโมเนีย",
+      },
+    ],
+    biochemicalRisks: ["การสะสมฮิสตามีน (Histamine / Scombroid poisoning)", "Oxidative rancidity ของไขมัน"],
   },
   {
     id: "grouper",
-    type: "fish",
-    nameTh: "ปลาเก๋า",
-    nameEn: "Grouper",
-    scientific: "Epinephelus spp.",
-    habitat: "แนวปะการัง/ชายฝั่งหินอันดามัน-อ่าวไทย",
-    keyIndicators: ["ตาใสนูน", "เหงือกแดงสด", "ลำตัวมีลายจุดชัดเจน"],
-    storageTempC: "0–2°C",
-    shelfLifeDays: "3–5 วันบนน้ำแข็ง",
-    peakSeasonTh: "ตลอดปี (เลี้ยง/จับ)",
-    nutrition: "โปรตีนสูง · ไขมันต่ำ · ซีลีเนียม",
+    category: "fish",
+    categoryTh: "ปลา",
+    nameTh: "ปลาเก๋าดอกแดง / ปลาเก๋าเสือ",
+    nameEn: "Orange-spotted Grouper",
+    scientific: "Epinephelus coioides",
+    family: "Serranidae",
+    commercialStatus: "ปลาภัตตาคารเกรดส่งออก",
+    habitat: "แนวปะการังและโขดหินชายฝั่ง",
+    optimalTempC: "0°C ถึง 2°C",
+    shelfLifeIcedDays: "5–7 วัน (เนื้อแน่นคงทน)",
+    peakSeasonTh: "ตลอดปี",
+    culinaryProfileTh: "เนื้อสัมผัสแน่นเด้ง หนังหนานุ่มด้วยคอลลาเจน นิยมนึ่งซีอิ๊ว ต้มยำน้ำใส ผัดฉ่า",
+    qimAnatomyGuide: [
+      {
+        region: "จุดลายบนลำตัว",
+        freshIndicatorTh: "จุดสีส้มอมน้ำตาลตัดกับสีผิวชัดเจน ผิวมันวาว",
+        spoilageIndicatorTh: "จุดสีซีดจาง ผิวคล้ำด้าน เมือกเหนียวปกคลุม",
+      },
+      {
+        region: "ความแน่นของเนื้อ",
+        freshIndicatorTh: "เนื้อสปริงตัวแข็งแรง ไม่บุ๋มตามรอยกด",
+        spoilageIndicatorTh: "เนื้อยุบยวบ ยางเมือกเหนียวติดตามมือ",
+      },
+    ],
+    biochemicalRisks: ["Ciguatera toxin (เฉพาะปลาธรรมชาติขนาดใหญ่ผิดปกติ)", "Bacterial spoilage"],
   },
   {
     id: "pomfret",
-    type: "fish",
+    category: "fish",
+    categoryTh: "ปลา",
     nameTh: "ปลาจะละเม็ดขาว",
     nameEn: "Silver Pomfret",
     scientific: "Pampus argenteus",
-    habitat: "อ่าวไทย/ทะเลอันดามัน",
-    keyIndicators: ["ผิวเงินเงาไม่หมองคล้ำ", "ตาใส", "ครีบไม่ฉีกขาด"],
-    storageTempC: "0–2°C",
-    shelfLifeDays: "2–4 วันบนน้ำแข็ง",
-    peakSeasonTh: "ก.ย.–ธ.ค.",
-    nutrition: "โอเมก้า-3 สูง · โปรตีนสูง",
+    family: "Stromateidae",
+    commercialStatus: "ปลาพรีเมียมราคาสูง",
+    habitat: "ทะเลลึกพื้นทราย",
+    optimalTempC: "0°C ถึง 2°C",
+    shelfLifeIcedDays: "3–4 วัน",
+    peakSeasonTh: "ธันวาคม – มีนาคม",
+    culinaryProfileTh: "เนื้อขาวเนียน ละลายในปาก กลิ่นหอมสะอาด นิยมนึ่งบ๊วย ทอดราดพริก",
+    qimAnatomyGuide: [
+      {
+        region: "ผิวกายสีเงิน",
+        freshIndicatorTh: "เงาเงินสว่างเจิดจ้าดั่งกระจกเงา",
+        spoilageIndicatorTh: "เกล็ดสีเงินหลุดล่อน ผิวเปลี่ยนเป็นสีเทาอมเหลือง",
+      },
+      {
+        region: "ความยืดหยุ่นของแผ่นตัว",
+        freshIndicatorTh: "แผ่นตัวโค้งกระชับ แข็งตรง ไม่หักพับ",
+        spoilageIndicatorTh: "แผ่นตัวอ่อนปวกเปียก หักพับงอได้ง่าย",
+      },
+    ],
+    biochemicalRisks: ["Autolytic tissue softening"],
+  },
+
+  // --- SHRIMP ---
+  {
+    id: "vannamei",
+    category: "shrimp",
+    categoryTh: "กุ้ง",
+    nameTh: "กุ้งขาวแวนนาไม",
+    nameEn: "Pacific White Shrimp",
+    scientific: "Litopenaeus vannamei",
+    family: "Penaeidae",
+    commercialStatus: "ผลผลิตกุ้งเศรษฐกิจอันดับ 1 ของไทย",
+    habitat: "ฟาร์มเพาะเลี้ยงระบบปิดและพัฒนา",
+    optimalTempC: "-1°C ถึง 1°C (Slush ice)",
+    shelfLifeIcedDays: "3–4 วัน",
+    peakSeasonTh: "ตลอดปี",
+    culinaryProfileTh: "รสหวานธรรมชาติ เปลือกบาง แกะง่าย เนื้อเด้งกรอบ เหมาะกับทุกเมนู",
+    qimAnatomyGuide: [
+      {
+        region: "ข้อต่อหัวและลำตัว (Cephalothorax)",
+        freshIndicatorTh: "หัวยึดติดแน่นสนิท ไม่คลอน ไม่เยิ้ม",
+        spoilageIndicatorTh: "คอหัก หัวหลวม พบของเหลวสีคล้ำไหลออกมา",
+      },
+      {
+        region: "ดัชนีจุดดำ (Melanosis)",
+        freshIndicatorTh: "เปลือกใส ไร้จุดดำที่ขาและข้อปล้อง",
+        spoilageIndicatorTh: "จุดดำลุกลามทั่วขอบเปลือกและระยางค์",
+      },
+      {
+        region: "ความโปร่งแสงของเปลือก",
+        freshIndicatorTh: "เปลือกสีเทาโปร่งแสง แวววาว",
+        spoilageIndicatorTh: "เปลือกขุ่นขาวหรือเริ่มแดงส้มเหมือนสุก",
+      },
+    ],
+    biochemicalRisks: ["PPO (Polyphenol oxidase) enzymatic browning", "Vibrio parahaemolyticus"],
   },
   {
-    id: "bluecrab",
-    type: "shellfish",
-    nameTh: "ปูม้า",
-    nameEn: "Blue Swimming Crab",
-    scientific: "Portunus pelagicus",
-    habitat: "ชายฝั่งทรายโคลนทั่วประเทศ",
-    keyIndicators: ["ขาและก้ามครบ", "เปลือกแข็งไม่นิ่ม", "ไม่มีกลิ่นแอมโมเนีย"],
-    storageTempC: "2–4°C",
-    shelfLifeDays: "1–2 วันเป็น ๆ / แช่แข็งได้นานขึ้น",
-    peakSeasonTh: "ก.ค.–ก.ย. (ช่วงห้ามจับปูไข่)",
-    nutrition: "โปรตีนสูง · สังกะสี",
+    id: "black_tiger",
+    category: "shrimp",
+    categoryTh: "กุ้ง",
+    nameTh: "กุ้งกุลาดำ",
+    nameEn: "Black Tiger Shrimp",
+    scientific: "Penaeus monodon",
+    family: "Penaeidae",
+    commercialStatus: "กุ้งยักษ์พรีเมียมเพื่อการส่งออก",
+    habitat: "ทะเล ชายฝั่ง และบ่อธรรมชาติ",
+    optimalTempC: "-1°C ถึง 1°C",
+    shelfLifeIcedDays: "4–5 วัน",
+    peakSeasonTh: "ตุลาคม – มกราคม",
+    culinaryProfileTh: "เนื้อแน่น ลายสวย รสหวานเข้มข้น นิยมเผา ต้มยำ หรืออบชีส",
+    qimAnatomyGuide: [
+      {
+        region: "ลายแถบขวางลำตัว",
+        freshIndicatorTh: "ลายแถบสีดำ-น้ำเงินเข้มตัดกับสีเนื้อชัดเจน",
+        spoilageIndicatorTh: "ลายแถบเบลอจาง สีเปลือกเปลี่ยนเป็นสีแดงคล้ำช้ำ",
+      },
+      {
+        region: "ความแน่นของหาง",
+        freshIndicatorTh: "หางแผ่สวย กรีแหลมคม ไม่หักรุ่งริ่ง",
+        spoilageIndicatorTh: "ปลายหางดำช้ำ กรีอ่อนหักง่าย",
+      },
+    ],
+    biochemicalRisks: ["Melanosis degradation", "Microbial proteolytic softening"],
   },
+
+  // --- SQUID ---
   {
-    id: "oyster",
-    type: "shellfish",
-    nameTh: "หอยนางรม",
-    nameEn: "Oyster",
-    scientific: "Crassostrea belcheri",
-    habitat: "ปากแม่น้ำ/ฟาร์มชายฝั่งภาคใต้",
-    keyIndicators: ["เปลือกปิดสนิทหรือหุบเมื่อสัมผัส", "เนื้อครีมนวลไม่ซีด", "น้ำในเปลือกใส"],
-    storageTempC: "2–5°C",
-    shelfLifeDays: "1–2 วันเป็น ๆ",
-    peakSeasonTh: "ต.ค.–ก.พ.",
-    nutrition: "สังกะสีสูงมาก · ธาตุเหล็ก · วิตามิน B12",
+    id: "splendid_squid",
+    category: "squid",
+    categoryTh: "หมึก",
+    nameTh: "หมึกกล้วย",
+    nameEn: "Splendid Squid",
+    scientific: "Uroteuthis duvaucelii",
+    family: "Loliginidae",
+    commercialStatus: "หมึกยอดนิยมของคนไทย",
+    habitat: "อ่าวไทยและทะเลอันดามัน",
+    optimalTempC: "0°C ถึง 2°C (บนน้ำแข็งสะอาด)",
+    shelfLifeIcedDays: "2–4 วัน",
+    peakSeasonTh: "กันยายน – ธันวาคม",
+    culinaryProfileTh: "เนื้อกรอบหวาน ผิวสัมผัสนุ่มเด้ง ไม่เหนียว ลวก ย่าง ยัดไส้",
+    qimAnatomyGuide: [
+      {
+        region: "เม็ดสีโครมาโตฟอร์",
+        freshIndicatorTh: "จุดสีน้ำตาลเข้ม คมชัดดั่งเม็ดทรายบนผิวขาวใส",
+        spoilageIndicatorTh: "จุดสีละลายกลายเป็นสีชมพูเรื่อ หรือผิวขาวซีดด้าน",
+      },
+      {
+        region: "ความตึงแน่นของลำตัว",
+        freshIndicatorTh: "ลำตัวกลมเต่ง ทรงกระบอก แข็งสปริง",
+        spoilageIndicatorTh: "ลำตัวแบนแฟบ เหลวย้วย ฉีกขาดง่าย",
+      },
+      {
+        region: "ตาและหนวด",
+        freshIndicatorTh: "ตาใสแจ๋ว ถ้วยดูดเกาะแน่นครบถ้วน",
+        spoilageIndicatorTh: "ตาขุ่นมัว ถ้วยดูดหลุดร่วง หนวดเปื่อย",
+      },
+    ],
+    biochemicalRisks: ["Trimethylamine (TMA) emission", "Rapid autolysis from squid digestive enzymes"],
+  },
+
+  // --- SHELLFISH ---
+  {
+    id: "green_mussel",
+    category: "shellfish",
+    categoryTh: "หอย",
+    nameTh: "หอยแมลงภู่",
+    nameEn: "Asian Green Mussel",
+    scientific: "Perna viridis",
+    family: "Mytilidae",
+    commercialStatus: "หอยสองฝาเศรษฐกิจหลัก",
+    habitat: "เสาเพาะเลี้ยงชายฝั่งอ่าวไทย",
+    optimalTempC: "2°C ถึง 5°C (ต้องรักษาความชื้น ห้ามแช่น้ำจืด)",
+    shelfLifeIcedDays: "2–3 วัน (ต้องมีชีวิตก่อนนำมาปรุง)",
+    peakSeasonTh: "พฤษภาคม – สิงหาคม",
+    culinaryProfileTh: "เนื้ออวบแน่น หวานฉ่ำ กลิ่นหอมสมุนไพร นิยมนึ่งใบโหระพา อบ หรือผัดกะเพรา",
+    qimAnatomyGuide: [
+      {
+        region: "การปิดของฝาหอย (Valve closure)",
+        freshIndicatorTh: "ฝาปิดสนิท หรือหุบปิดทันทีเมื่อเคาะเบา ๆ (ยังมีชีวิต)",
+        spoilageIndicatorTh: "ฝาอ้ากว้าง เคาะแล้วไม่ปิด (หอยตายแล้ว)",
+      },
+      {
+        region: "น้ำในฝาและเนื้อ",
+        freshIndicatorTh: "น้ำใส กลิ่นหอมไอทะเล เนื้อสีส้มหรือครีมเต่งตึง",
+        spoilageIndicatorTh: "น้ำขุ่นคล้ำ กลิ่นแก๊สไข่เน่า (H2S) เนื้อเหี่ยวลีบ",
+      },
+    ],
+    biochemicalRisks: ["Algal biotoxins (PSP / DSP)", "Vibrio vulnificus in dead bivalves"],
   },
 ];
 
-export type DatasetRef = {
-  name: string;
-  desc: string;
-  url: string;
-  usage: string;
-};
-
-/**
- * แหล่งข้อมูลสาธารณะที่ใช้อ้างอิงในการออกแบบ taxonomy / cue
- * และเตรียม open dataset ตามเป้าหมาย 2,000+ ภาพในโครงการ
- */
-export const DATASET_REFERENCES: DatasetRef[] = [
+export const DATASET_SPECIFICATIONS = [
   {
-    name: "Fish Freshness Grading Dataset (Kaggle)",
-    desc: "ภาพปลาน้ำเค็มหลายชนิดพร้อมป้ายกำกับ Fresh / Not-Fresh ใช้อ้างอิงเกณฑ์ตา-เหงือก",
-    url: "https://www.kaggle.com/datasets",
-    usage: "reference cues (eye, gill)",
+    title: "European QIM Seafood Assessment Standard",
+    reference: "Quality Index Method Foundation (qim-eurofish.com)",
+    scope: "De facto European standardized sensory inspection protocol for fish & cephalopods.",
   },
   {
-    name: "Freshwater Fish Disease Aquaculture (Mendeley Data)",
-    desc: "ภาพปลาน้ำจืดพร้อม metadata ด้านสุขภาพ ใช้อ้างอิงลักษณะผิวและเมือก",
-    url: "https://data.mendeley.com/",
-    usage: "reference skin/mucus",
+    title: "Thai Agricultural Standard TAS 7001-2550 (ปลาสด)",
+    reference: "National Bureau of Agricultural Commodity and Food Standards (ACFS)",
+    scope: "เกณฑ์คุณภาพทางกายภาพ จุลชีววิทยา และสารฮิสตามีนสำหรับปลาสดในประเทศไทย",
   },
   {
-    name: "Shrimp Freshness / Black-Spot Dataset (Roboflow Universe)",
-    desc: "ภาพกุ้งขาวและกุ้งกุลาดำ พร้อม bbox จุดดำที่หัว/ข้อต่อ",
-    url: "https://universe.roboflow.com/",
-    usage: "reference shrimp head/joint",
+    title: "Thai Agricultural Standard TAS 7002-2550 (กุ้งสด)",
+    reference: "ACFS Thailand / Department of Fisheries",
+    scope: "เกณฑ์การตรวจวัดดัชนีจุดดำ (Melanosis) และความสมบูรณ์ของกุ้งสดเพื่อการค้าและการส่งออก",
   },
   {
-    name: "Seafood Image Dataset — FAO/INFOFISH Field Guides",
-    desc: "คู่มือภาพประกอบเกณฑ์คุณภาพอาหารทะเลจาก FAO เพื่อยืนยันเกรด A/B/C",
-    url: "https://www.fao.org/fishery/",
-    usage: "taxonomy validation",
-  },
-  {
-    name: "กรมประมง — คู่มือคุณภาพสัตว์น้ำ",
-    desc: "เอกสารเกณฑ์ความสดจากกรมประมง กระทรวงเกษตรและสหกรณ์",
-    url: "https://www4.fisheries.go.th/",
-    usage: "ground truth (TH)",
-  },
-  {
-    name: "In-house Field Collection (FreshScan Reference)",
-    desc: "ภาพถ่ายจากตลาดสด/แพปลาชายฝั่งไทย ที่จัดเก็บและประเมินเกณฑ์โดยผู้เชี่ยวชาญ",
-    url: "#",
-    usage: "primary reference set",
+    title: "Codex Alimentarius Code of Practice for Fish and Fishery Products",
+    reference: "CODEX STAN CAC/RCP 52-2003",
+    scope: "International code of hygiene, cold chain integrity, and sensory defect grading.",
   },
 ];

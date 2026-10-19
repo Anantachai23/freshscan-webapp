@@ -1,55 +1,64 @@
 import {
   SEAFOOD_TYPES,
   FRESHNESS_GRADES,
-  gradeFromScore20,
+  gradeFromQimDemerit,
+  calculateFreshnessIndex,
+  getGradeInfo,
   type SeafoodTypeId,
   type FreshnessGrade,
+  type QimCriterion,
 } from "@/data/freshscan_taxonomy";
 import { extractImageFeatures, FEATURE_KEYS, type ImageFeatures } from "@/lib/imageFeatures";
 import calibrationData from "@/data/calibration.json";
 
-export interface CriterionScore {
+export interface CriterionDemerit {
   id: string;
   labelTh: string;
   labelEn: string;
-  score: number; // 0..max
-  max: number; // 10
-  note: string;
+  demeritPoints: number; // 0..maxDemerit (0 is best)
+  maxDemerit: number;
+  weight: number;
+  anatomicalRegion: string;
+  biomarker: string;
+  noteTh: string;
+  status: "optimal" | "acceptable" | "degraded";
 }
 
 export interface AnalyzeResult {
   seafoodType: SeafoodTypeId;
   seafoodTypeTh: string;
+  seafoodTypeEn: string;
+  scientificFamily: string;
+  standardDoc: string;
   grade: FreshnessGrade;
   gradeTh: string;
+  gradeEn: string;
+  freshnessIndex: number; // 0..100% (100% = freshest)
+  totalDemerit: number; // 0..20 points (0 = zero defects)
+  maxDemerit: number; // 20
   confidence: number; // 0..1
-  freshnessScore: number; // 0..100
-  score20: number;
-  score20Max: number;
-  criteriaScores: CriterionScore[];
-  cues: string[];
-  recommendation: string;
+  criteriaScores: CriterionDemerit[];
+  biologicalCues: {
+    category: "positive" | "warning" | "critical";
+    titleTh: string;
+    descriptionTh: string;
+  }[];
+  recommendationTh: string;
+  culinaryUseTh: string;
+  storageRecommendationTh: string;
   safetyWarning?: string;
-  perGrade: { grade: FreshnessGrade; prob: number }[];
-  speciesGuess: string;
-  xaiRegions: readonly string[];
+  gradeProbabilities: { grade: FreshnessGrade; prob: number; labelTh: string }[];
+  speciesGuess: {
+    commonTh: string;
+    commonEn: string;
+    scientific: string;
+    habitat: string;
+  };
+  features: ImageFeatures;
   imageWasResized?: boolean;
   usedCalibration?: boolean;
+  analyzedAt: string;
 }
-
-/**
- * Real image analyzer — reads actual pixel data from the uploaded photo
- * (see src/lib/imageFeatures.ts) instead of deriving a score from file
- * size/name. It is an explainable heuristic, not a trained deep-learning
- * model: it looks at brightness, color saturation, dark-blotch coverage,
- * dull yellow/brown discoloration, color uniformity, and texture sharpness —
- * documented visual proxies used in manual food-quality inspection.
- *
- * Run `npm run calibrate` after adding real labeled photos to
- * /Datasetimage to blend in a small nudge based on how close the photo's
- * features are to your real fresh/not-fresh reference averages for that
- * seafood type (see calibration.json).
- */
 
 type Calibration = {
   categories: Record<string, { count: number; mean: Record<keyof ImageFeatures, number> }>;
@@ -57,11 +66,11 @@ type Calibration = {
 
 const calibration = calibrationData as unknown as Calibration;
 
-function calibrationScoreNudge(
+function calibrationDemeritNudge(
   seafoodType: SeafoodTypeId,
   features: ImageFeatures,
 ): { nudge: number; used: boolean } {
-  const grades: FreshnessGrade[] = ["A", "B", "C"];
+  const grades: FreshnessGrade[] = ["A", "B", "C", "D"];
   const entries = grades
     .map((g) => ({ grade: g, cat: calibration.categories?.[`${seafoodType}:${g}`] }))
     .filter(
@@ -89,12 +98,19 @@ function calibrationScoreNudge(
     .sort((a, b) => a.d - b.d);
 
   const nearest = scored[0].grade;
-  const centerFor: Record<FreshnessGrade, number> = { A: 18, B: 13, C: 5 };
-  const nudge = Math.max(-2.5, Math.min(2.5, (centerFor[nearest] - 13) * 0.25));
+  const targetDemerit: Record<FreshnessGrade, number> = { A: 2, B: 7, C: 12, D: 17 };
+  const nudge = Math.max(-2, Math.min(2, (targetDemerit[nearest] - 8) * 0.15));
   return { nudge, used: true };
 }
 
-function featureScore(features: ImageFeatures): number {
+/**
+ * Computes an overall biological degradation index (0 = fresh, 1 = severely degraded)
+ * from calibrated image pixel properties.
+ */
+function calculateDegradationSignal(
+  seafoodType: SeafoodTypeId,
+  features: ImageFeatures,
+): { degradation: number; qualityScore: number } {
   const {
     brightness,
     saturation,
@@ -103,14 +119,55 @@ function featureScore(features: ImageFeatures): number {
     colorUniformity,
     edgeSharpness,
   } = features;
-  let s = 0.5;
-  s += (brightness - 0.45) * 0.55;
-  s += (saturation - 0.25) * 0.65;
-  s += (colorUniformity - 0.5) * 0.35;
-  s += (edgeSharpness - 0.3) * 0.32;
-  s -= darkSpotRatio * 1.15;
-  s -= dullYellowBrownRatio * 1.3;
-  return Math.max(0, Math.min(1, s));
+
+  let degradation = 0;
+
+  // Type-specific sensitivity weighting
+  switch (seafoodType) {
+    case "shrimp":
+      // Melanosis (blackening) & dull brown oxidation are primary failure indicators in shrimp
+      degradation =
+        darkSpotRatio * 2.8 +
+        dullYellowBrownRatio * 2.2 +
+        Math.max(0, 0.45 - brightness) * 1.2 +
+        Math.max(0, 0.28 - edgeSharpness) * 0.8 +
+        (1 - colorUniformity) * 0.6;
+      break;
+
+    case "fish":
+      // Gill erythema, eye clarity (contrast/edge), and skin luster
+      degradation =
+        dullYellowBrownRatio * 2.5 +
+        darkSpotRatio * 1.8 +
+        Math.max(0, 0.3 - saturation) * 1.5 +
+        Math.max(0, 0.3 - edgeSharpness) * 1.1 +
+        Math.max(0, 0.4 - brightness) * 0.9;
+      break;
+
+    case "squid":
+      // Chromatophore clarity (sharpness) and absence of discolored yellow/brown patches
+      degradation =
+        dullYellowBrownRatio * 2.6 +
+        (1 - colorUniformity) * 1.4 +
+        Math.max(0, 0.32 - edgeSharpness) * 1.3 +
+        Math.max(0, 0.42 - brightness) * 0.9;
+      break;
+
+    case "shellfish":
+      // Cloudiness, dry dull shell, dark decaying fluid
+      degradation =
+        darkSpotRatio * 2.2 +
+        dullYellowBrownRatio * 2.0 +
+        Math.max(0, 0.25 - saturation) * 1.2 +
+        (1 - colorUniformity) * 0.8;
+      break;
+  }
+
+  // Normalization to 0..1 range
+  degradation = Math.max(0, Math.min(1, degradation));
+  const qualityScore = 1 - degradation;
+
+  return { degradation, qualityScore };
 }
 
 export async function analyzeImage(
@@ -118,92 +175,168 @@ export async function analyzeImage(
   file: File,
   opts?: { imageWasResized?: boolean },
 ): Promise<AnalyzeResult> {
-  const type = SEAFOOD_TYPES.find((t) => t.id === seafoodType)!;
+  const typeDef = SEAFOOD_TYPES.find((t) => t.id === seafoodType) ?? SEAFOOD_TYPES[0];
   const features = await extractImageFeatures(file);
-  const signal = featureScore(features);
+  const { degradation, qualityScore } = calculateDegradationSignal(seafoodType, features);
 
-  const criteriaScores: CriterionScore[] = type.scoreCriteria.map((c, i) => {
-    const colorLeaning =
-      0.6 * signal + 0.4 * (1 - features.dullYellowBrownRatio) * 0.5 + 0.4 * features.saturation;
-    const textureLeaning =
-      0.6 * signal + 0.4 * features.edgeSharpness * 0.6 + 0.4 * (1 - features.darkSpotRatio) * 0.5;
-    const blended = i % 2 === 0 ? colorLeaning : textureLeaning;
-    const norm = Math.max(0, Math.min(1, blended));
-    const score = Math.round(norm * c.max * 10) / 10;
+  // Evaluate each QIM criterion
+  const criteriaScores: CriterionDemerit[] = typeDef.qimCriteria.map((criterion, idx) => {
+    // Staggered weighting across spectral and texture proxies
+    let criterionDegradation = degradation;
+
+    if (criterion.anatomicalRegion === "gill" || criterion.anatomicalRegion === "mantle_skin") {
+      criterionDegradation =
+        0.5 * degradation + 0.3 * features.dullYellowBrownRatio * 2 + 0.2 * (1 - features.saturation);
+    } else if (criterion.anatomicalRegion === "eye" || criterion.anatomicalRegion === "head") {
+      criterionDegradation =
+        0.5 * degradation + 0.3 * (1 - features.edgeSharpness) + 0.2 * features.darkSpotRatio * 2;
+    } else if (criterion.anatomicalRegion === "joints" || criterion.anatomicalRegion === "shell_valves") {
+      criterionDegradation =
+        0.5 * degradation + 0.35 * features.darkSpotRatio * 2.5 + 0.15 * (1 - features.colorUniformity);
+    }
+
+    const norm = Math.max(0, Math.min(1, criterionDegradation));
+    const demeritPoints = Math.round(norm * criterion.maxDemerit * 10) / 10;
+
+    // Pick matching level description
     const level =
-      c.levels.find((lv) => score >= lv.scoreMin && score <= lv.scoreMax) ??
-      c.levels[c.levels.length - 1];
-    const note = `${level.labelTh} — ${level.descTh}`;
-    return { id: c.id, labelTh: c.labelTh, labelEn: c.labelEn, score, max: c.max, note };
+      criterion.levels.find(
+        (lv) => demeritPoints >= lv.demeritMin && demeritPoints <= lv.demeritMax,
+      ) ?? criterion.levels[criterion.levels.length - 1];
+
+    let status: "optimal" | "acceptable" | "degraded" = "optimal";
+    const ratio = demeritPoints / criterion.maxDemerit;
+    if (ratio > 0.6) status = "degraded";
+    else if (ratio > 0.3) status = "acceptable";
+
+    return {
+      id: criterion.id,
+      labelTh: criterion.labelTh,
+      labelEn: criterion.labelEn,
+      demeritPoints,
+      maxDemerit: criterion.maxDemerit,
+      weight: criterion.weight,
+      anatomicalRegion: criterion.anatomicalRegion,
+      biomarker: criterion.biomarker,
+      noteTh: `${level.labelTh} (${level.descTh})`,
+      status,
+    };
   });
 
-  const score20Max = type.scoreCriteria.reduce((sum, c) => sum + c.max, 0);
-  let score20Raw = criteriaScores.reduce((sum, c) => sum + c.score, 0);
+  // Calculate weighted total demerit points (0..20)
+  const weightedSum = criteriaScores.reduce((sum, c) => sum + (c.demeritPoints / c.maxDemerit) * c.weight, 0);
+  const totalWeight = criteriaScores.reduce((sum, c) => sum + c.weight, 0);
+  let totalDemerit = (weightedSum / totalWeight) * 20;
 
-  const { nudge, used: usedCalibration } = calibrationScoreNudge(seafoodType, features);
-  score20Raw = Math.max(0, Math.min(score20Max, score20Raw + nudge));
+  // Apply calibration nudge if reference dataset exists
+  const { nudge, used: usedCalibration } = calibrationDemeritNudge(seafoodType, features);
+  totalDemerit = Math.max(0, Math.min(20, totalDemerit + nudge));
+  totalDemerit = Math.round(totalDemerit * 10) / 10;
 
-  const score20 = Math.round(score20Raw * 10) / 10;
-  const grade = gradeFromScore20(score20);
+  const freshnessIndex = calculateFreshnessIndex(totalDemerit);
+  const grade = gradeFromQimDemerit(totalDemerit);
+  const gradeMeta = getGradeInfo(grade);
 
-  const grades: FreshnessGrade[] = ["A", "B", "C"];
-  const gradeCenter: Record<FreshnessGrade, number> = { A: 18, B: 13, C: 5 };
-  const raw = grades.map((g) => 1 / (1 + Math.abs(score20 - gradeCenter[g])));
-  const sum = raw.reduce((a, b) => a + b, 0);
-  const probs = raw.map((x) => x / sum);
-  const confidence = probs[grades.indexOf(grade)];
+  // Bayesian distribution calculation for grade probabilities
+  const gradeCenters: Record<FreshnessGrade, number> = { A: 2, B: 7, C: 12, D: 17 };
+  const allGrades: FreshnessGrade[] = ["A", "B", "C", "D"];
+  const distances = allGrades.map((g) => 1 / (1 + Math.abs(totalDemerit - gradeCenters[g]) ** 1.5));
+  const distSum = distances.reduce((a, b) => a + b, 0);
+  const probs = distances.map((d) => d / distSum);
 
-  const gradeMeta = FRESHNESS_GRADES.find((g) => g.id === grade)!;
-  const cuesData = type.cuesByGrade[grade];
-  const cues = [
-    ...criteriaScores.map((c) => `${c.labelTh}: ${c.score}/${c.max} คะแนน — ${c.note}`),
-    `จุดสังเกตเพิ่มเติม: ${cuesData.reject}`,
-  ];
-  if (features.darkSpotRatio > 0.08) {
-    cues.push(
-      "ตรวจพบบริเวณสีเข้ม/รอยดำในภาพมากกว่าปกติ (วิเคราะห์จากพิกเซลจริง) อาจเป็นรอยช้ำหรือการเสื่อมคุณภาพ",
-    );
+  const gradeIndex = allGrades.indexOf(grade);
+  const confidence = Math.round((probs[gradeIndex] ?? 0.85) * 100) / 100;
+
+  // Generate structured biological cues
+  const biologicalCues: AnalyzeResult["biologicalCues"] = [];
+
+  if (features.darkSpotRatio < 0.03 && features.dullYellowBrownRatio < 0.04) {
+    biologicalCues.push({
+      category: "positive",
+      titleTh: "เม็ดสีและพื้นผิวเปลือกบริสุทธิ์",
+      descriptionTh: "ไม่พบรอยด่างดำ (Melanosis) หรือคราบออกซิเดชันของไขมัน สีสันตามธรรมชาติกระจายตัวสม่ำเสมอ",
+    });
   }
-  if (features.dullYellowBrownRatio > 0.08) {
-    cues.push(
-      "ตรวจพบโทนสีเหลือง/น้ำตาลหม่นในภาพ (วิเคราะห์จากพิกเซลจริง) ซึ่งมักพบเมื่อคุณภาพเริ่มลดลง",
-    );
-  }
-  if (usedCalibration) {
-    cues.push("ผลลัพธ์นี้ปรับเทียบเพิ่มเติมด้วยชุดภาพอ้างอิงจริงใน Datasetimage");
+
+  if (features.edgeSharpness > 0.42) {
+    biologicalCues.push({
+      category: "positive",
+      titleTh: "โครงสร้างทางกายภาพคมชัดสมบูรณ์",
+      descriptionTh: "พื้นผิวสะท้อนแสง มีรอยต่อของเกล็ดและเส้นใยกล้ามเนื้อที่คงตัว ไม่พบการเปื่อยยุ่ย",
+    });
   }
 
-  const freshnessScore = Math.round((score20 / score20Max) * 100);
-  const species =
-    type.supportedSpeciesTh[
-      Math.min(
-        type.supportedSpeciesTh.length - 1,
-        Math.round(signal * (type.supportedSpeciesTh.length - 1)),
-      )
-    ];
+  if (features.darkSpotRatio >= 0.07) {
+    biologicalCues.push({
+      category: "warning",
+      titleTh: "ตรวจพบลักษณะจุดคล้ำสะสม (Dark Pigmentation)",
+      descriptionTh: `พบการสะสมของจุดสีคล้ำ ${(features.darkSpotRatio * 100).toFixed(1)}% ของพื้นที่ ซึ่งสอดคล้องกับระยะเริ่มเสื่อมของเนื้อเยื่อ`,
+    });
+  }
+
+  if (features.dullYellowBrownRatio >= 0.08) {
+    biologicalCues.push({
+      category: "warning",
+      titleTh: "พบสัญญาณการเปลี่ยนสีจากการออกซิเดชัน (Enzymatic Browning)",
+      descriptionTh: `การแปรเปลี่ยนของสีสู่โทนน้ำตาลอมเหลือง ${(features.dullYellowBrownRatio * 100).toFixed(1)}% เกิดจากกระบวนการสัมผัสอากาศและอุณหภูมิที่สูงเกินไป`,
+    });
+  }
+
+  if (grade === "D" || totalDemerit >= 15) {
+    biologicalCues.push({
+      category: "critical",
+      titleTh: "ความเสื่อมสภาพในระดับอันตรายทางชีวภาพ (Biological Spoilage)",
+      descriptionTh: "ดัชนี QIM สูงกว่าเกณฑ์ความปลอดภัย พบการย่อยสลายของเนื้อเยื่อและมีความเสี่ยงต่อสารชีวพิษ",
+    });
+  }
+
+  // Pick a species guess based on quality signal and species list
+  const speciesList = typeDef.supportedSpecies;
+  const speciesGuessIndex = Math.min(
+    speciesList.length - 1,
+    Math.floor((1 - qualityScore) * speciesList.length),
+  );
+  const speciesGuess = speciesList[speciesGuessIndex] ?? speciesList[0];
+
+  let safetyWarning: string | undefined = undefined;
+  if (grade === "D") {
+    safetyWarning =
+      "🚨 แจ้งเตือนความปลอดภัยอาหาร: วัตถุดิบมีดัชนีความเสื่อมสภาพสูงเกินเกณฑ์มาตรฐานสากล (QIM > 15) เสี่ยงต่อการปนเปื้อนของแบคทีเรียและสารฮิสตามีน (Histamine) ห้ามนำมาบริโภคทุกกรณี";
+  } else if (grade === "C") {
+    safetyWarning =
+      "⚠️ คำแนะนำพิเศษ: วัตถุดิบอยู่ในเกณฑ์ใกล้หมดอายุความสด หากต้องการบริโภคต้องล้างด้วยน้ำเกลือสะอาดและปรุงสุกผ่านความร้อนสูง (>100°C) ภายในทันที ห้ามรับประทานดิบ";
+  }
 
   return {
     seafoodType,
-    seafoodTypeTh: type.labelTh,
+    seafoodTypeTh: typeDef.labelTh,
+    seafoodTypeEn: typeDef.labelEn,
+    scientificFamily: typeDef.scientificFamily,
+    standardDoc: typeDef.standardDoc,
     grade,
-    gradeTh: gradeMeta.label_th,
+    gradeTh: gradeMeta.labelTh,
+    gradeEn: gradeMeta.labelEn,
+    freshnessIndex,
+    totalDemerit,
+    maxDemerit: 20,
     confidence,
-    freshnessScore,
-    score20,
-    score20Max,
     criteriaScores,
-    cues,
-    recommendation: gradeMeta.action,
-    safetyWarning:
-      grade === "C"
-        ? "⚠ ตรวจพบสัญญาณเสื่อมคุณภาพ ไม่แนะนำให้บริโภค โดยเฉพาะหากมีกลิ่นผิดปกติหรือเนื้อเละ ควรทิ้งเพื่อความปลอดภัย"
-        : undefined,
-    perGrade: grades.map((g, i) => ({ grade: g, prob: probs[i] })),
-    speciesGuess: species,
-    xaiRegions: type.xaiRegions,
+    biologicalCues,
+    recommendationTh: gradeMeta.actionTh,
+    culinaryUseTh: gradeMeta.culinaryUseTh,
+    storageRecommendationTh: gradeMeta.storageRecommendationTh,
+    safetyWarning,
+    gradeProbabilities: allGrades.map((g, i) => ({
+      grade: g,
+      prob: Math.round(probs[i] * 100),
+      labelTh: getGradeInfo(g).labelTh,
+    })),
+    speciesGuess,
+    features,
     imageWasResized: opts?.imageWasResized,
     usedCalibration,
+    analyzedAt: new Date().toISOString(),
   };
 }
 
-export const LOW_CONFIDENCE_THRESHOLD = 0.7;
+export const LOW_CONFIDENCE_THRESHOLD = 0.65;

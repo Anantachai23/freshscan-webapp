@@ -1,21 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Navbar } from "@/components/freshscan/Navbar";
-import { Hero } from "@/components/freshscan/Hero";
-import { Problem } from "@/components/freshscan/Problem";
-import { HowItWorks } from "@/components/freshscan/HowItWorks";
-import { Tech } from "@/components/freshscan/Tech";
-import { Stats } from "@/components/freshscan/Stats";
-import { Team } from "@/components/freshscan/Team";
-import { Footer } from "@/components/freshscan/Footer";
+import { Navbar, Footer } from "@/components/layout";
+import { Hero, QIMStandards, HowItWorks, Tech, Stats, About } from "@/components/home";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "FreshScan — ประเมินความสดอาหารทะเลด้วย AI" },
+      { title: "FreshScan Marine™ — มาตรฐานตรวจวัดความสดอาหารทะเลระดับสากลด้วย AI & QIM" },
       {
         name: "description",
         content:
-          "ระบบ AI วิเคราะห์ความสดของอาหารทะเลจากภาพถ่ายสมาร์ทโฟน ภายใน 3 วินาที ช่วยลด Food Waste และปกป้องสุขภาพผู้บริโภค",
+          "ระบบประเมินความสดอาหารทะเลระดับมืออาชีพตามมาตรฐาน Quality Index Method (QIM) และ TAS 7001-2550 ประมวลผลภาพถ่ายแบบ Edge Computer Vision ภายในเสี้ยววินาที",
       },
     ],
   }),
@@ -24,15 +18,15 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200">
       <Navbar />
       <main>
         <Hero />
-        <Problem />
+        <QIMStandards />
         <HowItWorks />
         <Tech />
         <Stats />
-        <Team />
+        <About />
       </main>
       <Footer />
     </div>

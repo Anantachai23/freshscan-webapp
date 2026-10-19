@@ -15,6 +15,7 @@ import {
   FileJson,
   FileSpreadsheet,
   RotateCcw,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -49,10 +50,10 @@ import {
 export const Route = createFileRoute("/dataset")({
   head: () => ({
     meta: [
-      { title: "สถานะ Dataset · FreshScan" },
+      { title: "สถานะ Dataset & Manifest · FreshScan Marine™" },
       {
         name: "description",
-        content: "ภาพรวมจำนวนภาพต่อประเภทอาหารทะเล เกรด และ split พร้อมผลตรวจคุณภาพข้อมูล",
+        content: "ภาพรวมจำนวนภาพต่อประเภทอาหารทะเล เกรด และ split พร้อมผลตรวจคุณภาพข้อมูลตามมาตรฐาน QIM",
       },
     ],
   }),
@@ -60,9 +61,9 @@ export const Route = createFileRoute("/dataset")({
 });
 
 const splitLabel: Record<Split, string> = {
-  train: "Train",
-  val: "Validation",
-  test: "Test",
+  train: "Train (ฝึกสอน)",
+  val: "Validation (ตรวจสอบ)",
+  test: "Test (ทดสอบ)",
 };
 
 function DatasetPage() {
@@ -108,7 +109,7 @@ function DatasetPage() {
   ).map((s, i) => ({
     name: splitLabel[s],
     value: rows.filter((r) => r.split === s).length,
-    color: ["#0ea5e9", "#f59e0b", "#dc2626"][i],
+    color: ["#0284c7", "#06b6d4", "#10b981"][i],
   }));
 
   const typeChartData = SEAFOOD_TYPES.map((t) => {
@@ -151,7 +152,6 @@ function DatasetPage() {
       const missing = required.filter(
         (k) => !(k in parsed[0]) && !(parsed[0] as never)[k as never],
       );
-      // rudimentary sanity check
       if (parsed.some((r) => !r.image_id)) missing.push("image_id (บางแถวว่าง)");
       if (missing.length) throw new Error(`ไม่ครบคอลัมน์จำเป็น: ${missing.join(", ")}`);
       setPendingImport({ rows: parsed, fileName: file.name });
@@ -291,41 +291,45 @@ function DatasetPage() {
   };
 
   return (
-    <div className="min-h-screen bg-hero">
-      <header className="px-4 pt-6">
-        <div className="mx-auto max-w-6xl flex items-center justify-between">
+    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200">
+      {/* Header */}
+      <header className="px-4 py-5 border-b border-sky-500/15 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-40">
+        <div className="mx-auto max-w-7xl flex items-center justify-between">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground transition"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm text-slate-300 hover:text-white transition"
           >
-            <ArrowLeft className="size-4" /> กลับหน้าแรก
+            <ArrowLeft className="size-4 text-cyan-400" /> กลับหน้าหลัก FreshScan
           </Link>
           <Link
             to="/analyze"
-            className="text-xs font-medium text-ocean-deep hover:text-ocean transition"
+            className="text-xs text-cyan-300 hover:text-cyan-200 font-semibold bg-cyan-950/40 border border-cyan-500/30 px-3 py-1.5 rounded-xl transition"
           >
-            ไปหน้าวิเคราะห์ →
+            ไปหน้าวิเคราะห์สด →
           </Link>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 pb-20 pt-10">
-        <div className="text-center max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 rounded-full border border-ocean/20 bg-white/60 px-3.5 py-1.5 text-xs font-medium text-ocean-deep">
-            <Database className="size-3.5" />
-            Dataset Summary
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 pb-24 pt-10">
+        <div className="text-center max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/30 bg-sky-500/10 px-3.5 py-1 text-xs font-semibold text-sky-300">
+            <Database className="size-3.5 text-cyan-400" />
+            SCIENTIFIC DATASET & CALIBRATION MATRIX
           </div>
-          <h1 className="mt-5 text-4xl md:text-5xl font-bold tracking-tight">
-            ความคืบหน้า <span className="text-gradient-ocean">ข้อมูลภาพจริง</span>
+          <h1 className="mt-3 text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white font-display">
+            ฐานข้อมูลการปรับเทียบ <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-teal-300">
+              และสถิติภาพอ้างอิงจริง
+            </span>
           </h1>
-          <p className="mt-4 text-muted-foreground">
-            ตรวจสอบจำนวนภาพต่อประเภท เกรด และ split เทียบกับเป้าหมายมาตรฐานคุณภาพ
-            พร้อมผลตรวจคุณภาพอัตโนมัติตาม quality_rules.json
+          <p className="mt-3 text-xs sm:text-sm text-slate-400 leading-relaxed max-w-2xl mx-auto">
+            ตรวจสอบจำนวนภาพต่อประเภท เกรด และ split เทียบกับเป้าหมายมาตรฐานสากล
+            พร้อมระบบตรวจสอบความสมบูรณ์ของข้อมูลตามเกณฑ์ QIM Validation
           </p>
         </div>
 
-        {/* Import / Export toolbar */}
-        <div className="mt-8 rounded-3xl border border-border bg-card p-4 shadow-card-soft flex flex-wrap items-center gap-3">
+        {/* Toolbar */}
+        <div className="mt-10 rounded-2xl border border-sky-500/20 bg-slate-900/60 p-4 shadow-xl flex flex-wrap items-center gap-3">
           <input
             ref={fileRef}
             type="file"
@@ -335,82 +339,82 @@ function DatasetPage() {
           />
           <button
             onClick={() => fileRef.current?.click()}
-            className="inline-flex items-center gap-2 rounded-xl bg-ocean-gradient text-white px-4 py-2 text-sm font-medium shadow-card-soft hover:opacity-95 transition"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 text-slate-950 font-bold px-4 py-2 text-xs shadow-md hover:brightness-110 transition"
           >
-            <Upload className="size-4" /> นำเข้า Manifest (CSV)
+            <Upload className="size-3.5" /> นำเข้า Manifest (CSV)
           </button>
           <button
             onClick={exportCSV}
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary transition"
+            className="inline-flex items-center gap-2 rounded-xl border border-sky-500/30 bg-slate-950 px-3.5 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition"
           >
-            <FileSpreadsheet className="size-4" /> ส่งออก Summary (CSV)
+            <FileSpreadsheet className="size-3.5 text-cyan-400" /> ส่งออก Summary (CSV)
           </button>
           <button
             onClick={exportJSON}
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary transition"
+            className="inline-flex items-center gap-2 rounded-xl border border-sky-500/30 bg-slate-950 px-3.5 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition"
           >
-            <FileJson className="size-4" /> ส่งออก Summary (JSON)
+            <FileJson className="size-3.5 text-sky-400" /> ส่งออก Summary (JSON)
           </button>
           {importedName && (
             <button
               onClick={resetManifest}
-              className="inline-flex items-center gap-2 rounded-xl border border-dashed border-border px-3 py-2 text-xs text-muted-foreground hover:bg-secondary transition"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-sky-500/30 px-3 py-2 text-xs text-slate-400 hover:text-white transition"
             >
               <RotateCcw className="size-3.5" /> คืนค่าเริ่มต้น
             </button>
           )}
-          <div className="ml-auto text-xs text-muted-foreground flex items-center gap-2">
-            <Download className="size-3.5" />
-            แหล่งข้อมูล:{" "}
-            <span className="font-medium text-foreground/80">
-              {importedName ?? "sample_manifest.csv"}
-            </span>
-            <span className="mx-1 opacity-40">·</span>
-            {manifest.length.toLocaleString()} แถว
+
+          <div className="ml-auto text-xs text-slate-400 flex items-center gap-2 font-mono">
+            <Download className="size-3.5 text-cyan-400" />
+            <span>แหล่งข้อมูล: </span>
+            <span className="text-cyan-300 font-semibold">{importedName ?? "sample_manifest.csv"}</span>
+            <span className="opacity-40">·</span>
+            <span>{manifest.length.toLocaleString()} แถว</span>
           </div>
+
           {importError && (
-            <div className="w-full text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
+            <div className="w-full text-xs text-red-300 bg-red-950/40 border border-red-500/30 rounded-xl px-3.5 py-2">
               นำเข้าไม่สำเร็จ: {importError}
             </div>
           )}
         </div>
 
-        {/* KPI cards */}
-        <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* KPI Cards */}
+        <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <KpiCard
             icon={<Layers className="size-5" />}
-            label="ภาพต้นฉบับใน manifest"
+            label="ภาพต้นฉบับใน Manifest"
             value={totalPresent.toLocaleString()}
-            sub={`เป้า ≥ ${minOriginals.toLocaleString()} ภาพ`}
+            sub={`เป้าหมาย ≥ ${minOriginals.toLocaleString()} ภาพ`}
             progress={Math.min(1, totalPresent / minOriginals)}
           />
           <KpiCard
             icon={<Target className="size-5" />}
-            label="เป้ารวมก่อน Augment"
+            label="เป้ารวมก่อน Augmentation"
             value={totalTarget.toLocaleString()}
             sub={`Open Dataset ≥ ${minDataset.toLocaleString()}`}
           />
           <KpiCard
             icon={<Database className="size-5" />}
-            label="หลัง Augmentation (คาด)"
+            label="หลัง Augmentation (คาดการณ์)"
             value={`≥ ${afterAug.toLocaleString()}`}
-            sub="ภาพรวมหลังเพิ่มข้อมูล"
+            sub="ภาพรวมหลังเพิ่มข้อมูลสังเคราะห์"
           />
           <KpiCard
             icon={<ShieldCheck className="size-5" />}
-            label="ผลตรวจคุณภาพ"
+            label="ผลตรวจความสมบูรณ์"
             value={`${errors.length} error · ${warnings.length} warn`}
-            sub={`${infos.length} info`}
+            sub={`${infos.length} info notes`}
             tone={errors.length ? "danger" : warnings.length ? "warn" : "ok"}
           />
         </div>
 
-        {/* Filter */}
+        {/* Filter Chips */}
         <div className="mt-8 flex flex-wrap gap-2">
           <Chip
             active={typeFilter === "all"}
             onClick={() => setTypeFilter("all")}
-            label="ทุกประเภท"
+            label="ทุกประเภทสัตว์น้ำ (All Taxa)"
           />
           {SEAFOOD_TYPES.map((t) => (
             <Chip
@@ -423,80 +427,98 @@ function DatasetPage() {
         </div>
 
         {/* Charts */}
-        <div className="mt-5 grid lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2 rounded-3xl border border-border bg-card p-6 shadow-card-soft">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">
-              จำนวนภาพ vs เป้าหมาย ต่อประเภท
+        <div className="mt-6 grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 rounded-2xl border border-sky-500/20 bg-slate-900/60 p-6 shadow-xl">
+            <div className="text-xs uppercase font-mono tracking-wider text-slate-400">
+              จำนวนภาพปัจจุบัน vs เป้าหมาย
             </div>
-            <h3 className="font-display font-bold text-lg mt-0.5">Per Seafood Type</h3>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={typeChartData} margin={{ top: 16 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="present" name="ปัจจุบัน" fill="#0ea5e9" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="target" name="เป้าหมาย" fill="#cbd5e1" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <h3 className="font-display font-bold text-lg text-white mt-1">Per Seafood Taxonomic Class</h3>
+            <div className="h-64 mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={typeChartData} margin={{ top: 16 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(56, 189, 248, 0.1)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                  <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                  <Tooltip
+                    contentStyle={{
+                      background: "#090d16",
+                      border: "1px solid rgba(56, 189, 248, 0.3)",
+                      borderRadius: 10,
+                      fontSize: 12,
+                      color: "#fff",
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="present" name="ปัจจุบัน" fill="#0284c7" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="target" name="เป้าหมาย" fill="#334155" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-card-soft">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">
-              สัดส่วน Split
+          <div className="rounded-2xl border border-sky-500/20 bg-slate-900/60 p-6 shadow-xl">
+            <div className="text-xs uppercase font-mono tracking-wider text-slate-400">
+              สัดส่วนการแบ่งข้อมูล
             </div>
-            <h3 className="font-display font-bold text-lg mt-0.5">Train / Val / Test</h3>
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={splitData}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={48}
-                  outerRadius={80}
-                  paddingAngle={2}
-                >
-                  {splitData.map((d, i) => (
-                    <Cell key={i} fill={d.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="text-xs text-muted-foreground text-center">
-              เป้า {QUALITY_RULES.required_splits.train * 100}% /{" "}
-              {QUALITY_RULES.required_splits.validation * 100}% /{" "}
+            <h3 className="font-display font-bold text-lg text-white mt-1">Train / Val / Test Split</h3>
+            <div className="h-56 mt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={splitData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={3}
+                  >
+                    {splitData.map((d, i) => (
+                      <Cell key={i} fill={d.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      background: "#090d16",
+                      border: "1px solid rgba(56, 189, 248, 0.3)",
+                      borderRadius: 10,
+                      fontSize: 12,
+                      color: "#fff",
+                    }}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="text-[11px] text-slate-400 text-center font-mono mt-1">
+              เป้าหมาย: Train {QUALITY_RULES.required_splits.train * 100}% / Val{" "}
+              {QUALITY_RULES.required_splits.validation * 100}% / Test{" "}
               {QUALITY_RULES.required_splits.test * 100}%
             </div>
           </div>
         </div>
 
-        {/* Detailed matrix */}
-        <div className="mt-5 rounded-3xl border border-border bg-card p-6 shadow-card-soft overflow-x-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">
-                จำนวนภาพรายเซลล์
-              </div>
-              <h3 className="font-display font-bold text-lg mt-0.5">
-                ตาราง: ประเภท × เกรด × Split
-              </h3>
+        {/* Detailed Matrix Table */}
+        <div className="mt-8 rounded-2xl border border-sky-500/20 bg-slate-900/60 p-6 shadow-xl overflow-x-auto">
+          <div className="mb-4">
+            <div className="text-xs uppercase font-mono tracking-wider text-slate-400">
+              เมทริกซ์การกระจายตัวของข้อมูล
             </div>
+            <h3 className="font-display font-bold text-lg text-white mt-0.5">
+              ตาราง: ประเภท × เกรดความสด × การจัดสรรชุดข้อมูล
+            </h3>
           </div>
 
-          <table className="w-full text-sm min-w-[700px]">
+          <table className="w-full text-xs min-w-[700px]">
             <thead>
-              <tr className="text-left text-muted-foreground border-b border-border">
-                <th className="py-2 pr-3 font-medium">ประเภท</th>
-                <th className="py-2 pr-3 font-medium">เกรด</th>
-                <th className="py-2 pr-3 font-medium text-center">Train</th>
-                <th className="py-2 pr-3 font-medium text-center">Val</th>
-                <th className="py-2 pr-3 font-medium text-center">Test</th>
-                <th className="py-2 pr-3 font-medium text-right">ปัจจุบัน</th>
-                <th className="py-2 pr-3 font-medium text-right">เป้าหมาย</th>
-                <th className="py-2 pl-3 font-medium w-32">ความคืบหน้า</th>
+              <tr className="text-left text-slate-400 border-b border-sky-500/20">
+                <th className="py-2.5 pr-3 font-semibold">ประเภทสัตว์น้ำ</th>
+                <th className="py-2.5 pr-3 font-semibold">เกรดความสด</th>
+                <th className="py-2.5 pr-3 font-semibold text-center">Train</th>
+                <th className="py-2.5 pr-3 font-semibold text-center">Val</th>
+                <th className="py-2.5 pr-3 font-semibold text-center">Test</th>
+                <th className="py-2.5 pr-3 font-semibold text-right">ปัจจุบัน</th>
+                <th className="py-2.5 pr-3 font-semibold text-right">เป้าหมาย</th>
+                <th className="py-2.5 pl-3 font-semibold w-36">สัดส่วนความคืบหน้า</th>
               </tr>
             </thead>
             <tbody>
@@ -508,35 +530,35 @@ function DatasetPage() {
                   const ratio = target ? Math.min(1, present / target) : 0;
                   const meta = FRESHNESS_GRADES.find((x) => x.id === g)!;
                   return (
-                    <tr key={`${t.id}-${g}`} className="border-b border-border/60">
-                      <td className="py-3 pr-3 font-medium">{t.labelTh}</td>
+                    <tr key={`${t.id}-${g}`} className="border-b border-sky-500/10 hover:bg-slate-800/40 transition">
+                      <td className="py-3 pr-3 font-medium text-slate-200">{t.labelTh}</td>
                       <td className="py-3 pr-3">
                         <span
-                          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold"
-                          style={{ background: `${meta.ui_color}1f`, color: meta.ui_color }}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-bold"
+                          style={{ background: `${meta.colorHex}1f`, color: meta.colorHex }}
                         >
-                          {g} · {meta.label_th}
+                          Grade {g} · {meta.labelTh}
                         </span>
                       </td>
-                      <td className="py-3 pr-3 text-center text-muted-foreground">
+                      <td className="py-3 pr-3 text-center text-slate-400 font-mono">
                         {tr?.train ?? "-"}
                       </td>
-                      <td className="py-3 pr-3 text-center text-muted-foreground">
+                      <td className="py-3 pr-3 text-center text-slate-400 font-mono">
                         {tr?.val ?? "-"}
                       </td>
-                      <td className="py-3 pr-3 text-center text-muted-foreground">
+                      <td className="py-3 pr-3 text-center text-slate-400 font-mono">
                         {tr?.test ?? "-"}
                       </td>
-                      <td className="py-3 pr-3 text-right font-display font-bold">{present}</td>
-                      <td className="py-3 pr-3 text-right text-muted-foreground">{target}</td>
+                      <td className="py-3 pr-3 text-right font-mono font-bold text-white">{present}</td>
+                      <td className="py-3 pr-3 text-right font-mono text-slate-400">{target}</td>
                       <td className="py-3 pl-3">
-                        <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                        <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${ratio * 100}%` }}
                             transition={{ duration: 0.8, ease: "easeOut" }}
-                            className="h-full"
-                            style={{ background: meta.ui_color }}
+                            className="h-full rounded-full"
+                            style={{ background: meta.colorHex }}
                           />
                         </div>
                       </td>
@@ -548,36 +570,36 @@ function DatasetPage() {
           </table>
         </div>
 
-        {/* Validation */}
-        <div className="mt-5 grid lg:grid-cols-2 gap-5">
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-card-soft">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">
-              ผลตรวจ Manifest
+        {/* Validation & Rules */}
+        <div className="mt-8 grid lg:grid-cols-2 gap-6">
+          <div className="rounded-2xl border border-sky-500/20 bg-slate-900/60 p-6 shadow-xl">
+            <div className="text-xs uppercase font-mono tracking-wider text-slate-400">
+              ผลตรวจความสมบูรณ์ของ Manifest
             </div>
-            <h3 className="font-display font-bold text-lg mt-0.5 mb-3">Quality Check</h3>
+            <h3 className="font-display font-bold text-lg text-white mt-1 mb-3">
+              Quality Validation Report
+            </h3>
             {issues.length === 0 ? (
-              <div className="flex items-center gap-2 text-emerald-600 text-sm">
-                <CheckCircle2 className="size-4" /> ผ่านทุกข้อ
+              <div className="flex items-center gap-2 text-emerald-400 text-sm">
+                <CheckCircle2 className="size-4" /> ข้อมูลผ่านการตรวจสอบครบทุกเกณฑ์
               </div>
             ) : (
-              <ul className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+              <ul className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
                 {issues.map((it, i) => (
                   <li
                     key={i}
-                    className={`flex items-start gap-2 text-sm rounded-lg px-3 py-2 ${
+                    className={`flex items-start gap-2 text-xs rounded-xl p-3 border ${
                       it.level === "error"
-                        ? "bg-red-50 text-red-700"
+                        ? "bg-red-950/40 text-red-200 border-red-500/30"
                         : it.level === "warning"
-                          ? "bg-amber-50 text-amber-700"
-                          : "bg-sky-50 text-sky-700"
+                          ? "bg-amber-950/40 text-amber-200 border-amber-500/30"
+                          : "bg-sky-950/40 text-sky-200 border-sky-500/30"
                     }`}
                   >
-                    {it.level === "error" ? (
-                      <AlertTriangle className="size-4 mt-0.5 shrink-0" />
-                    ) : it.level === "warning" ? (
-                      <AlertTriangle className="size-4 mt-0.5 shrink-0" />
+                    {it.level === "error" || it.level === "warning" ? (
+                      <AlertTriangle className="size-4 mt-0.5 shrink-0 text-amber-400" />
                     ) : (
-                      <Info className="size-4 mt-0.5 shrink-0" />
+                      <Info className="size-4 mt-0.5 shrink-0 text-cyan-400" />
                     )}
                     <span>{it.message}</span>
                   </li>
@@ -586,109 +608,26 @@ function DatasetPage() {
             )}
           </div>
 
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-card-soft">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">
-              กติกาคุณภาพข้อมูล
+          <div className="rounded-2xl border border-sky-500/20 bg-slate-900/60 p-6 shadow-xl">
+            <div className="text-xs uppercase font-mono tracking-wider text-slate-400">
+              ข้อกำหนดคุณภาพข้อมูล (Data Integrity Protocol)
             </div>
-            <h3 className="font-display font-bold text-lg mt-0.5 mb-3">Rules (จากเอกสาร)</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="font-display font-bold text-lg text-white mt-1 mb-3">
+              Standard Quality Rules
+            </h3>
+            <ul className="space-y-2.5 text-xs text-slate-300">
               <RuleRow
-                text={`Train / Val / Test = ${QUALITY_RULES.required_splits.train} / ${QUALITY_RULES.required_splits.validation} / ${QUALITY_RULES.required_splits.test}`}
+                text={`สัดส่วนชุดข้อมูล Train / Val / Test = ${QUALITY_RULES.required_splits.train} / ${QUALITY_RULES.required_splits.validation} / ${QUALITY_RULES.required_splits.test}`}
               />
               <RuleRow
-                text={`ภาพต้นฉบับขั้นต่ำ ${minOriginals.toLocaleString()} ภาพ ก่อน augmentation`}
+                text={`จำนวนภาพต้นฉบับขั้นต่ำ ${minOriginals.toLocaleString()} ภาพ ก่อนการทำ Data Augmentation`}
               />
-              <RuleRow text={`Open Dataset เป้าหมาย ≥ ${minDataset.toLocaleString()} ภาพ`} />
-              <RuleRow text="ต้องมีผู้เชี่ยวชาญ 2 คน label ตรงกัน หากไม่ตรง ส่งคนที่ 3 หรือคัดออก" />
-              <RuleRow text="Grade C: ถ้ามีสัญญาณเน่าชัดเจน → จัดเป็น C ทันที" />
-              <RuleRow text="ห้ามใช้ภาพ AI-generated เป็นภาพ train/test จริง" />
-              <RuleRow text="Augmentation ทำหลัง split เท่านั้น เพื่อกัน data leakage" />
+              <RuleRow text={`Open Biological Dataset เป้าหมาย ≥ ${minDataset.toLocaleString()} ภาพ`} />
+              <RuleRow text="ผ่านการตรวจทานและรับรองโดยผู้เชี่ยวชาญด้านอาหารทะเลอย่างน้อย 2 ท่าน" />
+              <RuleRow text="สัตว์น้ำที่มีสัญญาณการเน่าเสียชัดเจน จะถูกจัดเป็นเกรดปฏิเสธ (Reject/Grade C) ทันที" />
+              <RuleRow text="ห้ามนำภาพสังเคราะห์ (AI-generated) มาใช้ปะปนในชุดทดสอบจริง" />
             </ul>
           </div>
-        </div>
-
-        {/* Sample manifest */}
-        <div className="mt-5 rounded-3xl border border-border bg-card p-6 shadow-card-soft overflow-x-auto">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">
-                ตัวอย่าง Manifest
-              </div>
-              <h3 className="font-display font-bold text-lg mt-0.5">
-                แสดง {rows.length} แถว ({typeFilter === "all" ? "ทั้งหมด" : "ตามตัวกรอง"})
-              </h3>
-            </div>
-            <code className="text-xs font-mono bg-secondary px-2 py-1 rounded">
-              src/data/dataset/sample_manifest.csv
-            </code>
-          </div>
-          <table className="w-full text-xs min-w-[800px]">
-            <thead>
-              <tr className="text-left text-muted-foreground border-b border-border">
-                <th className="py-2 pr-3 font-medium">image_id</th>
-                <th className="py-2 pr-3 font-medium">split</th>
-                <th className="py-2 pr-3 font-medium">type</th>
-                <th className="py-2 pr-3 font-medium">species</th>
-                <th className="py-2 pr-3 font-medium">grade</th>
-                <th className="py-2 pr-3 font-medium text-right">score</th>
-                <th className="py-2 pr-3 font-medium">lighting</th>
-                <th className="py-2 pr-3 font-medium">expert1/2</th>
-                <th className="py-2 pr-3 font-medium">status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.slice(0, 24).map((r) => {
-                const meta = FRESHNESS_GRADES.find((g) => g.id === r.grade)!;
-                return (
-                  <tr key={r.image_id} className="border-b border-border/60">
-                    <td className="py-2 pr-3 font-mono">{r.image_id}</td>
-                    <td className="py-2 pr-3">{r.split}</td>
-                    <td className="py-2 pr-3">{r.seafood_type_id}</td>
-                    <td className="py-2 pr-3">{r.species_th}</td>
-                    <td className="py-2 pr-3">
-                      <span
-                        className="px-1.5 py-0.5 rounded font-semibold"
-                        style={{ background: `${meta.ui_color}1f`, color: meta.ui_color }}
-                      >
-                        {r.grade}
-                      </span>
-                    </td>
-                    <td className="py-2 pr-3 text-right">{r.freshness_score}</td>
-                    <td className="py-2 pr-3 text-muted-foreground">{r.lighting}</td>
-                    <td className="py-2 pr-3">
-                      {r.expert_1_grade}/{r.expert_2_grade}
-                    </td>
-                    <td className="py-2 pr-3">
-                      <span
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                          r.label_status === "accepted"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : r.label_status === "needs_review"
-                              ? "bg-amber-100 text-amber-700"
-                              : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {r.label_status}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {rows.length > 24 && (
-            <div className="text-xs text-muted-foreground mt-3">
-              … แสดง 24 แถวแรก จากทั้งหมด {rows.length} แถว
-            </div>
-          )}
-        </div>
-
-        {/* Editor hint */}
-        <div className="mt-6 rounded-2xl border border-dashed border-ocean/30 bg-ocean/5 p-4 text-sm text-ocean-deep">
-          <span className="font-bold">สำหรับผู้พัฒนา:</span> แก้ไข dataset/manifest ได้ที่ไฟล์ใน{" "}
-          <code className="font-mono bg-white/70 px-1.5 py-0.5 rounded">src/data/dataset/</code>{" "}
-          (sample_manifest.csv, target_counts.csv, quality_rules.json, annotation_schema.json)
-          ระบบจะ re-validate และอัปเดตหน้านี้ให้อัตโนมัติ
         </div>
       </main>
 
@@ -720,161 +659,57 @@ function ImportPreviewDialog({
   const errs = previewIssues.filter((i) => i.level === "error").length;
   const warns = previewIssues.filter((i) => i.level === "warning").length;
 
-  const byType = SEAFOOD_TYPES.map((t) => ({
-    type: t.labelTh,
-    count: rows.filter((r) => r.seafood_type_id === t.id).length,
-  }));
-  const byGrade = (["A", "B", "C"] as FreshnessGrade[]).map((g) => ({
-    grade: g,
-    count: rows.filter((r) => r.grade === g).length,
-    meta: FRESHNESS_GRADES.find((x) => x.id === g)!,
-  }));
-  const bySplit = (["train", "val", "test"] as Split[]).map((s) => ({
-    split: s,
-    count: rows.filter((r) => r.split === s).length,
-  }));
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         onClick={onCancel}
-        className="absolute inset-0 bg-ocean-deep/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
       />
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
-        className="relative w-full max-w-3xl max-h-[85vh] rounded-3xl bg-card shadow-2xl border border-border overflow-hidden flex flex-col"
+        className="relative w-full max-w-2xl max-h-[85vh] rounded-2xl bg-slate-900 border border-sky-500/30 shadow-2xl overflow-hidden flex flex-col text-slate-100"
       >
-        <div className="p-6 border-b border-border">
+        <div className="p-6 border-b border-sky-500/20">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-ocean/10 px-3 py-1 text-xs font-medium text-ocean-deep">
-                <Upload className="size-3.5" /> พรีวิวก่อนนำเข้า
+              <div className="inline-flex items-center gap-2 rounded-full bg-sky-500/10 border border-sky-500/30 px-3 py-0.5 text-xs text-sky-300">
+                <Upload className="size-3.5" /> ตรวจสอบก่อนยืนยันนำเข้า
               </div>
-              <h3 className="mt-3 font-display font-bold text-2xl tracking-tight">
-                ตรวจสอบข้อมูลก่อนยืนยัน
+              <h3 className="mt-2.5 font-display font-bold text-xl text-white">
+                พรีวิวข้อมูล Manifest CSV
               </h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                ไฟล์: <span className="font-mono">{fileName}</span>
+              <p className="text-xs text-slate-400 mt-1">
+                ไฟล์: <span className="font-mono text-cyan-300">{fileName}</span>
               </p>
             </div>
             <div className="text-right">
-              <div className="text-xs text-muted-foreground">จำนวนภาพรวม</div>
-              <div className="font-display font-bold text-3xl text-gradient-ocean">
-                {total.toLocaleString()}
-              </div>
+              <div className="text-[11px] text-slate-400">จำนวนแถวทั้งหมด</div>
+              <div className="font-mono font-bold text-2xl text-cyan-300">{total.toLocaleString()}</div>
             </div>
           </div>
-
-          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
-            {byType.map((t) => (
-              <div key={t.type} className="rounded-xl bg-secondary/60 px-3 py-2">
-                <div className="text-[11px] text-muted-foreground">{t.type}</div>
-                <div className="font-display font-bold text-lg">{t.count}</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2">
-            {byGrade.map((g) => (
-              <div
-                key={g.grade}
-                className="rounded-xl px-3 py-2"
-                style={{ background: `${g.meta.ui_color}14` }}
-              >
-                <div className="text-[11px]" style={{ color: g.meta.ui_color }}>
-                  Grade {g.grade} · {g.meta.label_th}
-                </div>
-                <div className="font-display font-bold text-lg" style={{ color: g.meta.ui_color }}>
-                  {g.count}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-2 flex flex-wrap gap-2 text-xs">
-            {bySplit.map((s) => (
-              <span
-                key={s.split}
-                className="rounded-full bg-white border border-border px-2.5 py-1"
-              >
-                {splitLabel[s.split]}: <b>{s.count}</b>
-              </span>
-            ))}
-            <span
-              className={`rounded-full px-2.5 py-1 border ${errs ? "bg-red-50 border-red-200 text-red-700" : warns ? "bg-amber-50 border-amber-200 text-amber-700" : "bg-emerald-50 border-emerald-200 text-emerald-700"}`}
-            >
-              ตรวจล่วงหน้า: {errs} error · {warns} warning
-            </span>
+          <div className="mt-3 text-xs text-slate-300">
+            ตรวจพบ: <span className="text-red-400 font-bold">{errs} errors</span> ·{" "}
+            <span className="text-amber-400 font-bold">{warns} warnings</span>
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto px-6 py-4">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-            รายการ (แสดง {Math.min(rows.length, 50)} จาก {total.toLocaleString()})
-          </div>
-          <table className="w-full text-xs min-w-[640px]">
-            <thead className="sticky top-0 bg-card">
-              <tr className="text-left text-muted-foreground border-b border-border">
-                <th className="py-2 pr-3 font-medium">image_id</th>
-                <th className="py-2 pr-3 font-medium">split</th>
-                <th className="py-2 pr-3 font-medium">type</th>
-                <th className="py-2 pr-3 font-medium">species</th>
-                <th className="py-2 pr-3 font-medium">grade</th>
-                <th className="py-2 pr-3 font-medium text-right">score</th>
-                <th className="py-2 pr-3 font-medium">status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.slice(0, 50).map((r) => {
-                const meta = FRESHNESS_GRADES.find((g) => g.id === r.grade);
-                return (
-                  <tr key={r.image_id} className="border-b border-border/60">
-                    <td className="py-1.5 pr-3 font-mono">{r.image_id}</td>
-                    <td className="py-1.5 pr-3">{r.split}</td>
-                    <td className="py-1.5 pr-3">{r.seafood_type_id}</td>
-                    <td className="py-1.5 pr-3">{r.species_th}</td>
-                    <td className="py-1.5 pr-3">
-                      <span
-                        className="px-1.5 py-0.5 rounded font-semibold"
-                        style={{
-                          background: `${meta?.ui_color ?? "#64748b"}1f`,
-                          color: meta?.ui_color ?? "#64748b",
-                        }}
-                      >
-                        {r.grade}
-                      </span>
-                    </td>
-                    <td className="py-1.5 pr-3 text-right">{r.freshness_score}</td>
-                    <td className="py-1.5 pr-3 text-muted-foreground">{r.label_status}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="border-t border-border p-4 flex items-center justify-between gap-3 bg-secondary/30">
-          <div className="text-xs text-muted-foreground">
-            เมื่อยืนยัน ระบบจะแทนที่ manifest ปัจจุบันและตรวจสอบคุณภาพใหม่ทั้งหมด
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={onCancel}
-              className="rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary transition"
-            >
-              ยกเลิก
-            </button>
-            <button
-              onClick={onConfirm}
-              className="inline-flex items-center gap-2 rounded-xl bg-ocean-gradient text-white px-4 py-2 text-sm font-medium shadow-card-soft hover:opacity-95 transition"
-            >
-              <CheckCircle2 className="size-4" /> ยืนยันและนำเข้า
-            </button>
-          </div>
+        <div className="p-4 border-t border-sky-500/20 flex justify-end gap-2 bg-slate-950/50">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 rounded-xl text-xs font-medium text-slate-300 hover:bg-slate-800 transition"
+          >
+            ยกเลิก
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-sky-500 to-cyan-500 text-slate-950 hover:brightness-110 transition"
+          >
+            ยืนยันและนำเข้าข้อมูล
+          </button>
         </div>
       </motion.div>
     </div>
@@ -896,34 +731,30 @@ function KpiCard({
   progress?: number;
   tone?: "ocean" | "ok" | "warn" | "danger";
 }) {
-  const toneClass = {
-    ocean: "from-ocean to-ocean-deep",
-    ok: "from-emerald-500 to-emerald-700",
-    warn: "from-amber-500 to-amber-600",
-    danger: "from-red-500 to-red-700",
+  const toneBg = {
+    ocean: "border-sky-500/20 text-cyan-300",
+    ok: "border-emerald-500/20 text-emerald-400",
+    warn: "border-amber-500/20 text-amber-400",
+    danger: "border-red-500/20 text-red-400",
   }[tone];
+
   return (
-    <div className="relative rounded-3xl border border-border bg-card p-5 shadow-card-soft overflow-hidden">
-      <div
-        className={`absolute -top-10 -right-10 size-28 rounded-full bg-gradient-to-br ${toneClass} opacity-10`}
-      />
+    <div className={`relative rounded-2xl border ${toneBg} bg-slate-900/60 p-5 shadow-lg overflow-hidden`}>
       <div className="flex items-center gap-3">
-        <div
-          className={`size-10 rounded-xl grid place-items-center text-white bg-gradient-to-br ${toneClass} shadow-card-soft`}
-        >
+        <div className="size-10 rounded-xl grid place-items-center bg-sky-500/10 border border-sky-500/20">
           {icon}
         </div>
-        <div className="text-xs text-muted-foreground">{label}</div>
+        <div className="text-xs text-slate-400">{label}</div>
       </div>
-      <div className="mt-3 font-display font-bold text-2xl tracking-tight">{value}</div>
-      {sub && <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>}
+      <div className="mt-3 font-display font-bold text-2xl text-white">{value}</div>
+      {sub && <div className="text-xs text-slate-400 mt-1">{sub}</div>}
       {progress !== undefined && (
-        <div className="mt-3 h-1.5 bg-secondary rounded-full overflow-hidden">
+        <div className="mt-3 h-1.5 bg-slate-800 rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progress * 100}%` }}
             transition={{ duration: 1, ease: "easeOut" }}
-            className={`h-full bg-gradient-to-r ${toneClass}`}
+            className="h-full bg-gradient-to-r from-sky-500 to-cyan-400"
           />
         </div>
       )}
@@ -935,10 +766,10 @@ function Chip({ active, onClick, label }: { active: boolean; onClick: () => void
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+      className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
         active
-          ? "bg-ocean-gradient text-white shadow-card-soft"
-          : "bg-secondary/60 text-foreground/70 hover:bg-secondary"
+          ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-lg shadow-cyan-950/40"
+          : "bg-slate-900/60 text-slate-400 border border-sky-500/15 hover:border-sky-500/40 hover:text-slate-200"
       }`}
     >
       {label}
@@ -949,8 +780,8 @@ function Chip({ active, onClick, label }: { active: boolean; onClick: () => void
 function RuleRow({ text }: { text: string }) {
   return (
     <li className="flex items-start gap-2">
-      <CheckCircle2 className="size-4 mt-0.5 shrink-0 text-ocean-deep" />
-      <span className="text-foreground/85">{text}</span>
+      <CheckCircle2 className="size-4 mt-0.5 shrink-0 text-cyan-400" />
+      <span>{text}</span>
     </li>
   );
 }
