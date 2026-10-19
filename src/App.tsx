@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ArrowRight, ArrowDown, ChevronUp, Info, X, Camera, Upload, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowDown, ChevronUp, Camera, Upload, Sparkles, X, CheckCircle2 } from "lucide-react";
 import { useVideoScrub } from "./useVideoScrub";
 import { analyzeImage, type AnalyzeResult } from "@/lib/freshnessAnalyzer";
 import { type SeafoodTypeId } from "@/data/freshscan_taxonomy";
 import sampleFishImg from "@/assets/fish-sample.jpg";
 
 const VIDEO_URL = "/ocean.mp4";
-const DARK = "#0B2A3C"; // deep navy-teal, text on light/bright frames
-const ACCENT = "#FF6B5B"; // coral, used ONLY for small accents (freshness badge, active dot)
-const LIGHT_UNTIL = 0.45; // while p <= LIGHT_UNTIL text is DARK, after that text is white
+const ACCENT = "#FF6B5B"; // coral accent
 
-// Stagger Animation Component
+// Smooth Stagger Component
 function Stagger({
   visible,
   delay = 0,
@@ -28,7 +26,7 @@ function Stagger({
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(24px)",
-        transition: `opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
+        transition: `opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
       }}
     >
       {children}
@@ -46,8 +44,6 @@ export function App() {
   } = useVideoScrub(VIDEO_URL);
 
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [navMounted, setNavMounted] = useState(false);
-  const [activeNav, setActiveNav] = useState("FRESHSCAN AI");
 
   // Scanner Modal state
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -56,15 +52,6 @@ export function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzeResult, setAnalyzeResult] = useState<AnalyzeResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const hiddenImgRef = useRef<HTMLImageElement>(null);
-
-  // Entrance animation for Navbar
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setNavMounted(true);
-    }, 200);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Lock body scroll when mobile menu or scanner modal is open
   useEffect(() => {
@@ -78,43 +65,37 @@ export function App() {
     };
   }, [mobileOpen, scannerOpen]);
 
-  // Scroll progress p clamped [0, 1]
+  // Scroll progress p [0, 1]
   const p = scrollProgress;
 
-  // Color follows text color (DARK → white at LIGHT_UNTIL)
-  const currentTextColor = p <= LIGHT_UNTIL ? DARK : "#ffffff";
-  const navColor = currentTextColor;
-  const navInvertedText = p <= LIGHT_UNTIL ? "#ffffff" : DARK;
-
-  // =========================================================================
-  // TEXT SECTIONS ARE SEQUENTIAL (previous fully fades out before next appears)
-  // =========================================================================
-  const s1Opacity = p < 0.15 ? 1 : Math.max(0, 1 - (p - 0.15) / 0.07);
+  // Sequential Section Opacities
+  const s1Opacity = p < 0.18 ? 1 : Math.max(0, 1 - (p - 0.18) / 0.08);
 
   const s2Opacity =
-    p < 0.22
+    p < 0.24
       ? 0
-      : p < 0.29
-      ? (p - 0.22) / 0.07
-      : p < 0.40
+      : p < 0.32
+      ? (p - 0.24) / 0.08
+      : p < 0.44
       ? 1
-      : Math.max(0, 1 - (p - 0.40) / 0.07);
+      : Math.max(0, 1 - (p - 0.44) / 0.08);
 
   const s3Opacity =
-    p < 0.53
+    p < 0.50
       ? 0
-      : p < 0.60
-      ? (p - 0.53) / 0.07
-      : p < 0.70
+      : p < 0.58
+      ? (p - 0.50) / 0.08
+      : p < 0.72
       ? 1
-      : Math.max(0, 1 - (p - 0.70) / 0.07);
+      : Math.max(0, 1 - (p - 0.72) / 0.08);
 
   const s4Opacity =
-    p < 0.82
+    p < 0.78
       ? 0
-      : p < 0.90
-      ? (p - 0.82) / 0.08
+      : p < 0.88
+      ? (p - 0.78) / 0.10
       : 1;
+
   // Handle Photo Upload & Freshness Analysis
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -146,18 +127,18 @@ export function App() {
     };
   };
 
-  const navLinks = [
-    "FRESHSCAN AI",
-    "SEAFOOD GUIDE",
-    "FRESHNESS GRADES",
-    "REEF & ORIGIN",
-    "FRESHSCAN+",
-  ];
+  const scrollToDepth = (targetP: number) => {
+    const c = containerRef.current;
+    if (c) {
+      const targetY = (c.offsetHeight - window.innerHeight) * targetP;
+      window.scrollTo({ top: targetY, behavior: "smooth" });
+    }
+  };
 
   return (
     <div
       ref={containerRef}
-      className="relative h-[600vh] bg-[#090807] font-['Helvetica_Neue_ME','Helvetica_Neue',Helvetica,Arial,sans-serif]"
+      className="relative h-[600vh] bg-black text-white font-['Prompt','Sarabun',system-ui,sans-serif]"
     >
       {/* ===================================================================
           STICKY FULL-VIEWPORT SCENE (100vh)
@@ -176,298 +157,208 @@ export function App() {
         {/* 2) Canvas for Decoded WebCodecs Frame Bank */}
         <canvas
           ref={canvasRef}
-          width={1920}
-          height={1080}
+          width={1280}
+          height={720}
           className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
           style={{ opacity: canvasLive ? 1 : 0 }}
         />
 
         {/* ===================================================================
-            DEPTH GAUGE (Signature Left Edge Element)
+            DEPTH GAUGE (มาตรวัดความลึก - ภาษาไทยชัดเจน)
             =================================================================== */}
-        <div
-          className="hidden md:flex fixed left-6 lg:left-8 top-1/2 -translate-y-1/2 z-40 items-center gap-3 pointer-events-none select-none transition-colors duration-500"
-          style={{ color: currentTextColor }}
-        >
-          {/* Thin vertical line 1px, 160px height at 30% alpha */}
-          <div
-            className="relative w-[1px] h-[160px]"
-            style={{
-              backgroundColor: currentTextColor,
-              opacity: 0.3,
-            }}
-          >
-            {/* Small 8px dot that moves down the line according to p */}
+        <div className="hidden md:flex fixed left-6 lg:left-10 top-1/2 -translate-y-1/2 z-40 items-center gap-3 pointer-events-none select-none">
+          {/* เส้นแนวตั้ง */}
+          <div className="relative w-[2px] h-[160px] bg-white/30 rounded-full overflow-hidden shadow-sm">
+            {/* จุดวัดความลึก */}
             <div
-              className="absolute -left-[3.5px] w-2 h-2 rounded-full"
+              className="absolute -left-[3px] w-2.5 h-2.5 rounded-full shadow-lg"
               style={{
                 backgroundColor: ACCENT,
-                top: `${Math.min(152, p * 152)}px`,
+                top: `${Math.min(150, p * 150)}px`,
                 transition: "top 0.08s linear",
               }}
             />
           </div>
-          {/* Depth Label: "SURFACE" when p < 0.03, else Math.round(p * 30) + " m" */}
-          <span
-            className="text-xs tracking-[0.2em] font-medium tabular-nums transition-colors duration-500"
-            style={{ color: currentTextColor }}
-          >
-            {p < 0.03 ? "SURFACE" : `${Math.round(p * 30)} m`}
-          </span>
+          {/* ป้ายกำกับความลึก */}
+          <div className="flex flex-col text-left drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+            <span className="text-[10px] tracking-wider uppercase text-white/70 font-light">
+              ระดับความลึก
+            </span>
+            <span className="text-sm font-semibold tracking-wide text-white tabular-nums">
+              {p < 0.05 ? "ผิวน้ำทะเล" : `${Math.round(p * 30)} เมตร`}
+            </span>
+          </div>
         </div>
 
         {/* ===================================================================
-            NAVBAR (Absolute Top, z-50, pointer-events-auto)
+            NAVBAR (เรียบหรู คมชัด ไม่รก)
             =================================================================== */}
-        <nav
-          className="absolute top-0 inset-x-0 z-50 pointer-events-auto flex items-center justify-between px-6 sm:px-8 md:px-12 pt-8 sm:pt-12 pb-6 transition-colors duration-500"
-          style={{ color: navColor }}
-        >
-          {/* Mobile <lg Hamburger (Left) */}
-          <div className="flex lg:hidden items-center">
+        <nav className="absolute top-0 inset-x-0 z-50 pointer-events-auto flex items-center justify-between px-6 sm:px-10 md:px-14 pt-6 sm:pt-8 pb-4">
+          {/* Logo & Brand */}
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="flex items-center gap-2.5 text-left cursor-pointer group"
+          >
+            <div className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-[#FF6B5B] group-hover:scale-105 transition-transform shadow-md">
+              <Sparkles size={18} />
+            </div>
+            <div>
+              <span className="text-base sm:text-lg font-bold tracking-wide text-white block leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                FreshScan <span className="text-[#FF6B5B]">AI</span>
+              </span>
+              <span className="text-[10px] text-white/70 tracking-wider block font-light">
+                ตรวจความสดอาหารทะเล
+              </span>
+            </div>
+          </button>
+
+          {/* Desktop Links (สั้น กระชับ ตรงจุด) */}
+          <div className="hidden md:flex items-center gap-6 lg:gap-8">
             <button
-              onClick={() => setMobileOpen(true)}
-              className="flex flex-col justify-center gap-[5px] p-2 -ml-2 cursor-pointer focus:outline-none"
-              aria-label="Open menu"
+              onClick={() => scrollToDepth(0)}
+              className="text-xs sm:text-sm text-white/80 hover:text-white transition-colors cursor-pointer drop-shadow-md"
             >
-              <span
-                className="w-6 h-[2px] transition-colors duration-500"
-                style={{ backgroundColor: navColor }}
-              />
-              <span
-                className="w-6 h-[2px] transition-colors duration-500"
-                style={{ backgroundColor: navColor }}
-              />
-              <span
-                className="w-4 h-[2px] transition-colors duration-500"
-                style={{ backgroundColor: navColor }}
-              />
+              หน้าแรก
+            </button>
+            <button
+              onClick={() => scrollToDepth(0.35)}
+              className="text-xs sm:text-sm text-white/80 hover:text-white transition-colors cursor-pointer drop-shadow-md"
+            >
+              จุดสังเกตความสด
+            </button>
+            <button
+              onClick={() => scrollToDepth(0.65)}
+              className="text-xs sm:text-sm text-white/80 hover:text-white transition-colors cursor-pointer drop-shadow-md"
+            >
+              เกณฑ์มาตรฐาน QIM
             </button>
           </div>
 
-          {/* Desktop lg+ Left Cluster of 5 Links (pl-24 to clear depth gauge) */}
-          <div className="hidden lg:flex items-center gap-8 xl:gap-10 pl-24">
-            {navLinks.map((item, idx) => {
-              const isActive = activeNav === item;
-              return (
-                <button
-                  key={item}
-                  onClick={() => {
-                    setActiveNav(item);
-                    if (item === "FRESHSCAN AI") {
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    } else if (item === "SEAFOOD GUIDE") {
-                      const c = containerRef.current;
-                      if (c) window.scrollTo({ top: (c.offsetHeight - window.innerHeight) * 0.3, behavior: "smooth" });
-                    } else if (item === "FRESHNESS GRADES" || item === "REEF & ORIGIN") {
-                      const c = containerRef.current;
-                      if (c) window.scrollTo({ top: (c.offsetHeight - window.innerHeight) * 0.65, behavior: "smooth" });
-                    } else {
-                      setScannerOpen(true);
-                    }
-                  }}
-                  className="relative text-xs tracking-[0.15em] uppercase font-medium hover:opacity-70 transition-opacity cursor-pointer py-1"
-                  style={{
-                    color: navColor,
-                    opacity: navMounted ? 1 : 0,
-                    transform: navMounted ? "translateY(0)" : "translateY(-12px)",
-                    transition: `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 80 + 100}ms, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 80 + 100}ms, color 0.5s ease`,
-                  }}
-                >
-                  {item}
-                  {isActive && (
-                    <span
-                      className="absolute -bottom-3 left-0 right-0 h-[2px] transition-colors duration-500"
-                      style={{ backgroundColor: navColor }}
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Right Cluster (Hidden below sm) */}
-          <div
-            className="hidden sm:flex items-center gap-5 md:gap-7"
-            style={{
-              opacity: navMounted ? 1 : 0,
-              transform: navMounted ? "translateY(0)" : "translateY(-12px)",
-              transition: `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 500ms, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 500ms`,
-            }}
-          >
-            {/* PHOTO SCAN Pill Button */}
+          {/* ปุ่มสแกนความสด (เด่นชัด กดใช้งานได้ทันที) */}
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setScannerOpen(true)}
-              className="rounded-full px-4 py-2 flex items-center gap-2 cursor-pointer transition-all duration-300 hover:scale-105 shadow-sm"
-              style={{
-                backgroundColor: navColor,
-                color: navInvertedText,
-              }}
+              className="rounded-full px-5 py-2.5 bg-[#FF6B5B] hover:bg-[#ff5542] text-white font-medium text-xs sm:text-sm flex items-center gap-2 transition-all duration-300 hover:scale-105 shadow-lg cursor-pointer"
             >
-              <Camera size={14} />
-              <span className="text-xs tracking-[0.15em] uppercase font-medium">
-                Photo Scan
-              </span>
-            </button>
-
-            {/* NEWS Label + 20px Info Circle */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs tracking-[0.2em] uppercase font-medium">
-                News
-              </span>
-              <div
-                className="w-5 h-5 rounded-full flex items-center justify-center transition-colors duration-500"
-                style={{
-                  backgroundColor: navColor,
-                  color: navInvertedText,
-                }}
-              >
-                <Info size={10} />
-              </div>
-            </div>
-
-            {/* MENU Label (lg+: span, below lg: button that opens overlay) */}
-            <button
-              onClick={() => setMobileOpen(true)}
-              className="text-xs tracking-[0.15em] uppercase font-medium hover:opacity-70 transition-opacity cursor-pointer lg:cursor-default"
-            >
-              Menu
+              <Camera size={16} />
+              <span>ถ่ายภาพตรวจความสด</span>
             </button>
           </div>
         </nav>
 
         {/* ===================================================================
-            3) OVERLAY (Pointer-events-none, 4 Sequential Text Sections)
+            3) OVERLAY (เนื้อหาภาษาไทย คมชัด อ่านง่าย ตัวหนังสือขาวมีมิติ)
             =================================================================== */}
         <div className="absolute inset-0 pointer-events-none">
           {/* ---------------------------------------------------------------
-              SECTION 1 — SURFACE (Hero, Left Aligned, Vertically Centered, DARK text)
+              SECTION 1 — ผิวน้ำ & ท้องฟ้ายามราตรี
               --------------------------------------------------------------- */}
           <div
-            className="absolute inset-0 flex items-center px-6 sm:px-8 md:px-20 lg:px-32 md:pl-28"
+            className="absolute inset-0 flex items-center px-6 sm:px-12 md:px-24 lg:px-32 md:pl-32"
             style={{
               opacity: s1Opacity,
-              transition: "opacity 0.1s ease-out",
+              transition: "opacity 0.15s ease-out",
               pointerEvents: s1Opacity > 0.3 ? "auto" : "none",
             }}
           >
-            <div className="max-w-4xl text-left">
+            <div className="max-w-3xl text-left drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]">
               <Stagger visible={s1Opacity > 0.3} delay={0}>
-                <h1
-                  className="font-light uppercase leading-[1.2] text-[clamp(2rem,5vw,5rem)]"
-                  style={{ color: DARK }}
-                >
-                  Know how fresh, before it reaches your table
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs sm:text-sm text-white/90 mb-6">
+                  <span className="w-2 h-2 rounded-full bg-[#FF6B5B] animate-pulse" />
+                  เทคโนโลยี AI คุณภาพอาหารทะเล 2026
+                </div>
+              </Stagger>
+
+              <Stagger visible={s1Opacity > 0.3} delay={100}>
+                <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white leading-[1.2] tracking-tight">
+                  รู้ความสดใหม่
+                  <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-sky-200 to-sky-400">
+                    ก่อนถึงจานโปรดของคุณ
+                  </span>
                 </h1>
               </Stagger>
-              <Stagger visible={s1Opacity > 0.3} delay={150}>
-                <p
-                  className="mt-6 text-sm tracking-[0.3em] uppercase"
-                  style={{ color: `${DARK}e6` }} // 90% alpha
-                >
-                  AI-powered seafood freshness grading
+
+              <Stagger visible={s1Opacity > 0.3} delay={200}>
+                <p className="mt-5 text-base sm:text-xl text-white/90 font-light max-w-xl leading-relaxed">
+                  ถ่ายภาพดวงตา เหงือก หรือผิวสัมผัส ระบบจะประเมินเกรดความสดด้วยโมเดลวิเคราะห์ภาพมาตรฐาน QIM ในไม่กี่วินาที
                 </p>
               </Stagger>
             </div>
 
-            {/* Bottom-right 48px circle button (invites the dive) */}
-            <div className="absolute bottom-12 right-6 sm:right-8 md:right-12">
+            {/* ปุ่มเลื่อนดำดิ่ง (ขวาล่าง) */}
+            <div className="absolute bottom-10 right-6 sm:right-10 md:right-16 flex items-center gap-3">
               <Stagger visible={s1Opacity > 0.3} delay={300}>
                 <button
-                  onClick={() => {
-                    const c = containerRef.current;
-                    if (c) {
-                      const targetY = (c.offsetHeight - window.innerHeight) * 0.28;
-                      window.scrollTo({ top: targetY, behavior: "smooth" });
-                    }
-                  }}
-                  className="w-12 h-12 rounded-full flex items-center justify-center transition-opacity hover:opacity-70 pointer-events-auto cursor-pointer"
-                  style={{
-                    border: `1px solid ${DARK}80`,
-                    color: DARK,
-                  }}
-                  aria-label="Scroll down to dive"
+                  onClick={() => scrollToDepth(0.35)}
+                  className="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-black/40 backdrop-blur-md border border-white/30 text-white hover:bg-white/20 transition-all cursor-pointer pointer-events-auto"
                 >
-                  <ArrowDown size={18} />
+                  <span className="text-xs sm:text-sm font-light">เลื่อนลงเพื่อดำดิ่ง</span>
+                  <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
+                    <ArrowDown size={14} />
+                  </div>
                 </button>
               </Stagger>
             </div>
           </div>
 
           {/* ---------------------------------------------------------------
-              SECTION 2 — SHALLOW WATER (Center, DARK text)
+              SECTION 2 — ดำดิ่งลงสู่ใต้ผิวน้ำ
               --------------------------------------------------------------- */}
           <div
-            className="absolute inset-0 flex items-center justify-center px-6 sm:px-8"
+            className="absolute inset-0 flex items-center justify-center px-6 sm:px-12"
             style={{
               opacity: s2Opacity,
-              transition: "opacity 0.1s ease-out",
+              transition: "opacity 0.15s ease-out",
               pointerEvents: s2Opacity > 0.3 ? "auto" : "none",
             }}
           >
-            <div className="max-w-[900px] text-center">
+            <div className="max-w-2xl text-center drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]">
               <Stagger visible={s2Opacity > 0.3} delay={0}>
-                <h2
-                  className="font-extralight tracking-wide leading-[1.3] text-center uppercase text-[clamp(1.5rem,4.5vw,4.5rem)]"
-                  style={{ color: DARK }}
-                >
-                  Every eye, every gill{" "}
-                  <span style={{ color: `${DARK}cc` }}>tells a story</span>{" "}
-                  <span style={{ color: `${DARK}80` }}>of how fresh it is</span>
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
+                  ดวงตา เหงือก และเกล็ด
+                  <br />
+                  <span className="text-sky-300">บอกเล่าความสดที่แท้จริง</span>
                 </h2>
+              </Stagger>
+
+              <Stagger visible={s2Opacity > 0.3} delay={150}>
+                <p className="mt-4 text-sm sm:text-lg text-white/85 font-light leading-relaxed">
+                  ระบบตรวจจับความนูนใสของตาดำ สีแดงเลือดนกของเหงือก และความตึงของเนื้อปลาอย่างละเอียด แม่นยำทุกมุมมอง
+                </p>
+              </Stagger>
+
+              <Stagger visible={s2Opacity > 0.3} delay={250}>
+                <div className="mt-6 flex justify-center gap-3">
+                  <span className="px-3 py-1 rounded-md bg-white/10 backdrop-blur-md text-xs border border-white/20 text-white/90">
+                    👁️ ความใสของกระจกตา
+                  </span>
+                  <span className="px-3 py-1 rounded-md bg-white/10 backdrop-blur-md text-xs border border-white/20 text-white/90">
+                    🩸 สีสันของเหงือกปลา
+                  </span>
+                  <span className="px-3 py-1 rounded-md bg-white/10 backdrop-blur-md text-xs border border-white/20 text-white/90">
+                    ✨ ความแวววาวของผิว
+                  </span>
+                </div>
               </Stagger>
             </div>
 
-            {/* Right Column: 48px circle, 3 dots, 40px circle */}
-            <div className="absolute bottom-16 right-6 sm:right-8 md:right-12 flex flex-col items-center gap-4">
-              <Stagger visible={s2Opacity > 0.3} delay={200}>
+            {/* ปุ่มนำทางขวาล่าง */}
+            <div className="absolute bottom-12 right-6 sm:right-10 md:right-16 flex flex-col items-center gap-3">
+              <Stagger visible={s2Opacity > 0.3} delay={300}>
                 <button
-                  onClick={() => {
-                    const c = containerRef.current;
-                    if (c) {
-                      const targetY = (c.offsetHeight - window.innerHeight) * 0.62;
-                      window.scrollTo({ top: targetY, behavior: "smooth" });
-                    }
-                  }}
-                  className="w-12 h-12 rounded-full flex items-center justify-center hover:opacity-70 pointer-events-auto cursor-pointer"
-                  style={{
-                    border: `1px solid ${DARK}66`,
-                    color: DARK,
-                  }}
+                  onClick={() => scrollToDepth(0.65)}
+                  className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center text-white hover:bg-white/20 transition-all pointer-events-auto cursor-pointer"
                   aria-label="Dive deeper"
                 >
                   <ArrowDown size={18} />
                 </button>
               </Stagger>
-
-              <Stagger visible={s2Opacity > 0.3} delay={350}>
-                <div className="mt-4 flex items-center gap-2">
-                  <div
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: ACCENT }}
-                  />
-                  <div
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: `${DARK}66` }}
-                  />
-                  <div
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: `${DARK}66` }}
-                  />
-                </div>
-              </Stagger>
-
-              <Stagger visible={s2Opacity > 0.3} delay={500}>
+              <Stagger visible={s2Opacity > 0.3} delay={400}>
                 <button
-                  onClick={() => {
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-70 mt-2 pointer-events-auto cursor-pointer"
-                  style={{
-                    border: `1px solid ${DARK}4d`,
-                    color: `${DARK}cc`,
-                  }}
-                  aria-label="Scroll back to surface"
+                  onClick={() => scrollToDepth(0)}
+                  className="w-9 h-9 rounded-full bg-black/30 border border-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all pointer-events-auto cursor-pointer"
+                  aria-label="Back to surface"
                 >
                   <ChevronUp size={16} />
                 </button>
@@ -476,87 +367,81 @@ export function App() {
           </div>
 
           {/* ---------------------------------------------------------------
-              SECTION 3 — CORAL REEF (Right Aligned, WHITE text)
+              SECTION 3 — แนวปะการัง & ความสดเกรดพรีเมียม
               --------------------------------------------------------------- */}
           <div
-            className="absolute inset-0 flex items-center justify-end px-6 sm:px-8 md:px-20 lg:px-32"
+            className="absolute inset-0 flex items-center justify-end px-6 sm:px-12 md:px-24 lg:px-32"
             style={{
               opacity: s3Opacity,
-              transition: "opacity 0.1s ease-out",
+              transition: "opacity 0.15s ease-out",
               pointerEvents: s3Opacity > 0.3 ? "auto" : "none",
             }}
           >
-            <div className="max-w-2xl text-left">
+            <div className="max-w-xl text-left drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]">
               <Stagger visible={s3Opacity > 0.3} delay={0}>
-                <div className="flex items-center gap-2 mb-4">
-                  <div
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{ backgroundColor: ACCENT }}
-                  />
-                  <span className="text-white/60 text-lg tracking-wide">
-                    Grade A | Excellent Fresh
-                  </span>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs sm:text-sm font-semibold mb-4">
+                  <CheckCircle2 size={14} />
+                  เกรด A | ความสดระดับพรีเมียม
                 </div>
               </Stagger>
 
-              <Stagger visible={s3Opacity > 0.3} delay={150}>
-                <h2 className="text-[clamp(2rem,4vw,4rem)] font-light text-white leading-[1.2] uppercase tracking-wide mb-8">
-                  Clear eyes, bright gills,
+              <Stagger visible={s3Opacity > 0.3} delay={100}>
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
+                  ตาใสเป็นประกาย
                   <br />
-                  firm flesh.
+                  เหงือกแดงสด เนื้อแน่น
                 </h2>
               </Stagger>
 
-              <Stagger visible={s3Opacity > 0.3} delay={250}>
-                <p className="text-white/70 text-base max-w-md mb-8">
-                  Snap a photo. Our AI reads color, texture and clarity in seconds.
+              <Stagger visible={s3Opacity > 0.3} delay={200}>
+                <p className="mt-4 text-sm sm:text-base text-white/85 font-light leading-relaxed">
+                  ปลอดภัย มั่นใจ ไร้สารฟอร์มาลิน ถ่ายภาพวัตถุดิบที่คุณซื้อจากตลาดหรือซูเปอร์มาร์เก็ต แล้วให้ AI ตรวจสอบได้ทันที
                 </p>
               </Stagger>
             </div>
           </div>
 
           {/* ---------------------------------------------------------------
-              SECTION 4 — DEEP BLUE (Final CTA, Centered, WHITE text)
+              SECTION 4 — ใต้ทะเลลึก & จุดเริ่มสแกนหลัก
               --------------------------------------------------------------- */}
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 sm:px-8"
+            className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 sm:px-12"
             style={{
               opacity: s4Opacity,
-              transition: "opacity 0.1s ease-out",
+              transition: "opacity 0.15s ease-out",
               pointerEvents: s4Opacity > 0.3 ? "auto" : "none",
             }}
           >
-            <div className="flex flex-col items-center justify-center">
+            <div className="max-w-2xl flex flex-col items-center justify-center drop-shadow-[0_4px_20px_rgba(0,0,0,0.98)]">
               <Stagger visible={s4Opacity > 0.3} delay={0}>
-                <span className="text-white/60 text-lg tracking-wide mb-4 block">
-                  FreshScan AI
+                <span className="text-xs sm:text-sm tracking-[0.25em] uppercase text-sky-300 font-semibold mb-3 block">
+                  FRESHSCAN AI ASSESSMENT
                 </span>
               </Stagger>
 
-              <Stagger visible={s4Opacity > 0.3} delay={150}>
-                <h2 className="text-[clamp(2rem,4.5vw,4.5rem)] font-light text-white leading-[1.2] uppercase tracking-wide mb-10">
-                  From the sea
+              <Stagger visible={s4Opacity > 0.3} delay={100}>
+                <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white leading-tight mb-6">
+                  คัดสรรจากทะเล
                   <br />
-                  to your table, verified.
+                  สู่ความมั่นใจบนโต๊ะอาหาร
                 </h2>
               </Stagger>
 
+              <Stagger visible={s4Opacity > 0.3} delay={200}>
+                <p className="text-sm sm:text-lg text-white/85 font-light max-w-lg mb-8 leading-relaxed">
+                  เริ่มต้นตรวจสอบอาหารทะเลของคุณได้เลยวันนี้ ฟรี ไม่ต้องติดตั้งแอปพลิเคชัน
+                </p>
+              </Stagger>
+
               <Stagger visible={s4Opacity > 0.3} delay={300}>
-                <div className="pointer-events-auto flex items-center justify-center gap-4">
-                  <button
-                    onClick={() => setScannerOpen(true)}
-                    className="text-sm tracking-[0.3em] text-white/80 uppercase font-medium hover:text-white transition-colors cursor-pointer"
-                  >
-                    Start Photo Scan
-                  </button>
-                  <button
-                    onClick={() => setScannerOpen(true)}
-                    className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-800 transition-transform duration-300 hover:scale-110 cursor-pointer shadow-lg"
-                    aria-label="Start Photo Scan"
-                  >
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
+                <button
+                  onClick={() => setScannerOpen(true)}
+                  className="pointer-events-auto rounded-full px-8 py-4 bg-[#FF6B5B] hover:bg-[#ff5542] text-white text-base sm:text-lg font-semibold flex items-center gap-3 transition-all duration-300 hover:scale-105 shadow-2xl cursor-pointer"
+                >
+                  <Camera size={22} />
+                  <span>เริ่มสแกนความสดอาหารทะเล</span>
+                  <ArrowRight size={20} />
+                </button>
               </Stagger>
             </div>
           </div>
@@ -564,82 +449,11 @@ export function App() {
       </div>
 
       {/* ===================================================================
-          MOBILE MENU OVERLAY (fixed inset-0, z-[100], background DARK)
-          =================================================================== */}
-      <div
-        className={`fixed inset-0 z-[100] transition-opacity duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-          mobileOpen
-            ? "opacity-100 visible pointer-events-auto"
-            : "opacity-0 invisible pointer-events-none"
-        }`}
-        style={{ backgroundColor: DARK }}
-      >
-        <div
-          className={`relative h-full flex flex-col justify-between transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-            mobileOpen ? "translate-y-0" : "-translate-y-8"
-          }`}
-        >
-          {/* Close Button (Top-Right) */}
-          <div className="flex justify-end px-6 sm:px-8 pt-8 sm:pt-12">
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center text-white hover:border-white transition-colors cursor-pointer"
-              aria-label="Close menu"
-            >
-              <X size={18} />
-            </button>
-          </div>
-
-          {/* Links Centered Vertically */}
-          <div className="flex flex-col items-center justify-center px-8 sm:px-12 py-3 text-center gap-5">
-            {navLinks.map((item, i) => {
-              const isActive = activeNav === item;
-              return (
-                <button
-                  key={item}
-                  onClick={() => {
-                    setActiveNav(item);
-                    setMobileOpen(false);
-                    if (item === "FRESHSCAN AI") {
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    } else if (item === "SEAFOOD GUIDE") {
-                      const c = containerRef.current;
-                      if (c) window.scrollTo({ top: (c.offsetHeight - window.innerHeight) * 0.3, behavior: "smooth" });
-                    } else if (item === "FRESHNESS GRADES" || item === "REEF & ORIGIN") {
-                      const c = containerRef.current;
-                      if (c) window.scrollTo({ top: (c.offsetHeight - window.innerHeight) * 0.65, behavior: "smooth" });
-                    } else {
-                      setScannerOpen(true);
-                    }
-                  }}
-                  className={`text-2xl sm:text-3xl font-light tracking-wide uppercase transition-colors py-2 cursor-pointer ${
-                    isActive ? "text-white" : "text-white/60 hover:text-white"
-                  }`}
-                  style={{
-                    transform: mobileOpen ? "translateY(0)" : "translateY(20px)",
-                    transition: `transform 0.5s ease ${i * 60}ms, color 0.2s ease`,
-                  }}
-                >
-                  {item}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Footer: NEWS and CONTACT */}
-          <div className="flex justify-between items-center px-8 sm:px-12 pb-10 text-xs tracking-[0.2em] uppercase text-white/60">
-            <span>News</span>
-            <span>Contact</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ===================================================================
-          PHOTO SCAN MODAL (Interactive AI Seafood Quality Analysis)
+          PHOTO SCAN MODAL (ระบบสแกนความสด - ภาษาไทย 100% ใช้งานง่าย)
           =================================================================== */}
       {scannerOpen && (
-        <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-xl bg-[#0B2A3C] border border-white/20 rounded-2xl p-6 sm:p-8 text-white shadow-2xl overflow-y-auto max-h-[90vh]">
+        <div className="fixed inset-0 z-[120] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg bg-[#07131D] border border-white/20 rounded-2xl p-6 sm:p-8 text-white shadow-2xl overflow-y-auto max-h-[90vh]">
             <button
               onClick={() => {
                 setScannerOpen(false);
@@ -647,23 +461,22 @@ export function App() {
                 setAnalyzeResult(null);
               }}
               className="absolute top-5 right-5 w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:text-white hover:border-white transition-colors cursor-pointer"
+              aria-label="Close"
             >
               <X size={16} />
             </button>
 
+            {/* Header */}
             <div className="flex items-center gap-3 mb-6">
-              <div
-                className="w-9 h-9 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: ACCENT }}
-              >
-                <Camera size={18} className="text-white" />
+              <div className="w-10 h-10 rounded-full bg-[#FF6B5B] flex items-center justify-center text-white shadow-md">
+                <Camera size={20} />
               </div>
               <div>
-                <h3 className="text-lg font-medium uppercase tracking-wide">
-                  FreshScan AI Scanner
+                <h3 className="text-lg font-bold text-white">
+                  สแกนประเมินความสด (FreshScan)
                 </h3>
-                <p className="text-xs text-white/60 tracking-wider">
-                  Select species & evaluate freshness
+                <p className="text-xs text-white/60">
+                  เลือกประเภทอาหารทะเล แล้วถ่ายภาพเพื่อตรวจผล
                 </p>
               </div>
             </div>
@@ -671,10 +484,10 @@ export function App() {
             {/* Species Selector */}
             <div className="grid grid-cols-4 gap-2 mb-6">
               {[
-                { id: "fish", label: "Fish (ปลา)" },
-                { id: "shrimp", label: "Shrimp (กุ้ง)" },
-                { id: "squid", label: "Squid (หมึก)" },
-                { id: "shellfish", label: "Shellfish (หอย)" },
+                { id: "fish", label: "🐟 ปลาทั้งตัว" },
+                { id: "shrimp", label: "🦐 กุ้งสด" },
+                { id: "squid", label: "🦑 หมึกสด" },
+                { id: "shellfish", label: "🦪 หอยสด" },
               ].map((sp) => (
                 <button
                   key={sp.id}
@@ -682,9 +495,9 @@ export function App() {
                     setSelectedType(sp.id as SeafoodTypeId);
                     if (selectedImage) runFreshnessTest(selectedImage, sp.id as SeafoodTypeId);
                   }}
-                  className={`py-2 px-2 text-xs font-medium rounded-lg border transition-all text-center cursor-pointer ${
+                  className={`py-2.5 px-2 text-xs font-medium rounded-xl border transition-all text-center cursor-pointer ${
                     selectedType === sp.id
-                      ? "border-[#FF6B5B] bg-[#FF6B5B]/20 text-white font-semibold"
+                      ? "border-[#FF6B5B] bg-[#FF6B5B]/20 text-white font-semibold shadow-sm"
                       : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
                   }`}
                 >
@@ -705,14 +518,14 @@ export function App() {
             {!selectedImage ? (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-white/20 hover:border-white/50 rounded-xl p-8 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-3 bg-white/5"
+                className="border-2 border-dashed border-white/25 hover:border-white/50 rounded-2xl p-8 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-3 bg-white/5"
               >
-                <Upload size={32} className="text-white/50" />
-                <p className="text-sm font-medium tracking-wide">
-                  Click to upload or drag photo of seafood
+                <Upload size={32} className="text-white/60" />
+                <p className="text-sm font-medium text-white">
+                  กดเพื่อถ่ายภาพ หรือ อัปโหลดรูปภาพ
                 </p>
                 <p className="text-xs text-white/50">
-                  Supports JPG, PNG, WEBP (Eyes, gills or body)
+                  ถ่ายเน้นบริเวณดวงตา เหงือก หรือผิวสัมผัส (JPG, PNG, WEBP)
                 </p>
                 <button
                   type="button"
@@ -721,38 +534,38 @@ export function App() {
                     setSelectedImage(sampleFishImg);
                     runFreshnessTest(sampleFishImg, selectedType);
                   }}
-                  className="mt-2 text-xs text-[#FF6B5B] underline hover:opacity-80"
+                  className="mt-3 text-xs text-[#FF6B5B] underline hover:opacity-80 cursor-pointer"
                 >
-                  Or test with sample fresh fish photo
+                  หรือทดสอบด้วยภาพปลาสดตัวอย่าง
                 </button>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="relative rounded-xl overflow-hidden max-h-56 border border-white/20">
+                <div className="relative rounded-xl overflow-hidden max-h-56 border border-white/20 shadow-md">
                   <img
                     src={selectedImage}
-                    alt="Uploaded seafood"
+                    alt="Seafood"
                     className="w-full h-full object-cover"
                   />
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="absolute bottom-3 right-3 bg-black/70 hover:bg-black text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm cursor-pointer"
+                    className="absolute bottom-3 right-3 bg-black/80 hover:bg-black text-white text-xs px-3.5 py-1.5 rounded-full backdrop-blur-sm cursor-pointer border border-white/20"
                   >
-                    Change photo
+                    เปลี่ยนภาพถ่าย
                   </button>
                 </div>
 
                 {isAnalyzing ? (
-                  <div className="p-6 text-center text-sm text-white/70 flex items-center justify-center gap-2">
-                    <Sparkles className="animate-spin text-[#FF6B5B]" size={18} />
-                    Analyzing pixels, color temperature & QIM clarity...
+                  <div className="p-6 text-center text-sm text-white/80 flex items-center justify-center gap-2">
+                    <Sparkles className="animate-spin text-[#FF6B5B]" size={20} />
+                    AI กำลังวิเคราะห์สี ความโปร่งใส และเกณฑ์ QIM...
                   </div>
                 ) : analyzeResult ? (
                   <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span
-                          className="px-2.5 py-1 rounded text-xs font-bold"
+                          className="px-3 py-1 rounded-md text-xs font-bold text-white shadow"
                           style={{
                             backgroundColor:
                               analyzeResult.overallGrade === "A"
@@ -762,40 +575,39 @@ export function App() {
                                 : analyzeResult.overallGrade === "C"
                                 ? "#f59e0b"
                                 : "#ef4444",
-                            color: "#fff",
                           }}
                         >
-                          GRADE {analyzeResult.overallGrade}
+                          เกรด {analyzeResult.overallGrade}
                         </span>
-                        <span className="font-semibold text-sm">
+                        <span className="font-semibold text-sm text-white">
                           {analyzeResult.overallGrade === "A"
-                            ? "Very Fresh (สดมาก)"
+                            ? "สดมาก (พรีเมียม)"
                             : analyzeResult.overallGrade === "B"
-                            ? "Fresh (สด)"
+                            ? "สดดี (คุณภาพดี)"
                             : analyzeResult.overallGrade === "C"
-                            ? "Moderate (พอใช้)"
-                            : "Spoiled (เริ่มเสื่อมสภาพ)"}
+                            ? "พอใช้ (ควรปรุงสุกทันที)"
+                            : "เริ่มเสื่อมสภาพ (ไม่ควรบริโภค)"}
                         </span>
                       </div>
-                      <span className="text-xs font-mono text-white/60">
-                        QIM Demerit: {analyzeResult.qimScore} / 20
+                      <span className="text-xs text-white/60 font-mono">
+                        QIM: {analyzeResult.qimScore} / 20
                       </span>
                     </div>
 
-                    <p className="text-xs text-white/80 leading-relaxed">
+                    <p className="text-xs text-white/85 leading-relaxed">
                       {analyzeResult.verdict}
                     </p>
 
                     <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10 text-xs">
-                      <div className="p-2 rounded bg-black/20">
-                        <span className="text-white/50 block">Confidence</span>
-                        <span className="font-medium text-emerald-400">
+                      <div className="p-2.5 rounded-lg bg-black/30">
+                        <span className="text-white/50 block text-[11px]">ความมั่นใจของ AI</span>
+                        <span className="font-semibold text-emerald-400">
                           {Math.round(analyzeResult.confidence * 100)}%
                         </span>
                       </div>
-                      <div className="p-2 rounded bg-black/20">
-                        <span className="text-white/50 block">Recommended</span>
-                        <span className="font-medium text-white/90">
+                      <div className="p-2.5 rounded-lg bg-black/30">
+                        <span className="text-white/50 block text-[11px]">คำแนะนำ</span>
+                        <span className="font-semibold text-white/90">
                           {analyzeResult.recommendedAction}
                         </span>
                       </div>

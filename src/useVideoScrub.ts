@@ -4,15 +4,13 @@ import * as MP4BoxModule from "mp4box";
 const MP4Box = (MP4BoxModule as any).default || MP4BoxModule;
 const { createFile, DataStream } = MP4BoxModule as any;
 
-const LERP_TAU = 8;
-const SNAP = 0.002;
-const LRU_MAX = 24;
+const LERP_TAU = 9; // smooth responsive tracking
+const SNAP = 0.001;
 const LEAD = 24;
-const WATCHDOG = 60000;
 
 interface FrameItem {
   ts: number; // in microseconds
-  blob: Blob;
+  bitmap: ImageBitmap;
 }
 
 export function useVideoScrub(videoSrc: string) {
@@ -22,21 +20,19 @@ export function useVideoScrub(videoSrc: string) {
 
   const [scrollProgress, setScrollProgress] = useState(0);
   const [canvasLive, setCanvasLive] = useState(false);
-  const [dur, setDur] = useState(0);
+  const [dur, setDur] = useState(10);
 
   // Animation & decoding state stored in refs to avoid re-renders on rAF
   const stateRef = useRef({
     current: 0,
     target: 0,
-    dur: 0,
+    dur: 10,
     ready: false,
     reverted: false,
     painted: false,
     building: false,
     lastTime: performance.now(),
     bank: [] as FrameItem[],
-    lru: new Map<number, ImageBitmap | null>(),
-    lruOrder: [] as number[],
     inFlightDecodes: 0,
     videoDecoder: null as any,
   });
@@ -61,61 +57,23 @@ export function useVideoScrub(videoSrc: string) {
     return Math.abs(bank[low].ts - tsMicro) < Math.abs(bank[high].ts - tsMicro) ? low : high;
   }, []);
 
-  // Warm LRU cache around index (i-1..i+2)
-  const warmLRU = useCallback((centerIdx: number) => {
-    const s = stateRef.current;
-    if (!s.bank.length) return;
-    const start = Math.max(0, centerIdx - 1);
-    const end = Math.min(s.bank.length - 1, centerIdx + 2);
-
-    for (let i = start; i <= end; i++) {
-      if (!s.lru.has(i)) {
-        s.lru.set(i, null); // mark pending
-        s.lruOrder.push(i);
-
-        // Evict oldest if exceeding LRU_MAX
-        while (s.lruOrder.length > LRU_MAX) {
-          const evictIdx = s.lruOrder.shift();
-          if (evictIdx !== undefined && evictIdx !== centerIdx) {
-            const bmp = s.lru.get(evictIdx);
-            if (bmp) {
-              try {
-                bmp.close();
-              } catch (_) {}
-            }
-            s.lru.delete(evictIdx);
-          }
-        }
-
-        const item = s.bank[i];
-        createImageBitmap(item.blob)
-          .then((bitmap) => {
-            s.lru.set(i, bitmap);
-          })
-          .catch(() => {
-            s.lru.delete(i);
-          });
-      }
-    }
-  }, []);
-
-  // Scroll Progress Calculator
+  // Compute scroll progress p = clamp(0, 1, window.scrollY / (container.offsetHeight - window.innerHeight))
   const getProgress = useCallback(() => {
+    if (typeof window === "undefined") return 0;
     const container = containerRef.current;
     if (!container) return 0;
-    const totalScrollable = container.offsetHeight - window.innerHeight;
-    if (totalScrollable <= 0) return 0;
-    const p = window.scrollY / totalScrollable;
-    return Math.max(0, Math.min(1, p));
+    const total = container.offsetHeight - window.innerHeight;
+    if (total <= 0) return 0;
+    return Math.min(1, Math.max(0, window.scrollY / total));
   }, []);
 
-  // Handle Video Duration Loaded
+  // Sync duration from video element immediately
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const onLoadedMetadata = () => {
-      if (video.duration && !isNaN(video.duration)) {
+      if (video.duration && !isNaN(video.duration) && isFinite(video.duration)) {
         stateRef.current.dur = video.duration;
         setDur(video.duration);
       }
@@ -123,8 +81,7 @@ export function useVideoScrub(videoSrc: string) {
 
     video.addEventListener("loadedmetadata", onLoadedMetadata);
     if (video.duration && !isNaN(video.duration)) {
-      stateRef.current.dur = video.duration;
-      setDur(video.duration);
+      onLoadedMetadata();
     }
 
     return () => {
@@ -146,14 +103,6 @@ export function useVideoScrub(videoSrc: string) {
     let isCancelled = false;
     const s = stateRef.current;
 
-    // 60s Watchdog: revert to HTML5 video seeking if decoding takes too long
-    const watchdogTimer = setTimeout(() => {
-      if (!s.ready && !s.painted) {
-        s.reverted = true;
-        setCanvasLive(false);
-      }
-    }, WATCHDOG);
-
     async function initDecoder(preferSoftware = false) {
       try {
         s.building = true;
@@ -163,9 +112,6 @@ export function useVideoScrub(videoSrc: string) {
         if (isCancelled) return;
 
         const mp4boxfile = createFile();
-        const offscreenCanvas = document.createElement("canvas");
-        const offscreenCtx = offscreenCanvas.getContext("2d");
-
         let videoTrackInfo: any = null;
         let decoder: VideoDecoder | null = null;
         const pendingSamples: any[] = [];
@@ -178,9 +124,8 @@ export function useVideoScrub(videoSrc: string) {
           while (pendingSamples.length > 0) {
             if (isCancelled || s.reverted) break;
 
-            // Throttle with LEAD so decode doesn't outrun blob encoding
             if (s.inFlightDecodes >= LEAD) {
-              await new Promise((r) => setTimeout(r, 16));
+              await new Promise((r) => setTimeout(r, 8));
               continue;
             }
 
@@ -205,7 +150,7 @@ export function useVideoScrub(videoSrc: string) {
         }
 
         decoder = new VideoDecoder({
-          output: (frame: VideoFrame) => {
+          output: async (frame: VideoFrame) => {
             if (isCancelled || s.reverted) {
               frame.close();
               s.inFlightDecodes = Math.max(0, s.inFlightDecodes - 1);
@@ -213,36 +158,39 @@ export function useVideoScrub(videoSrc: string) {
             }
 
             const timestamp = frame.timestamp;
-            if (offscreenCanvas.width !== frame.displayWidth) {
-              offscreenCanvas.width = frame.displayWidth;
-              offscreenCanvas.height = frame.displayHeight;
-            }
 
-            offscreenCtx?.drawImage(frame, 0, 0);
-            frame.close();
+            try {
+              // Direct GPU-to-GPU ImageBitmap creation (instantaneous & 100% crystal clear)
+              const bitmap = await createImageBitmap(frame);
+              frame.close();
+              s.inFlightDecodes = Math.max(0, s.inFlightDecodes - 1);
 
-            offscreenCanvas.toBlob(
-              (blob) => {
-                s.inFlightDecodes = Math.max(0, s.inFlightDecodes - 1);
-                if (blob && !isCancelled) {
-                  s.bank.push({ ts: timestamp, blob });
+              if (bitmap && !isCancelled) {
+                s.bank.push({ ts: timestamp, bitmap });
+
+                // Once we have a solid batch of decoded frames, activate canvas mode
+                if (!s.ready && s.bank.length >= 10) {
+                  s.bank.sort((a, b) => a.ts - b.ts);
+                  s.ready = true;
+                  setCanvasLive(true);
                 }
-              },
-              "image/webp",
-              0.82
-            );
+              }
+            } catch (bmpErr) {
+              frame.close();
+              s.inFlightDecodes = Math.max(0, s.inFlightDecodes - 1);
+            }
           },
           error: (e) => {
             console.warn("VideoDecoder error:", e);
             if (!preferSoftware && !s.ready) {
-              // Retry once with prefer-software
               initDecoder(true);
             } else {
               s.reverted = true;
-              setCanvasLive(false);
             }
           },
         });
+
+        s.videoDecoder = decoder;
 
         mp4boxfile.onReady = (info: any) => {
           if (isCancelled) return;
@@ -252,7 +200,7 @@ export function useVideoScrub(videoSrc: string) {
           }
 
           videoTrackInfo = info.videoTracks[0];
-          if (!s.dur && videoTrackInfo.duration && videoTrackInfo.timescale) {
+          if (videoTrackInfo.duration && videoTrackInfo.timescale) {
             const calculatedDur = videoTrackInfo.duration / videoTrackInfo.timescale;
             s.dur = calculatedDur;
             setDur(calculatedDur);
@@ -278,8 +226,8 @@ export function useVideoScrub(videoSrc: string) {
           try {
             decoder?.configure({
               codec: videoTrackInfo.codec,
-              codedWidth: videoTrackInfo.video?.width || 1920,
-              codedHeight: videoTrackInfo.video?.height || 1080,
+              codedWidth: videoTrackInfo.video?.width || 1280,
+              codedHeight: videoTrackInfo.video?.height || 720,
               description,
               hardwareAcceleration: preferSoftware ? "prefer-software" : "no-preference",
             });
@@ -309,39 +257,43 @@ export function useVideoScrub(videoSrc: string) {
         mp4boxfile.appendBuffer(buffer);
         mp4boxfile.flush();
 
-        // Check when bank reaches sufficient density to declare ready
-        const readinessChecker = setInterval(() => {
+        // Final sort when all samples are extracted
+        const finishChecker = setInterval(() => {
           if (isCancelled) {
-            clearInterval(readinessChecker);
+            clearInterval(finishChecker);
             return;
           }
-          if (s.bank.length > 0 && (s.bank.length >= 15 || (pendingSamples.length === 0 && !processing))) {
+          if (s.bank.length > 0) {
             s.bank.sort((a, b) => a.ts - b.ts);
             s.ready = true;
-            clearInterval(readinessChecker);
+            setCanvasLive(true);
           }
-        }, 150);
+          if (pendingSamples.length === 0 && !processing && s.bank.length > 0) {
+            clearInterval(finishChecker);
+          }
+        }, 200);
       } catch (err) {
-        console.warn("Frame extraction fallback active:", err);
+        console.warn("Frame extraction error, using video fallback:", err);
         s.reverted = true;
       }
     }
 
-    // Build after window load or right away
-    if (document.readyState === "complete") {
-      initDecoder();
-    } else {
-      window.addEventListener("load", () => initDecoder(), { once: true });
-    }
+    initDecoder();
 
     return () => {
       isCancelled = true;
-      clearTimeout(watchdogTimer);
       if (s.videoDecoder && s.videoDecoder.state !== "closed") {
         try {
           s.videoDecoder.close();
         } catch (_) {}
       }
+      // Clean up bitmaps
+      for (const item of s.bank) {
+        try {
+          item.bitmap.close();
+        } catch (_) {}
+      }
+      s.bank = [];
     };
   }, [videoSrc]);
 
@@ -367,6 +319,7 @@ export function useVideoScrub(videoSrc: string) {
         if (prefersReduced) {
           s.current = s.target;
         } else {
+          // Responsive fluid LERP
           s.current += (s.target - s.current) * (1 - Math.exp(-dt * LERP_TAU));
           if (Math.abs(s.target - s.current) < SNAP) {
             s.current = s.target;
@@ -376,18 +329,19 @@ export function useVideoScrub(videoSrc: string) {
         const canvas = canvasRef.current;
         const video = videoRef.current;
 
+        // 1) Primary: Draw decoded high-res frame from bank on canvas
         if (s.ready && s.bank.length > 0 && canvas) {
           const targetTs = s.current * 1e6;
           const nearestIdx = getNearestIndex(targetTs, s.bank);
 
           if (nearestIdx >= 0) {
-            warmLRU(nearestIdx);
-            const bitmap = s.lru.get(nearestIdx);
-
-            if (bitmap) {
+            const item = s.bank[nearestIdx];
+            if (item && item.bitmap) {
               const ctx = canvas.getContext("2d");
               if (ctx) {
-                ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = "high";
+                ctx.drawImage(item.bitmap, 0, 0, canvas.width, canvas.height);
                 if (!s.painted) {
                   s.painted = true;
                   setCanvasLive(true);
@@ -396,8 +350,8 @@ export function useVideoScrub(videoSrc: string) {
             }
           }
         } else if (video) {
-          // Fallback: Seek video.currentTime directly
-          if (!video.seeking && Math.abs(video.currentTime - s.current) > 0.01) {
+          // 2) Fallback: Keep video element seeking smoothly in sync
+          if (!video.seeking && Math.abs(video.currentTime - s.current) > 0.02) {
             video.currentTime = s.current;
           }
         }
@@ -411,7 +365,7 @@ export function useVideoScrub(videoSrc: string) {
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [getProgress, getNearestIndex, warmLRU]);
+  }, [getProgress, getNearestIndex]);
 
   // Recompute on window resize & orientationchange
   useEffect(() => {
@@ -426,17 +380,12 @@ export function useVideoScrub(videoSrc: string) {
     };
   }, [getProgress]);
 
-  const isLight = scrollProgress <= 0.55;
-
   return {
     containerRef,
     videoRef,
     canvasRef,
     scrollProgress,
     canvasLive,
-    isLight,
     dur,
   };
 }
-
-export default useVideoScrub;
