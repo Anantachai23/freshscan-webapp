@@ -73,23 +73,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FreshScan — ประเมินความสดอาหารทะเลด้วย AI" },
+      { title: "FreshScan Marine™ — AI Seafood Freshness Assessment" },
       {
         name: "description",
         content:
-          "FreshScan วิเคราะห์ความสดของอาหารทะเลจากภาพถ่ายสมาร์ทโฟน ด้วย Machine Learning แม่นยำ รวดเร็ว ใช้งานง่าย",
+          "Instant AI-powered seafood freshness analysis. Evaluate fish, shrimp, squid, and shellfish quality using international QIM standards. On-device processing, 100% private.",
       },
-      { property: "og:title", content: "FreshScan — ประเมินความสดอาหารทะเลด้วย AI" },
+      { property: "og:title", content: "FreshScan Marine™ — AI Seafood Freshness Assessment" },
       {
         property: "og:description",
-        content: "ระบบ AI ช่วยผู้บริโภคและพ่อค้าแม่ค้าตรวจความสดอาหารทะเลภายใน 3 วินาที",
+        content: "Professional-grade seafood quality assessment powered by computer vision and QIM standards. Analyze freshness in under 1 second.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "FreshScan — ประเมินความสดอาหารทะเลด้วย AI" },
+      { name: "twitter:title", content: "FreshScan Marine™ — AI Seafood Freshness Assessment" },
       {
         name: "twitter:description",
-        content: "ระบบ AI ช่วยผู้บริโภคและพ่อค้าแม่ค้าตรวจความสดอาหารทะเลภายใน 3 วินาที",
+        content: "Professional-grade seafood quality assessment powered by computer vision and QIM standards.",
       },
     ],
     links: [

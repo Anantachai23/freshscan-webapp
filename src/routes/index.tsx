@@ -4,11 +4,11 @@ import { NeuralOceanHero } from "@/components/home";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Neural — World-Class Marine Sanctuaries & Living Coral Reefs" },
+      { title: "FreshScan Marine™ — AI Seafood Freshness Scanner" },
       {
         name: "description",
         content:
-          "Exploring Earth's most breathtaking coral reefs and majestic marine kingdoms. Deep wonders, beyond the surface.",
+          "Professional-grade AI seafood freshness assessment. Analyze fish, shrimp, squid, and shellfish quality instantly using QIM standards. Processed on-device, 100% private.",
       },
     ],
   }),

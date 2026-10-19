@@ -368,7 +368,7 @@ export function NeuralOceanHero() {
             <path d="M22.9 0 L19.3 0 L15.0 7.6 L18.6 7.6 Z" />
             <path d="M22.6 6.9 L19.0 6.9 L14.05 16.4 L17.65 16.4 Z" />
           </svg>
-          <span id="word">NEURAL</span>
+          <span id="word">FRESHSCAN</span>
         </Link>
 
         <input className="neural-navtoggle" type="checkbox" id="nav-open" />
@@ -384,42 +384,42 @@ export function NeuralOceanHero() {
         <div className="neural-navpanel">
           <nav className="neural-menu">
             <Link to="/species">
-              <span id="about">Sanctuaries</span>
+              <span id="about">Species Guide</span>
             </Link>
             <Link to="/dataset">
-              <span id="product">Reef Atlas</span>
+              <span id="product">Dataset</span>
             </Link>
             <Link to="/analyze">
-              <span id="solutions">Ecosystems</span>
+              <span id="solutions">Analyze</span>
               <svg className="neural-caret" viewBox="0 0 9 6" aria-hidden="true">
                 <path d="M0.7 1.1 L4.5 4.6 L8.3 1.1" />
               </svg>
             </Link>
           </nav>
           <Link className="neural-login" to="/analyze">
-            <span id="login">Expedition access</span>
+            <span id="login">Start Scanning</span>
             <svg className="neural-navarrow" viewBox="0 0 10 9" aria-hidden="true">
               <path d="M0 4.5 H9.1 M5.4 0.9 L9.2 4.5 L5.4 8.1" />
             </svg>
           </Link>
           <Link className="neural-pill" to="/analyze">
-            <span id="contact">Dive with us</span>
+            <span id="contact">Scan Now</span>
           </Link>
         </div>
       </header>
 
-      {/* 4. Hero Content Section */}
+      {/* 4. Hero Content Section — FreshScan Marine */}
       <main className="neural-hero">
         <h1 className="neural-title">
-          <span id="h1a">Living Coral Sanctuaries</span>
-          <span id="h1b">Deep Wonders, Beyond the Surface.</span>
+          <span id="h1a">AI Seafood Freshness Scanner</span>
+          <span id="h1b">Instant Quality Assessment.</span>
         </h1>
         <p className="neural-sub">
-          <span id="sub1">Exploring Earth's most breathtaking coral reefs</span>
-          <span id="sub2">and majestic marine kingdoms.</span>
+          <span id="sub1">Professional-grade freshness analysis for fish, shrimp, squid & shellfish.</span>
+          <span id="sub2">Powered by QIM standards. Processed on-device.</span>
         </p>
         <Link className="neural-cta" to="/analyze">
-          <span id="cta">Descend into the reef</span>
+          <span id="cta">Start Scanning</span>
           <svg className="arrow" viewBox="0 0 16 11" aria-hidden="true">
             <path d="M0 5.5 H14.6 M10.3 1.2 L14.9 5.5 L10.3 9.8" />
           </svg>
@@ -429,25 +429,25 @@ export function NeuralOceanHero() {
             <svg className="neural-chev" viewBox="0 0 11 20" aria-hidden="true">
               <path d="M1.15 1.15 L9.6 10 L1.15 18.85" />
             </svg>
-            <span id="f1">Bioluminescent corals</span>
+            <span id="f1">QIM European standard</span>
           </li>
           <li>
             <svg className="neural-chev" viewBox="0 0 11 20" aria-hidden="true">
               <path d="M1.15 1.15 L9.6 10 L1.15 18.85" />
             </svg>
-            <span id="f2">Pelagic biodiversity</span>
+            <span id="f2">Edge-processed, 100% private</span>
           </li>
           <li>
             <svg className="neural-chev" viewBox="0 0 11 20" aria-hidden="true">
               <path d="M1.15 1.15 L9.6 10 L1.15 18.85" />
             </svg>
-            <span id="f3">Pristine barrier reefs</span>
+            <span id="f3">4 species: fish, shrimp, squid, shellfish</span>
           </li>
           <li>
             <svg className="neural-chev" viewBox="0 0 11 20" aria-hidden="true">
               <path d="M1.15 1.15 L9.6 10 L1.15 18.85" />
             </svg>
-            <span id="f4">Marine conservation</span>
+            <span id="f4">Grade A–D freshness rating</span>
           </li>
         </ul>
         <span className="neural-rule" aria-hidden="true" />
@@ -455,8 +455,8 @@ export function NeuralOceanHero() {
 
       {/* 5. Footer */}
       <footer className="neural-foot">
-        <span id="foot1">Preserving vital marine ecosystems and living reefs across the oceans.</span>
-        <span id="foot2">2026</span>
+        <span id="foot1">Empowering consumers and markets with reliable seafood quality assessment.</span>
+        <span id="foot2">FreshScan Marine™ 2026</span>
       </footer>
     </div>
   );
