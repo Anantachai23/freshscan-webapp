@@ -9,43 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SpeciesRouteImport } from './routes/species'
-import { Route as ScanRouteImport } from './routes/scan'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as FoldcraftRouteImport } from './routes/foldcraft'
-import { Route as DatasetRouteImport } from './routes/dataset'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AnalyzeRouteImport } from './routes/analyze'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AnalyzeRouteImport } from './routes/analyze'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DatasetRouteImport } from './routes/dataset'
+import { Route as FoldcraftRouteImport } from './routes/foldcraft'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ScanRouteImport } from './routes/scan'
+import { Route as SpeciesRouteImport } from './routes/species'
 
-const SpeciesRoute = SpeciesRouteImport.update({
-  id: '/species',
-  path: '/species',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ScanRoute = ScanRouteImport.update({
-  id: '/scan',
-  path: '/scan',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FoldcraftRoute = FoldcraftRouteImport.update({
-  id: '/foldcraft',
-  path: '/foldcraft',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DatasetRoute = DatasetRouteImport.update({
-  id: '/dataset',
-  path: '/dataset',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnalyzeRoute = AnalyzeRouteImport.update({
@@ -53,9 +28,34 @@ const AnalyzeRoute = AnalyzeRouteImport.update({
   path: '/analyze',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DatasetRoute = DatasetRouteImport.update({
+  id: '/dataset',
+  path: '/dataset',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FoldcraftRoute = FoldcraftRouteImport.update({
+  id: '/foldcraft',
+  path: '/foldcraft',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScanRoute = ScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpeciesRoute = SpeciesRouteImport.update({
+  id: '/species',
+  path: '/species',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -136,46 +136,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/species': {
-      id: '/species'
-      path: '/species'
-      fullPath: '/species'
-      preLoaderRoute: typeof SpeciesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/scan': {
-      id: '/scan'
-      path: '/scan'
-      fullPath: '/scan'
-      preLoaderRoute: typeof ScanRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/foldcraft': {
-      id: '/foldcraft'
-      path: '/foldcraft'
-      fullPath: '/foldcraft'
-      preLoaderRoute: typeof FoldcraftRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dataset': {
-      id: '/dataset'
-      path: '/dataset'
-      fullPath: '/dataset'
-      preLoaderRoute: typeof DatasetRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/analyze': {
@@ -185,11 +150,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnalyzeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dataset': {
+      id: '/dataset'
+      path: '/dataset'
+      fullPath: '/dataset'
+      preLoaderRoute: typeof DatasetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/foldcraft': {
+      id: '/foldcraft'
+      path: '/foldcraft'
+      fullPath: '/foldcraft'
+      preLoaderRoute: typeof FoldcraftRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scan': {
+      id: '/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof ScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/species': {
+      id: '/species'
+      path: '/species'
+      fullPath: '/species'
+      preLoaderRoute: typeof SpeciesRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

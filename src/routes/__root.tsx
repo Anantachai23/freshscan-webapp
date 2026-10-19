@@ -73,20 +73,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FreshScan Marine™ — AI Seafood Freshness Assessment" },
+      { title: "Scroll Tied Video Section — FreshScan Marine" },
       {
         name: "description",
         content:
-          "Instant AI-powered seafood freshness analysis. Evaluate fish, shrimp, squid, and shellfish quality using international QIM standards. On-device processing, 100% private.",
+          "Cinematic scroll-tied video experience for AI seafood freshness evaluation with living coral reef and optical computer vision.",
       },
-      { property: "og:title", content: "FreshScan Marine™ — AI Seafood Freshness Assessment" },
+      { property: "og:title", content: "Scroll Tied Video Section — FreshScan Marine" },
       {
         property: "og:description",
-        content: "Professional-grade seafood quality assessment powered by computer vision and QIM standards. Analyze freshness in under 1 second.",
+        content: "Professional-grade seafood quality assessment powered by computer vision and QIM standards.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "FreshScan Marine™ — AI Seafood Freshness Assessment" },
+      { name: "twitter:title", content: "Scroll Tied Video Section — FreshScan Marine" },
       {
         name: "twitter:description",
         content: "Professional-grade seafood quality assessment powered by computer vision and QIM standards.",
@@ -96,6 +96,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://db.onlinewebfonts.com/c/95cecf452d3208890088a5b4c19c7ecf?family=Helvetica+Neue+ME",
+      },
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap",

@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import url("https://db.onlinewebfonts.com/c/95cecf452d3208890088a5b4c19c7ecf?family=Helvetica+Neue+ME");
 @import url("https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap");
 
 @custom-variant dark (&:is(.dark *));
@@ -1778,5 +1779,13 @@ body:not(.intro-ready) .portal-planet-content .portal-fact {
 .delay-900 {
   animation-delay: 0.9s;
 }
+
+/* =======================================================================
+   CINEMATIC SCROLL-TIED VIDEO FONT & UTILITIES
+   ======================================================================= */
+.font-helvetica {
+  font-family: 'Helvetica Neue ME', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
 
 
