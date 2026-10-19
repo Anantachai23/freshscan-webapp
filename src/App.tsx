@@ -21,6 +21,9 @@ import {
   Scale,
   ThermometerSnowflake,
   Fish,
+  SlidersHorizontal,
+  Table as TableIcon,
+  LayoutGrid,
 } from "lucide-react";
 import { analyzeImage, type AnalyzeResult } from "@/lib/freshnessAnalyzer";
 import { type SeafoodTypeId } from "@/data/freshscan_taxonomy";
@@ -143,54 +146,169 @@ function Stagger({
 }
 
 // =========================================================================
-// DETAILED OFFICIAL QIM CRITERIA (5 DIMENSIONS)
+// COMPREHENSIVE ORGANOLEPTIC QIM CRITERIA DATA
 // =========================================================================
-const QIM_CRITERIA_DETAILS = [
+interface QIMCriterion {
+  id: string;
+  nameTh: string;
+  nameEn: string;
+  icon: typeof Eye;
+  maxDemerit: number;
+  gradeA: {
+    title: string;
+    description: string;
+    points: number;
+    status: string;
+  };
+  gradeB: {
+    title: string;
+    description: string;
+    points: number;
+    status: string;
+  };
+  gradeC: {
+    title: string;
+    description: string;
+    points: number;
+    status: string;
+  };
+}
+
+const QIM_CRITERIA: QIMCriterion[] = [
   {
-    dim: "1. เลนส์ตาและกระจกตา (Eyes & Cornea)",
+    id: "eyes",
+    nameTh: "เลนส์ตาและกระจกตา",
+    nameEn: "Eyes & Corneal Clarity",
     icon: Eye,
-    weight: "0–3 คะแนน",
-    gradeA: "ตานูน กลม ใสเป็นประกาย ม่านตาดำสนิท ไร้ฝ้าขุ่น",
-    gradeB: "ตาราบลงเล็กน้อย เริ่มมีฝ้าขุ่นบาง ม่านตาสีเทา",
-    gradeC: "ตาบุ๋มลึก ฝ้าขุ่นหนาสีเทาหรือมีเลือดคั่ง",
+    maxDemerit: 3,
+    gradeA: {
+      title: "ตานูน กลม ใสเป็นประกาย ม่านตาดำสนิท",
+      description: "กระจกตานูนใส ไร้รอยบุ๋ม ไร้ฝ้าขุ่น เลนส์ตาโปร่งแสง มองเห็นม่านตาดำชัดเจน",
+      points: 0,
+      status: "ผ่านเกณฑ์รับรองความสดพรีเมียม",
+    },
+    gradeB: {
+      title: "ตาราบลงเล็กน้อย เริ่มมีฝ้าขุ่นจางๆ",
+      description: "กระจกตาเริ่มแบนราบ มีฝ้าสีเทาจางกระจายบางส่วน ม่านตามัวลงเล็กน้อย",
+      points: 1,
+      status: "เกณฑ์มาตรฐานเพื่อการปรุงสุก",
+    },
+    gradeC: {
+      title: "ตาบุ๋มลึก มีฝ้าขุ่นหนาหรือมีรอยเลือดคั่ง",
+      description: "ลูกตาบุ๋มยุบตัวลงชัดเจน กระจกตาขุ่นมัวสีเทาเข้มหรือมีเลือดออกในช่องตา",
+      points: 3,
+      status: "เสื่อมสภาพ ไม่ควรบริโภค",
+    },
   },
   {
-    dim: "2. เหงือกและกลิ่นไอทะเล (Gills & Odor)",
+    id: "gills",
+    nameTh: "เหงือกและกลิ่นไอทะเล",
+    nameEn: "Gills & Oceanic Aroma",
     icon: Activity,
-    weight: "0–4 คะแนน",
-    gradeA: "สีแดงสดธรรมชาติ เมือกใสบาง กลิ่นไอทะเลสดชื่น ไร้กลิ่นคาว",
-    gradeB: "สีชมพูซีดหรือน้ำตาลแดง เมือกเริ่มขุ่น กลิ่นจืด",
-    gradeC: "สีน้ำตาลคล้ำหรือเทาเข้ม เมือกเหนียวขุ่น กลิ่นคาวจัด/แอมโมเนีย",
+    maxDemerit: 4,
+    gradeA: {
+      title: "สีแดงสดธรรมชาติ กลิ่นไอทะเลสดชื่น",
+      description: "แผ่นซี่เหงือกเรียงตัวเป็นระเบียบ สีแดงสดคล้ายเลือดนก เมือกใสบาง ไร้กลิ่นคาวหรือแอมโมเนีย",
+      points: 0,
+      status: "ผ่านเกณฑ์รับรองความสดพรีเมียม",
+    },
+    gradeB: {
+      title: "สีชมพูซีดหรือน้ำตาลแดง เมือกเริ่มขุ่น",
+      description: "สีของเหงือกเริ่มซีดลงเป็นชมพูอ่อนหรือน้ำตาลปน เมือกเริ่มเหนียวขุ่น กลิ่นจืดปนคาวอ่อนๆ",
+      points: 2,
+      status: "เกณฑ์มาตรฐานเพื่อการปรุงสุก",
+    },
+    gradeC: {
+      title: "สีน้ำตาลคล้ำหรือเทาหม่น เมือกเหนียวหนา กลิ่นเน่าเสีย",
+      description: "เหงือกมีสีคล้ำจัดหรือเทา เมือกเหนียวหนาเป็นลิ่ม มีกลิ่นคาวรุนแรงหรือกลิ่นแอมโมเนียชัดเจน",
+      points: 4,
+      status: "เสื่อมสภาพ ไม่ควรบริโภค",
+    },
   },
   {
-    dim: "3. ผิวหนัง เกล็ด และเม็ดสี (Skin & Scales)",
+    id: "skin",
+    nameTh: "ผิวหนัง เกล็ด และเม็ดสี",
+    nameEn: "Skin, Scales & Pigmentation",
     icon: Layers,
-    weight: "0–3 คะแนน",
-    gradeA: "เกล็ดแนบสนิทเป็นประกายแวววาว เม็ดสีสดใส ชุ่มชื้นธรรมชาติ",
-    gradeB: "เกล็ดหลุดร่วงบางส่วน สีด้านลง เมือกขุ่นเล็กน้อย",
-    gradeC: "เกล็ดหลุดร่วงง่าย ผิวซีดด่าง เมือกขุ่นเหนียวหนา",
+    maxDemerit: 3,
+    gradeA: {
+      title: "เกล็ดแนบสนิท แวววาว เม็ดสีสดใสชัดเจน",
+      description: "เกล็ดเรียงตัวแน่นไม่หลุดร่วง เปล่งประกายสะท้อนแสง เม็ดสีตามธรรมชาติสดใส ชุ่มชื้น",
+      points: 0,
+      status: "ผ่านเกณฑ์รับรองความสดพรีเมียม",
+    },
+    gradeB: {
+      title: "เกล็ดเริ่มหลุดง่าย สีเริ่มด้าน เมือกขุ่นเล็กน้อย",
+      description: "ความวาวของผิวลดลง เม็ดสีเริ่มซีดจาง เกล็ดเริ่มหลุดลอกเมื่อสัมผัสเล็กน้อย",
+      points: 1,
+      status: "เกณฑ์มาตรฐานเพื่อการปรุงสุก",
+    },
+    gradeC: {
+      title: "เกล็ดหลุดร่วงง่าย ผิวซีดด่าง เมือกขุ่นหนาคล้ำ",
+      description: "ผิวหนังมีรอยด่างซีด เมือกขุ่นคล้ำปกคลุมหนาแน่น เกล็ดหลุดร่วงเป็นบริเวณกว้าง",
+      points: 3,
+      status: "เสื่อมสภาพ ไม่ควรบริโภค",
+    },
   },
   {
-    dim: "4. ความยืดหยุ่นของเนื้อ (Flesh Firmness)",
+    id: "flesh",
+    nameTh: "ความยืดหยุ่นของกล้ามเนื้อ",
+    nameEn: "Muscle Firmness & Elasticity",
     icon: ShieldCheck,
-    weight: "0–3 คะแนน",
-    gradeA: "กล้ามเนื้อแน่นตึง กดแล้วเด้งคืนรูปทันที ไม่ทิ้งรอยบุ๋ม",
-    gradeB: "กล้ามเนื้อเริ่มนิ่มเล็กน้อย คืนรูปช้าเมื่อถูกกด",
-    gradeC: "กล้ามเนื้อนิ่มเละ บุ๋มถาวร เนื้อแยกตัวเมื่อสัมผัส",
+    maxDemerit: 3,
+    gradeA: {
+      title: "กล้ามเนื้อแน่นตึง กดแล้วเด้งคืนรูปทันที",
+      description: "เส้นใยกล้ามเนื้อมีความยืดหยุ่นสูง เมื่อใช้นิ้วกดลงบนลำตัว เนื้อจะสปริงตัวคืนรูปทันทีโดยไม่ทิ้งรอยบุ๋ม",
+      points: 0,
+      status: "ผ่านเกณฑ์รับรองความสดพรีเมียม",
+    },
+    gradeB: {
+      title: "กล้ามเนื้อเริ่มนิ่ม คืนตัวช้าเมื่อถูกกด",
+      description: "เนื้อสัมผัสเริ่มนิ่มลงเล็กน้อย เมื่อกดแล้วยังคืนรูปได้แต่ใช้เวลาช้าลง เนื้อไม่เละ",
+      points: 1,
+      status: "เกณฑ์มาตรฐานเพื่อการปรุงสุก",
+    },
+    gradeC: {
+      title: "กล้ามเนื้อนิ่มเละ บุ๋มถาวร เนื้อแยกตัวเมื่อสัมผัส",
+      description: "เนื้อปลานิ่มเละ ยุบตัวบุ๋มถาวรไม่คืนรูป เส้นใยกล้ามเนื้อสลายตัวจนสัมผัสถึงความเปื่อยยุ่ย",
+      points: 3,
+      status: "เสื่อมสภาพ ไม่ควรบริโภค",
+    },
   },
   {
-    dim: "5. ช่องท้องและอวัยวะภายใน (Belly Integrity)",
+    id: "belly",
+    nameTh: "ความสมบูรณ์ของช่องท้อง",
+    nameEn: "Abdominal Cavity & Viscera",
     icon: Scale,
-    weight: "0–3 คะแนน",
-    gradeA: "ผนังช่องท้องแน่นสมบูรณ์ ท้องไม่แตก ไร้รอยช้ำ ไส้ไม่ทะลัก",
-    gradeB: "ผนังท้องเริ่มนิ่ม สีด้านในเริ่มเปลี่ยน ยังไม่แตก",
-    gradeC: "ผนังท้องแตก ไส้ทะลัก มีกลิ่นเน่าเสียอย่างชัดเจน",
+    maxDemerit: 3,
+    gradeA: {
+      title: "ผนังช่องท้องแน่นสมบูรณ์ ท้องไม่แตก ไร้รอยช้ำ",
+      description: "โครงสร้างช่องท้องแข็งแรง แน่นตึง ไม่มีรอยฉีกขาดหรือมีน้ำเยิ้ม ไร้รอยเลือดคั่งภายใน",
+      points: 0,
+      status: "ผ่านเกณฑ์รับรองความสดพรีเมียม",
+    },
+    gradeB: {
+      title: "ผนังช่องท้องเริ่มนิ่ม สีภายในเริ่มเปลี่ยน ยังไม่แตก",
+      description: "ผนังหน้าท้องเริ่มนิ่มลงแต่ยังคงรูปได้ ไม่แตก ไม่มีอวัยวะภายในไหลออกมา",
+      points: 1,
+      status: "เกณฑ์มาตรฐานเพื่อการปรุงสุก",
+    },
+    gradeC: {
+      title: "ผนังท้องแตก อวัยวะภายในทะลัก มีกลิ่นเน่าเสีย",
+      description: "ผนังช่องท้องเปื่อยยุ่ยจนแตก มีน้ำคาวเลือดและอวัยวะภายในทะลัก ส่งกลิ่นเหม็นเน่า",
+      points: 3,
+      status: "เสื่อมสภาพ ไม่ควรบริโภค",
+    },
   },
 ];
 
 export function App() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Active Grade Tab in Criteria Section
+  const [activeGradeTab, setActiveGradeTab] = useState<"A" | "B" | "C">("A");
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
   // Scanner Suite State
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -232,6 +350,13 @@ export function App() {
 
   const p = scrollProgress;
 
+  // =========================================================================
+  // DYNAMIC UNDERWATER VIDEO ATMOSPHERIC COLOR & DEPTH GRADING
+  // Responsive to scroll: surface daylight -> shallow reef -> deep coral -> abyss
+  // =========================================================================
+  const videoFilter = `brightness(${1.05 - p * 0.42}) contrast(${1.02 + p * 0.28}) saturate(${1.1 + p * 0.35}) hue-rotate(${-p * 22}deg)`;
+  const videoTransform = `scale(${1 + p * 0.16}) translateY(${-p * 50}px)`;
+
   // Sequential Section Opacities
   const s1Opacity = p < 0.20 ? 1 : Math.max(0, 1 - (p - 0.20) / 0.08);
 
@@ -240,25 +365,35 @@ export function App() {
       ? 0
       : p < 0.34
       ? (p - 0.26) / 0.08
-      : p < 0.48
+      : p < 0.50
       ? 1
-      : Math.max(0, 1 - (p - 0.48) / 0.08);
+      : Math.max(0, 1 - (p - 0.50) / 0.08);
 
   const s3Opacity =
-    p < 0.54
+    p < 0.56
       ? 0
-      : p < 0.62
-      ? (p - 0.54) / 0.08
-      : p < 0.76
+      : p < 0.64
+      ? (p - 0.56) / 0.08
+      : p < 0.78
       ? 1
-      : Math.max(0, 1 - (p - 0.76) / 0.08);
+      : Math.max(0, 1 - (p - 0.78) / 0.08);
 
   const s4Opacity =
-    p < 0.82
+    p < 0.84
       ? 0
-      : p < 0.90
-      ? (p - 0.82) / 0.08
+      : p < 0.92
+      ? (p - 0.84) / 0.08
       : 1;
+
+  // Current Depth Atmosphere Zone Label
+  const depthZoneLabel =
+    p < 0.25
+      ? "ผิวน้ำทะเล (Sunlit Surface Zone)"
+      : p < 0.55
+      ? "ระดับน้ำตื้น (Shallow Reef Zone)"
+      : p < 0.80
+      ? "สวนปะการังน้ำลึก (Deep Coral Zone)"
+      : "ห้วงทะเลลึก (Abyssal Ocean Zone)";
 
   // Perform AI Visual Analysis
   const executeAnalysis = (imgSrc: string) => {
@@ -278,7 +413,6 @@ export function App() {
       }, 700);
 
       setTimeout(() => {
-        // Automatically analyze seafood with comprehensive AI rules
         const res = analyzeImage(img, "fish");
         setAnalyzeResult(res);
         setIsScanning(false);
@@ -320,24 +454,33 @@ export function App() {
     >
       {/* ===================================================================
           STICKY FULL-VIEWPORT SCENE (100vh)
-          The video plays continuously at 60fps with zero stutter
+          Video plays continuously at 60fps with dynamic scroll-driven depth
           =================================================================== */}
       <div className="sticky top-0 w-full h-screen overflow-hidden">
-        {/* Continuous Fluid Underwater Video (AutoPlay Loop Muted PlaysInline) */}
+        {/* Continuous Fluid Underwater Video with Dynamic Depth Transform & Filters */}
         <video
           src={VIDEO_URL}
           autoPlay
           loop
           muted
           playsInline
-          className="absolute inset-0 w-full h-full object-cover transform-gpu"
+          className="absolute inset-0 w-full h-full object-cover transform-gpu transition-all duration-300"
+          style={{
+            filter: videoFilter,
+            transform: videoTransform,
+          }}
         />
 
-        {/* Dignified Dark Gradient Vignette for Maximum Contrast & Readability */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-slate-950/75 via-slate-950/35 to-slate-950/80" />
+        {/* Dynamic Deep-Sea Atmospheric Vignette (Darkens naturally as you dive deeper) */}
+        <div
+          className="absolute inset-0 pointer-events-none transition-all duration-500"
+          style={{
+            background: `radial-gradient(ellipse at center, transparent 35%, rgba(2, 6, 23, ${0.45 + p * 0.45}) 100%), linear-gradient(180deg, rgba(2, 6, 23, ${0.4 + p * 0.35}) 0%, transparent 40%, rgba(2, 6, 23, ${0.55 + p * 0.4}) 100%)`,
+          }}
+        />
 
         {/* ===================================================================
-            NAVBAR (เรียบหรู ทางการ โลโก้ใหม่สง่างาม)
+            NAVBAR (เรียบหรู ทางการ คมชัด สบายตา)
             =================================================================== */}
         <nav className="absolute top-0 inset-x-0 z-50 pointer-events-auto flex items-center justify-between px-6 sm:px-10 md:px-14 pt-6 sm:pt-8 pb-4">
           <button
@@ -348,7 +491,7 @@ export function App() {
           </button>
 
           {/* Quick Nav Anchors */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-8 bg-slate-900/80 backdrop-blur-md px-6 py-2.5 rounded-full border border-slate-700/70 shadow-lg text-xs sm:text-sm">
+          <div className="hidden md:flex items-center gap-6 lg:gap-8 bg-slate-900/85 backdrop-blur-md px-6 py-2.5 rounded-full border border-slate-700/70 shadow-lg text-xs sm:text-sm">
             <button
               onClick={() => scrollToDepth(0)}
               className="text-slate-200 hover:text-white transition-colors cursor-pointer"
@@ -381,8 +524,14 @@ export function App() {
           </div>
         </nav>
 
+        {/* Depth Atmosphere Status Pill (มุมขวาล่าง แสดงระดับชั้นบรรยากาศใต้น้ำ) */}
+        <div className="hidden sm:flex fixed bottom-6 right-6 z-40 items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-slate-900/80 backdrop-blur-md border border-slate-700/60 text-[11px] text-slate-300 pointer-events-none select-none shadow-lg">
+          <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
+          <span>{depthZoneLabel}</span>
+        </div>
+
         {/* ===================================================================
-            SCROLL STORY SECTIONS (เนื้อหาทางการ ไม่มีช่องค้นหา ไม่มีตัวกรอง)
+            SCROLL STORY SECTIONS
             =================================================================== */}
         <div className="absolute inset-0 pointer-events-none">
           {/* ---------------------------------------------------------------
@@ -405,11 +554,11 @@ export function App() {
               </Stagger>
 
               <Stagger visible={s1Opacity > 0.3} delay={100}>
-                <div className="p-6 sm:p-10 rounded-2xl bg-slate-950/70 backdrop-blur-md border border-white/10 shadow-2xl">
+                <div className="p-6 sm:p-10 rounded-2xl bg-slate-950/75 backdrop-blur-md border border-white/10 shadow-2xl">
                   <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-white leading-tight tracking-tight">
                     ประเมินความสดอาหารทะเล
                     <br />
-                    <span className="text-sky-300">
+                    <span className="text-sky-300 font-semibold">
                       ด้วยปัญญาประดิษฐ์ระดับสากล
                     </span>
                   </h1>
@@ -431,7 +580,7 @@ export function App() {
                       onClick={() => scrollToDepth(0.35)}
                       className="px-5 py-3.5 rounded-xl bg-slate-900/85 hover:bg-slate-800 text-slate-200 font-medium text-sm sm:text-base flex items-center gap-2 transition-all border border-slate-700 cursor-pointer"
                     >
-                      <span>ดูเกณฑ์มาตรฐาน QIM</span>
+                      <span>ดูเกณฑ์มาตรฐาน QIM 5 มิติ</span>
                       <ArrowDown size={16} />
                     </button>
                   </div>
@@ -441,72 +590,253 @@ export function App() {
           </div>
 
           {/* ---------------------------------------------------------------
-              SECTION 2 — เกณฑ์การตรวจวัดละเอียดและกระชับ (5 มิติ QIM)
+              SECTION 2 — เกณฑ์การตรวจวัดมาตรฐานสากล (แยกชัดเจน สวยงาม เป็นทางการ)
               --------------------------------------------------------------- */}
           <div
-            className="absolute inset-0 flex items-center justify-center px-4 sm:px-8 md:px-12"
+            className="absolute inset-0 flex items-center justify-center px-4 sm:px-8 md:px-12 py-10 overflow-y-auto"
             style={{
               opacity: s2Opacity,
               transition: "opacity 0.2s ease-out",
               pointerEvents: s2Opacity > 0.3 ? "auto" : "none",
             }}
           >
-            <div className="max-w-5xl w-full text-center">
+            <div className="max-w-5xl w-full my-auto text-left">
               <Stagger visible={s2Opacity > 0.3} delay={0}>
-                <div className="p-6 sm:p-8 rounded-2xl bg-slate-950/75 backdrop-blur-md border border-white/10 shadow-2xl">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-xs font-semibold text-sky-300 mb-3">
-                    <Scale size={14} />
-                    <span>ORGANOLEPTIC QUALITY INDEX METHOD</span>
+                <div className="p-6 sm:p-9 rounded-2xl bg-slate-950/80 backdrop-blur-xl border border-white/15 shadow-2xl">
+                  {/* Header & Subtitle */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-5">
+                    <div>
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-sky-500/10 border border-sky-500/20 text-xs font-semibold text-sky-300 mb-2">
+                        <Scale size={14} />
+                        <span>ORGANOLEPTIC QUALITY INDEX METHOD (QIM)</span>
+                      </div>
+                      <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                        เกณฑ์มาตรฐานการตรวจวัดความสด 5 มิติ
+                      </h2>
+                      <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                        ข้อกำหนดการประเมินทางประสาทสัมผัสและคะแนนตัดเกรด (Demerit Scoring System: 0–20 คะแนน)
+                      </p>
+                    </div>
+
+                    {/* View Mode Toggle (Cards vs Table) */}
+                    <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-700/80 shrink-0">
+                      <button
+                        onClick={() => setViewMode("cards")}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
+                          viewMode === "cards"
+                            ? "bg-sky-600 text-white shadow"
+                            : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        <LayoutGrid size={13} />
+                        <span>จำแนกตามเกรด</span>
+                      </button>
+                      <button
+                        onClick={() => setViewMode("table")}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
+                          viewMode === "table"
+                            ? "bg-sky-600 text-white shadow"
+                            : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        <TableIcon size={13} />
+                        <span>ตารางเปรียบเทียบ</span>
+                      </button>
+                    </div>
                   </div>
 
-                  <h2 className="text-2xl sm:text-4xl font-bold text-white leading-tight">
-                    เกณฑ์มาตรฐานการตรวจวัดความสด 5 มิติ
-                  </h2>
-                  <p className="mt-2 text-xs sm:text-sm text-slate-300 max-w-xl mx-auto">
-                    สรุปตัวชี้วัดทางประสาทสัมผัสและคะแนนตัดเกรด (Demerit Scoring: 0–20)
-                  </p>
-
-                  {/* 5-Column Detailed & Concise Criteria Grid */}
-                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-left">
-                    {QIM_CRITERIA_DETAILS.map((c, idx) => {
-                      const IconComp = c.icon;
-                      return (
-                        <div
-                          key={idx}
-                          className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between"
+                  {/* CARDS VIEW: Grade Selector Tabs & Detailed Criterion Rows */}
+                  {viewMode === "cards" && (
+                    <div className="mt-5 space-y-4">
+                      {/* Grade Selector Tabs */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button
+                          onClick={() => setActiveGradeTab("A")}
+                          className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                            activeGradeTab === "A"
+                              ? "bg-emerald-950/60 border-emerald-500/70 text-white shadow-lg ring-1 ring-emerald-500/40"
+                              : "bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                          }`}
                         >
-                          <div>
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center">
-                                <IconComp size={15} />
-                              </div>
-                              <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">
-                                {c.weight}
-                              </span>
-                            </div>
-                            <h4 className="text-xs font-bold text-white line-clamp-2">
-                              {c.dim}
-                            </h4>
-
-                            <div className="mt-3 space-y-1.5 text-[11px] leading-relaxed">
-                              <div className="p-1.5 rounded bg-emerald-950/40 border border-emerald-800/40 text-emerald-300">
-                                <strong className="font-semibold block text-[10px]">เกรด A (สดมาก):</strong>
-                                {c.gradeA}
-                              </div>
-                              <div className="p-1.5 rounded bg-amber-950/30 border border-amber-800/30 text-amber-300">
-                                <strong className="font-semibold block text-[10px]">เกรด B (ปานกลาง):</strong>
-                                {c.gradeB}
-                              </div>
-                              <div className="p-1.5 rounded bg-rose-950/30 border border-rose-800/30 text-rose-300">
-                                <strong className="font-semibold block text-[10px]">เกรด C (เสื่อมสภาพ):</strong>
-                                {c.gradeC}
-                              </div>
-                            </div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-sm text-emerald-300">
+                              เกรด A | คุณภาพพรีเมียม
+                            </span>
+                            <span className="text-[10px] font-mono bg-emerald-900/70 px-2 py-0.5 rounded text-emerald-200">
+                              0–3 Demerit
+                            </span>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                          <span className="text-xs text-slate-300 block">
+                            สดมาก ปลอดภัยสำหรับซาซิมิ / บริโภคสด
+                          </span>
+                        </button>
+
+                        <button
+                          onClick={() => setActiveGradeTab("B")}
+                          className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                            activeGradeTab === "B"
+                              ? "bg-sky-950/60 border-sky-500/70 text-white shadow-lg ring-1 ring-sky-500/40"
+                              : "bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-sm text-sky-300">
+                              เกรด B | มาตรฐานทั่วไป
+                            </span>
+                            <span className="text-[10px] font-mono bg-sky-900/70 px-2 py-0.5 rounded text-sky-200">
+                              4–8 Demerit
+                            </span>
+                          </div>
+                          <span className="text-xs text-slate-300 block">
+                            สดปานกลาง เหมาะสำหรับปรุงสุกผ่านความร้อน
+                          </span>
+                        </button>
+
+                        <button
+                          onClick={() => setActiveGradeTab("C")}
+                          className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                            activeGradeTab === "C"
+                              ? "bg-rose-950/60 border-rose-500/70 text-white shadow-lg ring-1 ring-rose-500/40"
+                              : "bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-sm text-rose-300">
+                              เกรด C | เสื่อมสภาพ
+                            </span>
+                            <span className="text-[10px] font-mono bg-rose-900/70 px-2 py-0.5 rounded text-rose-200">
+                              9+ Demerit
+                            </span>
+                          </div>
+                          <span className="text-xs text-slate-300 block">
+                            ความสดต่ำ ไม่แนะนำให้บริโภค ควรคัดทิ้ง
+                          </span>
+                        </button>
+                      </div>
+
+                      {/* 5 Criteria Detailed List for Active Grade */}
+                      <div className="space-y-2.5 pt-2">
+                        {QIM_CRITERIA.map((item, idx) => {
+                          const IconComp = item.icon;
+                          const currentSpec =
+                            activeGradeTab === "A"
+                              ? item.gradeA
+                              : activeGradeTab === "B"
+                              ? item.gradeB
+                              : item.gradeC;
+
+                          const badgeStyle =
+                            activeGradeTab === "A"
+                              ? "bg-emerald-950/50 text-emerald-300 border-emerald-800/60"
+                              : activeGradeTab === "B"
+                              ? "bg-sky-950/50 text-sky-300 border-sky-800/60"
+                              : "bg-rose-950/50 text-rose-300 border-rose-800/60";
+
+                          return (
+                            <div
+                              key={item.id}
+                              className="p-3.5 sm:p-4 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-slate-700/80 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                            >
+                              <div className="flex items-start gap-3.5">
+                                <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-sky-400 shrink-0 mt-0.5">
+                                  <IconComp size={18} />
+                                </div>
+                                <div>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <h4 className="text-sm font-bold text-white">
+                                      {idx + 1}. {item.nameTh}
+                                    </h4>
+                                    <span className="text-[11px] text-slate-400 font-normal">
+                                      ({item.nameEn})
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-white font-medium mt-1 leading-snug">
+                                    {currentSpec.title}
+                                  </p>
+                                  <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
+                                    {currentSpec.description}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between gap-1 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
+                                <span className={`px-2.5 py-0.5 rounded text-[11px] border font-medium ${badgeStyle}`}>
+                                  {currentSpec.status}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-mono">
+                                  ตัดคะแนน: {currentSpec.points} / {item.maxDemerit}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TABLE VIEW: Executive Comparison Matrix */}
+                  {viewMode === "table" && (
+                    <div className="mt-5 overflow-x-auto">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-800 bg-slate-900/90 text-slate-300">
+                            <th className="py-3 px-3.5 font-semibold w-[22%]">มิติการตรวจวัด</th>
+                            <th className="py-3 px-3.5 font-semibold text-emerald-300 w-[26%]">
+                              เกรด A (สดพรีเมียม)
+                            </th>
+                            <th className="py-3 px-3.5 font-semibold text-sky-300 w-[26%]">
+                              เกรด B (สดปานกลาง)
+                            </th>
+                            <th className="py-3 px-3.5 font-semibold text-rose-300 w-[26%]">
+                              เกรด C (เสื่อมสภาพ)
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/80">
+                          {QIM_CRITERIA.map((item, idx) => {
+                            const IconComp = item.icon;
+                            return (
+                              <tr key={item.id} className="hover:bg-slate-900/40 transition-colors">
+                                <td className="py-3 px-3.5 align-top">
+                                  <div className="flex items-center gap-2 font-bold text-white">
+                                    <IconComp size={14} className="text-sky-400" />
+                                    <span>{idx + 1}. {item.nameTh}</span>
+                                  </div>
+                                  <span className="text-[10px] text-slate-400 block mt-0.5">
+                                    (0–{item.maxDemerit} คะแนน)
+                                  </span>
+                                </td>
+                                <td className="py-3 px-3.5 align-top text-slate-200">
+                                  <strong className="block text-emerald-300 font-medium mb-0.5">
+                                    {item.gradeA.title}
+                                  </strong>
+                                  <span className="text-[11px] text-slate-300 leading-relaxed block">
+                                    {item.gradeA.description}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-3.5 align-top text-slate-200">
+                                  <strong className="block text-sky-300 font-medium mb-0.5">
+                                    {item.gradeB.title}
+                                  </strong>
+                                  <span className="text-[11px] text-slate-300 leading-relaxed block">
+                                    {item.gradeB.description}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-3.5 align-top text-slate-200">
+                                  <strong className="block text-rose-300 font-medium mb-0.5">
+                                    {item.gradeC.title}
+                                  </strong>
+                                  <span className="text-[11px] text-slate-300 leading-relaxed block">
+                                    {item.gradeC.description}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </Stagger>
             </div>
@@ -534,7 +864,7 @@ export function App() {
                   <h2 className="text-2xl sm:text-4xl font-bold text-white leading-tight">
                     ยกระดับมาตรฐานอาหารทะเล
                     <br />
-                    <span className="text-sky-300">สร้างความเชื่อมั่นในทุกห่วงโซ่อุปทาน</span>
+                    <span className="text-sky-300 font-semibold">สร้างความเชื่อมั่นในทุกห่วงโซ่อุปทาน</span>
                   </h2>
 
                   <p className="mt-4 text-sm sm:text-base text-slate-200 font-normal leading-relaxed">
@@ -582,7 +912,7 @@ export function App() {
                   <h2 className="text-3xl sm:text-5xl font-bold text-white leading-tight mb-4">
                     ตรวจสอบความสดอาหารทะเล
                     <br />
-                    <span className="text-sky-300">ได้ด้วยตัวคุณเองทันที</span>
+                    <span className="text-sky-300 font-semibold">ได้ด้วยตัวคุณเองทันที</span>
                   </h2>
 
                   <p className="text-sm sm:text-base text-slate-200 font-normal max-w-lg mb-8 leading-relaxed">
@@ -606,7 +936,6 @@ export function App() {
 
       {/* ===================================================================
           OFFICIAL SEAFOOD INSPECTION SUITE MODAL
-          ไม่มีช่องค้นหา ไม่มีตัวกรอง อัปโหลดหรือถ่ายภาพแล้ววิเคราะห์ทันที
           =================================================================== */}
       {scannerOpen && (
         <div className="fixed inset-0 z-[120] bg-slate-950/85 backdrop-blur-xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
@@ -647,7 +976,7 @@ export function App() {
               {/* Left Column: Dropzone or Image Preview (6 Cols) */}
               <div className="lg:col-span-6 flex flex-col justify-between rounded-xl bg-slate-950/70 border border-slate-800 p-4 min-h-[340px]">
                 {!uploadedImage ? (
-                  /* Clean Dropzone without search or filter clutter */
+                  /* Clean Dropzone */
                   <div className="my-auto py-10 px-6 flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-700/80 rounded-xl bg-slate-900/30">
                     <div className="w-14 h-14 rounded-2xl bg-sky-950/60 border border-sky-800/60 flex items-center justify-center text-sky-400 mb-4">
                       <Upload size={24} />
