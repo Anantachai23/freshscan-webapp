@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Neural — World-Class Marine Sanctuaries & Living Coral Reefs</title>
+  <style>
+    /* =======================================================================
+       0. FONT DECLARATION (Sora Variable Weight 100..900)
+       ======================================================================= */
+    @font-face {
+      font-family: 'Sora';
+      src: url('https://fonts.gstatic.com/s/sora/v14/xMQOuFFYT72X5wkB_18qmnndmSdSnk-6Qg.woff2') format('woff2');
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: block;
+    }
+
+    /* =======================================================================
+       1. DESIGN TOKENS (:root)
+       ======================================================================= */
+    :root {
+      --ink: #ffffff;
+      --sub: #93c5fd;
+      --nav: #f0f9ff;
+      --foot: #e0f2fe;
+      --hair: rgba(186, 230, 253, .65);
+      --chev: rgba(224, 242, 254, .92);
+      --navdim: #bae6fd;
+      --feat: #f0f9ff;
+      --veil: 3, 7, 18; /* Raw RGB triplet for oceanic midnight deep */
+
+      /* Desktop scale system mapping 1536x1024 artboard */
+      --cover: max(calc(100vw / 1536), calc(100vh / 1024));
+      --fit: calc(100vh / 910);
+      --u: min(var(--cover), var(--fit));
+      --blur: calc(var(--u) * 26);
+      --glow: calc(var(--u) * 34);
+      --hairline: max(1px, calc(var(--u) * 1.6));
+    }
+
+    @supports (height: 100dvh) {
+      :root {
+        --cover: max(calc(100vw / 1536), calc(100dvh / 1024));
+        --fit: calc(100dvh / 910);
+      }
+    }
+
+    /* =======================================================================
+       2. RESET & GLOBAL VIEWPORT
+       ======================================================================= */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      background: #02060f;
+      overflow: hidden; /* The page never scrolls — one viewport, always */
+    }
+
+    body {
+      font-family: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: geometricPrecision;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    li {
+      list-style: none;
+    }
+
+    a:focus-visible {
+      outline: 2px solid #38bdf8;
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+
+    /* =======================================================================
+       3. BACKGROUND LAYERS & VOLUMETRIC OCEANIC VEIL
+       ======================================================================= */
+    .art {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 50% 50%;
+      z-index: 0;
+      user-select: none;
+      -webkit-user-drag: none;
+      pointer-events: none;
+      background: #020712;
+    }
+
+    #ocean-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .veil {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(140% 60% at 50% 40%,
+          rgba(var(--veil), .20) 0%,
+          rgba(var(--veil), .08) 50%,
+          rgba(var(--veil), 0) 100%),
+        linear-gradient(180deg,
+          rgba(var(--veil), 0) 45%,
+          rgba(var(--veil), .22) 100%);
+    }
+
+    .bar, .hero, .foot {
+      position: fixed;
+      z-index: 1;
+    }
+
+    /* =======================================================================
+       4. COMPONENT SKIN & LUXURY CTA GLASS
+       ======================================================================= */
+    .brand svg {
+      fill: var(--ink);
+      display: block;
+    }
+
+    .caret, .navarrow {
+      fill: none;
+      stroke: var(--nav);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .navarrow {
+      stroke-linecap: square;
+      stroke-linejoin: miter;
+    }
+
+    .pill {
+      border: var(--hairline) solid var(--hair);
+      border-radius: 999px;
+    }
+
+    .chev {
+      fill: none;
+      stroke: var(--chev);
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .cta .arrow {
+      fill: none;
+      stroke: var(--ink);
+      stroke-width: 1.6;
+      stroke-linecap: square;
+      stroke-linejoin: miter;
+    }
+
+    .rule {
+      background: linear-gradient(180deg,
+        rgba(186, 230, 253, .70) 0%,
+        rgba(56, 189, 248, .92) 52%,
+        rgba(14, 165, 233, .68) 100%);
+    }
+
+    /* Luxury Oceanic Glass CTA with Gold/Cyan Dual-Gradients */
+    .cta {
+      border-radius: 999px;
+      position: relative;
+      background:
+        linear-gradient(180deg, rgba(3, 7, 18, 0) 45%, rgba(3, 7, 18, .16) 78%, rgba(3, 7, 18, .32) 100%),
+        linear-gradient(90deg,
+          rgba(251, 191, 36, .18) 0%,
+          rgba(244, 63, 94, .10) 22%,
+          rgba(14, 165, 233, .05) 55%,
+          rgba(56, 189, 248, .14) 100%),
+        linear-gradient(90deg,
+          rgba(255, 255, 255, .26) 0%,
+          rgba(255, 255, 255, .18) 12%,
+          rgba(255, 255, 255, .12) 26%,
+          rgba(255, 255, 255, .08) 42%,
+          rgba(255, 255, 255, .05) 60%,
+          rgba(255, 255, 255, .04) 80%,
+          rgba(255, 255, 255, .04) 100%);
+      -webkit-backdrop-filter: blur(var(--blur)) saturate(.45);
+      backdrop-filter: blur(var(--blur)) saturate(.45);
+      box-shadow:
+        0 calc(var(--u) * -2) calc(var(--u) * 20) rgba(251, 191, 36, .22),
+        0 0 var(--glow) rgba(56, 189, 248, .20),
+        inset 0 var(--hairline) 0 0 rgba(240, 249, 255, .50);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      transition: box-shadow .25s ease, filter .25s ease;
+    }
+
+    .cta:hover {
+      filter: brightness(1.08);
+      box-shadow:
+        0 calc(var(--u) * -2) calc(var(--u) * 24) rgba(251, 191, 36, .35),
+        0 0 calc(var(--glow) * 1.3) rgba(56, 189, 248, .32),
+        inset 0 var(--hairline) 0 0 rgba(240, 249, 255, .70);
+    }
+
+    .cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: var(--hairline);
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(255, 252, 246, .95) 0%, rgba(255, 252, 246, .20) 45%, rgba(255, 252, 246, 0) 78%),
+        linear-gradient(90deg,
+          rgba(251, 191, 36, .95) 0%,
+          rgba(250, 204, 21, .70) 12%,
+          rgba(186, 230, 253, .04) 32%,
+          rgba(14, 165, 233, .05) 62%,
+          rgba(56, 189, 248, .80) 90%,
+          rgba(125, 211, 252, .95) 100%);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+    }
+
+    /* Per-Element Variable Weights */
+    #word {
+      font-variation-settings: 'wght' 531;
+      font-weight: 531;
+      color: var(--ink);
+    }
+    #about, #product, #solutions, #login {
+      font-variation-settings: 'wght' 506;
+      font-weight: 506;
+      color: var(--nav);
+    }
+    #contact {
+      font-variation-settings: 'wght' 581;
+      font-weight: 581;
+      color: var(--navdim);
+    }
+    #h1a, #h1b {
+      font-variation-settings: 'wght' 424;
+      font-weight: 424;
+      color: var(--ink);
+    }
+    #sub1, #sub2 {
+      font-variation-settings: 'wght' 446;
+      font-weight: 446;
+      color: var(--sub);
+    }
+    #cta {
+      font-variation-settings: 'wght' 497;
+      font-weight: 497;
+      color: var(--ink);
+    }
+    #f1, #f2, #f3, #f4 {
+      font-variation-settings: 'wght' 534;
+      font-weight: 534;
+      color: var(--feat);
+    }
+    #foot1, #foot2 {
+      font-variation-settings: 'wght' 521;
+      font-weight: 521;
+      color: var(--foot);
+    }
+
+    /* =======================================================================
+       5. ENTRANCE SEQUENCE (~2.1s, Pure CSS, Backwards Fill-Mode)
+       ======================================================================= */
+    @media (prefers-reduced-motion: no-preference) {
+      :root {
+        --ent-line: cubic-bezier(.16, 1, .3, 1);
+        --ent-soft: cubic-bezier(.25, .8, .35, 1);
+        --rise: 9px;
+      }
+
+      @keyframes en-wipe {
+        from {
+          clip-path: inset(-.78em 0 calc(100% + .78em) 0);
+          translate: 0 var(--rise);
+        }
+        to {
+          clip-path: inset(-.78em 0 -.78em 0);
+          translate: 0 0;
+        }
+      }
+
+      @keyframes en-lift {
+        from {
+          opacity: 0;
+          translate: 0 var(--rise);
+        }
+        to {
+          opacity: 1;
+          translate: 0 0;
+        }
+      }
+
+      @keyframes en-settle {
+        from {
+          opacity: 0;
+          translate: 0 calc(var(--rise) * .7);
+          scale: .99;
+        }
+        to {
+          opacity: 1;
+          translate: 0 0;
+          scale: 1;
+        }
+      }
+
+      @keyframes en-draw {
+        from {
+          scale: 1 0;
+        }
+        to {
+          scale: 1 1;
+        }
+      }
+
+      html:not(.is-entered) .brand {
+        animation: en-lift .60s var(--ent-soft) .12s backwards;
+      }
+      html:not(.is-entered) #about {
+        animation: en-lift .55s var(--ent-soft) .20s backwards;
+      }
+      html:not(.is-entered) #product {
+        animation: en-lift .55s var(--ent-soft) .25s backwards;
+      }
+      html:not(.is-entered) #solutions,
+      html:not(.is-entered) .caret {
+        animation: en-lift .55s var(--ent-soft) .30s backwards;
+      }
+      html:not(.is-entered) #login,
+      html:not(.is-entered) .navarrow {
+        animation: en-lift .55s var(--ent-soft) .35s backwards;
+      }
+      html:not(.is-entered) .pill {
+        animation: en-settle .60s var(--ent-soft) .40s backwards;
+      }
+      html:not(.is-entered) .burger {
+        animation: en-lift .60s var(--ent-soft) .40s backwards;
+      }
+      html:not(.is-entered) #h1a {
+        animation: en-wipe .95s var(--ent-line) .34s backwards;
+      }
+      html:not(.is-entered) #h1b {
+        animation: en-wipe .95s var(--ent-line) .44s backwards;
+      }
+      html:not(.is-entered) #sub1 {
+        animation: en-lift .70s var(--ent-soft) .74s backwards;
+      }
+      html:not(.is-entered) #sub2 {
+        animation: en-lift .70s var(--ent-soft) .80s backwards;
+      }
+      html:not(.is-entered) .cta {
+        animation: en-lift .80s var(--ent-line) .94s backwards;
+      }
+      html:not(.is-entered) .feats li:nth-child(1) {
+        animation: en-lift .60s var(--ent-soft) 1.08s backwards;
+      }
+      html:not(.is-entered) .feats li:nth-child(2) {
+        animation: en-lift .60s var(--ent-soft) 1.15s backwards;
+      }
+      html:not(.is-entered) .feats li:nth-child(3) {
+        animation: en-lift .60s var(--ent-soft) 1.22s backwards;
+      }
+      html:not(.is-entered) .feats li:nth-child(4) {
+        animation: en-lift .60s var(--ent-soft) 1.29s backwards;
+      }
+      html:not(.is-entered) .rule {
+        animation: en-draw .55s var(--ent-line) 1.34s backwards;
+        transform-origin: top;
+      }
+      html:not(.is-entered) #foot1 {
+        animation: en-lift .60s var(--ent-soft) 1.42s backwards;
+      }
+      html:not(.is-entered) #foot2 {
+        animation: en-lift .60s var(--ent-soft) 1.48s backwards;
+      }
+    }
+
+    /* =======================================================================
+       6. ARCHITECTURE A — LOCKED 1536x1024 DESKTOP COMPOSITION
+       ======================================================================= */
+    @media (min-width: 1200px) and (min-height: 560px) and (min-aspect-ratio: 100/95) {
+      .bar, .hero, .foot {
+        left: 50%;
+        width: calc(var(--u) * 1536);
+        transform: translateX(-50%);
+      }
+      .bar {
+        top: 0;
+        height: calc(var(--u) * 120);
+      }
+      .foot {
+        bottom: 0;
+        height: calc(var(--u) * 140);
+      }
+      .hero {
+        top: 50%;
+        height: calc(var(--u) * 1024);
+        transform: translate(-50%, -50%);
+      }
+      .navtoggle, .burger, .scrim {
+        display: none;
+      }
+      .navpanel {
+        display: contents; /* Children take bar-space coordinates */
+      }
+      .bar > *, .foot > *, .hero > *, .pill, .caret, .navarrow {
+        position: absolute;
+      }
+      .menu, .menu a, .login {
+        position: static;
+      }
+      .title, .sub, .feats {
+        inset: 0;
+        font-weight: inherit;
+      }
+      .bar span, .foot span, .title span, .sub span, .feats span, .cta span {
+        position: absolute;
+        line-height: 0;
+        white-space: nowrap;
+      }
+
+      /* Desktop Box Coordinates */
+      .brand {
+        left: calc(var(--u) * 221);
+        top: calc(var(--u) * 55);
+        display: flex;
+        align-items: center;
+        gap: calc(var(--u) * 7);
+      }
+      .brand svg {
+        width: calc(var(--u) * 23);
+        height: calc(var(--u) * 17);
+      }
+      #word {
+        position: relative;
+        font-size: calc(var(--u) * 23.4);
+        letter-spacing: calc(var(--u) * 4.8);
+        transform: translate(0, 0);
+      }
+
+      #about {
+        font-size: calc(var(--u) * 13.5);
+        letter-spacing: calc(var(--u) * -0.5);
+        left: calc(var(--u) * 477);
+        top: calc(var(--u) * 65.66);
+      }
+      #product {
+        font-size: calc(var(--u) * 13.5);
+        letter-spacing: calc(var(--u) * -0.167);
+        left: calc(var(--u) * 568.5);
+        top: calc(var(--u) * 65.66);
+      }
+      #solutions {
+        font-size: calc(var(--u) * 13.5);
+        letter-spacing: calc(var(--u) * -0.5);
+        left: calc(var(--u) * 675);
+        top: calc(var(--u) * 65.66);
+      }
+      .caret {
+        left: calc(var(--u) * 770);
+        top: calc(var(--u) * 62.4);
+        width: calc(var(--u) * 9);
+        height: calc(var(--u) * 6);
+        stroke-width: 1.25;
+      }
+
+      #login {
+        font-size: calc(var(--u) * 13.5);
+        letter-spacing: calc(var(--u) * -0.227);
+        left: calc(var(--u) * 980);
+        top: calc(var(--u) * 66.16);
+      }
+      .navarrow {
+        left: calc(var(--u) * 1152);
+        top: calc(var(--u) * 61.6);
+        width: calc(var(--u) * 10);
+        height: calc(var(--u) * 9);
+        stroke-width: 1.2;
+      }
+
+      .pill {
+        left: calc(var(--u) * 1184);
+        top: calc(var(--u) * 43.5);
+        width: calc(var(--u) * 152);
+        height: calc(var(--u) * 44);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #contact {
+        font-size: calc(var(--u) * 13.5);
+        letter-spacing: calc(var(--u) * 0.25);
+        left: 0;
+        right: 0;
+        text-align: center;
+        top: calc(var(--u) * 21.66);
+        transform: translateX(calc(var(--u) * -0.5));
+      }
+
+      /* Desktop Hero Coordinates */
+      #h1a {
+        font-size: calc(var(--u) * 46.8);
+        letter-spacing: calc(var(--u) * 0.532);
+        left: 0;
+        right: 0;
+        text-align: center;
+        top: calc(var(--u) * 285.222);
+        transform: translateX(calc(var(--u) * -1));
+      }
+      #h1b {
+        font-size: calc(var(--u) * 46.8);
+        letter-spacing: calc(var(--u) * -0.398);
+        left: 0;
+        right: 0;
+        text-align: center;
+        top: calc(var(--u) * 335.222);
+        transform: translateX(calc(var(--u) * -3));
+      }
+
+      #sub1 {
+        font-size: calc(var(--u) * 20.6);
+        letter-spacing: calc(var(--u) * 0.367);
+        left: 0;
+        right: 0;
+        text-align: center;
+        top: calc(var(--u) * 408.115);
+        transform: translateX(calc(var(--u) * -0.5));
+      }
+      #sub2 {
+        font-size: calc(var(--u) * 19.1);
+        letter-spacing: calc(var(--u) * -0.632);
+        left: 0;
+        right: 0;
+        text-align: center;
+        top: calc(var(--u) * 432.153);
+        transform: translateX(calc(var(--u) * -2));
+      }
+
+      .cta {
+        left: calc(var(--u) * 616);
+        top: calc(var(--u) * 555.2);
+        width: calc(var(--u) * 304);
+        height: calc(var(--u) * 46.6);
+      }
+      #cta {
+        font-size: calc(var(--u) * 21);
+        letter-spacing: calc(var(--u) * -0.312);
+        left: 0;
+        right: 0;
+        text-align: center;
+        top: calc(var(--u) * 23.113);
+        transform: translateX(calc(var(--u) * -14.5));
+      }
+      .cta .arrow {
+        position: absolute;
+        left: calc(var(--u) * 258);
+        top: calc(var(--u) * 17.8);
+        width: calc(var(--u) * 16);
+        height: calc(var(--u) * 11);
+      }
+
+      /* Desktop Features Row */
+      .feats li {
+        position: absolute;
+        width: calc(var(--u) * 220);
+        height: calc(var(--u) * 20);
+      }
+      .feats .chev {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: calc(var(--u) * 11);
+        height: calc(var(--u) * 20);
+      }
+      .feats li:nth-child(1) { left: calc(var(--u) * 338); top: calc(var(--u) * 718); }
+      .feats li:nth-child(2) { left: calc(var(--u) * 580); top: calc(var(--u) * 719); }
+      .feats li:nth-child(3) { left: calc(var(--u) * 800); top: calc(var(--u) * 721); }
+      .feats li:nth-child(4) { left: calc(var(--u) * 1022); top: calc(var(--u) * 722); }
+
+      #f1, #f2, #f3 {
+        font-size: calc(var(--u) * 14.6);
+        letter-spacing: calc(var(--u) * -0.75);
+        left: calc(var(--u) * 26);
+        top: calc(var(--u) * 11.266);
+      }
+      #f4 {
+        font-size: calc(var(--u) * 14.6);
+        letter-spacing: calc(var(--u) * -1.067);
+        left: calc(var(--u) * 28);
+        top: calc(var(--u) * 11.266);
+      }
+
+      .rule {
+        left: calc(var(--u) * 767);
+        top: calc(var(--u) * 792);
+        width: 1px;
+        height: calc(var(--u) * 57);
+      }
+
+      #foot1 {
+        font-size: calc(var(--u) * 16.3);
+        letter-spacing: calc(var(--u) * -0.256);
+        left: 0;
+        right: 0;
+        text-align: center;
+        bottom: calc(var(--u) * 101.344);
+        transform: translateX(calc(var(--u) * -0.5));
+      }
+      #foot2 {
+        font-size: calc(var(--u) * 16.3);
+        letter-spacing: calc(var(--u) * -0.667);
+        left: 0;
+        right: 0;
+        text-align: center;
+        bottom: calc(var(--u) * 76.344);
+        transform: translateX(calc(var(--u) * -2));
+      }
+    }
+
+    /* =======================================================================
+       7. ARCHITECTURE B — RESPONSIVE FLOW (Tablet down to Mobile)
+       ======================================================================= */
+    @media (max-width: 1199px), (max-height: 559px), (max-aspect-ratio: 100/95) {
+      :root {
+        --c: min(calc(100vw / 430), calc(100vh / 860));
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        padding: calc(env(safe-area-inset-top) + calc(var(--c) * 24))
+                 calc(var(--c) * 22)
+                 calc(env(safe-area-inset-bottom) + calc(var(--c) * 22));
+      }
+
+      .bar, .hero, .foot {
+        position: static;
+        width: 100%;
+      }
+
+      .bar {
+        order: 1;
+        position: relative;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: calc(var(--c) * 16);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: calc(var(--c) * 8);
+      }
+      .brand svg {
+        width: calc(var(--c) * 22);
+        height: auto;
+      }
+      #word {
+        font-size: calc(var(--c) * 19);
+        letter-spacing: .06em;
+      }
+
+      /* Pure CSS Burger Menu (Checkbox Driven) */
+      .navtoggle {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        margin: 0;
+        pointer-events: none;
+      }
+
+      .burger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: calc(var(--c) * 42);
+        height: calc(var(--c) * 30);
+        border-radius: 999px;
+        cursor: pointer;
+        border: var(--hairline) solid var(--hair);
+        background: rgba(255, 255, 255, .03);
+        -webkit-backdrop-filter: blur(var(--blur)) saturate(.45);
+        backdrop-filter: blur(var(--blur)) saturate(.45);
+      }
+
+      .burger svg {
+        width: calc(var(--c) * 19);
+        height: auto;
+        fill: none;
+        stroke: var(--nav);
+        stroke-width: 1.4;
+        stroke-linecap: round;
+      }
+
+      .burger svg path {
+        transform-box: fill-box;
+        transform-origin: center;
+        transition: transform .24s ease, opacity .18s ease;
+      }
+
+      .navtoggle:focus-visible ~ .burger {
+        outline: 2px solid #38bdf8;
+        outline-offset: 3px;
+      }
+
+      .navtoggle:checked ~ .burger .b1 {
+        transform: translateY(6px) rotate(45deg);
+      }
+      .navtoggle:checked ~ .burger .b2 {
+        opacity: 0;
+      }
+      .navtoggle:checked ~ .burger .b3 {
+        transform: translateY(-6px) rotate(-45deg);
+      }
+
+      .scrim {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 4;
+      }
+      .navtoggle:checked ~ .scrim {
+        display: block; /* Click away closes menu */
+      }
+
+      .navpanel {
+        position: absolute;
+        top: calc(100% + calc(var(--c) * 12));
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        gap: calc(var(--c) * 2);
+        width: min(calc(var(--c) * 268), 78vw);
+        padding: calc(var(--c) * 12);
+        border-radius: calc(var(--c) * 20);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, .10) 0%, rgba(255, 255, 255, .045) 100%),
+          linear-gradient(90deg, rgba(251, 191, 36, .06) 0%, rgba(56, 189, 248, .06) 100%),
+          linear-gradient(180deg, rgba(3, 7, 18, .75) 0%, rgba(3, 7, 18, .85) 100%);
+        -webkit-backdrop-filter: blur(var(--blur)) saturate(.45);
+        backdrop-filter: blur(var(--blur)) saturate(.45);
+        box-shadow: 0 calc(var(--c) * 14) calc(var(--c) * 38) rgba(2, 6, 14, .45);
+        opacity: 0;
+        transform: translateY(calc(var(--c) * -8)) scale(.985);
+        transform-origin: 100% 0;
+        pointer-events: none;
+        transition: opacity .2s ease, transform .2s ease;
+        z-index: 5;
+      }
+
+      .navtoggle:checked ~ .navpanel {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+      }
+
+      .navpanel .menu {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .navpanel .menu a, .navpanel .login {
+        display: flex;
+        align-items: center;
+        gap: calc(var(--c) * 8);
+        padding: calc(var(--c) * 10) calc(var(--c) * 12);
+        border-radius: calc(var(--c) * 12);
+        font-size: calc(var(--c) * 16);
+        color: var(--nav);
+        transition: background .15s ease;
+      }
+
+      .navpanel .menu a:hover, .navpanel .login:hover {
+        background: rgba(255, 255, 255, .07);
+      }
+
+      .navpanel .caret, .navpanel .navarrow {
+        margin-left: auto;
+        height: auto;
+      }
+      .navpanel .caret {
+        width: calc(var(--c) * 10);
+      }
+      .navpanel .navarrow {
+        width: calc(var(--c) * 11);
+      }
+
+      .navpanel .pill {
+        margin-top: calc(var(--c) * 8);
+        text-align: center;
+        white-space: nowrap;
+        padding: calc(var(--c) * 11) calc(var(--c) * 16);
+        font-size: calc(var(--c) * 15);
+        display: block;
+      }
+
+      /* Hero (Flow Base) */
+      .hero {
+        order: 2;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: calc(var(--c) * 20);
+      }
+
+      .title {
+        font-size: calc(var(--c) * 33);
+        line-height: 1.12;
+        max-width: 15ch;
+      }
+      .sub {
+        color: var(--sub);
+        font-size: calc(var(--c) * 17);
+        line-height: 1.32;
+        max-width: 26ch;
+      }
+
+      .cta {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: calc(var(--c) * 12);
+        padding: calc(var(--c) * 16) calc(var(--c) * 26);
+        font-size: calc(var(--c) * 18);
+      }
+      .cta .arrow {
+        width: calc(var(--c) * 16);
+        height: calc(var(--c) * 11);
+      }
+
+      .feats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: calc(var(--c) * 15) calc(var(--c) * 13);
+        width: 100%;
+        max-width: calc(var(--c) * 400);
+        margin-top: calc(var(--c) * 6);
+      }
+      .feats li {
+        display: flex;
+        align-items: center;
+        gap: calc(var(--c) * 9);
+        font-size: calc(var(--c) * 14);
+      }
+      .feats .chev {
+        width: calc(var(--c) * 9);
+        height: calc(var(--c) * 16);
+        flex: none;
+      }
+
+      .rule {
+        width: 1px;
+        height: calc(var(--c) * 33);
+        margin: calc(var(--c) * 19) auto 0;
+      }
+
+      .foot {
+        order: 3;
+        text-align: center;
+        color: var(--foot);
+        font-size: calc(var(--c) * 13);
+        line-height: 1.55;
+      }
+      .foot span {
+        display: block;
+      }
+    }
+
+    /* --- B1. PHONE CANVAS: max-width 599px, max-height 429px --- */
+    @media (max-width: 599px), (max-height: 429px) {
+      :root {
+        --c: min(calc(100vw / 360), calc(100vh / 770), 1px);
+        --rise: 6px;
+      }
+
+      body {
+        padding: calc(env(safe-area-inset-top) + calc(var(--c) * 28))
+                 calc(var(--c) * 26)
+                 calc(env(safe-area-inset-bottom) + calc(var(--c) * 26));
+      }
+
+      .brand svg {
+        width: calc(var(--c) * 24);
+      }
+      #word {
+        font-size: calc(var(--c) * 19);
+      }
+
+      .burger {
+        width: calc(var(--c) * 46);
+        height: calc(var(--c) * 33);
+        position: relative;
+      }
+      .burger::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: max(44px, 100%);
+        height: max(44px, 100%); /* Guarantees 44px tap target */
+      }
+      .burger svg {
+        width: calc(var(--c) * 21);
+      }
+
+      .navpanel {
+        width: min(calc(var(--c) * 300), 82vw);
+        padding: calc(var(--c) * 15);
+        border-radius: calc(var(--c) * 22);
+      }
+      .navpanel .menu a, .navpanel .login {
+        font-size: calc(var(--c) * 16);
+        padding: calc(var(--c) * 13) calc(var(--c) * 14);
+        border-radius: calc(var(--c) * 13);
+        min-height: max(44px, calc(var(--c) * 44));
+      }
+      .navpanel .pill {
+        font-size: calc(var(--c) * 16);
+        padding: calc(var(--c) * 13) calc(var(--c) * 18);
+        margin-top: calc(var(--c) * 9);
+      }
+
+      /* Phone veil re-aimed for vertical ocean crop */
+      .veil {
+        background:
+          radial-gradient(130% 44% at 50% 45%,
+            rgba(var(--veil), .50) 0%,
+            rgba(var(--veil), .26) 55%,
+            rgba(var(--veil), 0) 100%),
+          linear-gradient(180deg,
+            rgba(var(--veil), .34) 0%,
+            rgba(var(--veil), 0) 20%,
+            rgba(var(--veil), 0) 60%,
+            rgba(var(--veil), .36) 100%);
+      }
+
+      .hero {
+        gap: calc(var(--c) * 22);
+      }
+      .title {
+        font-size: calc(var(--c) * 32);
+        line-height: 1.2;
+        letter-spacing: -.002em;
+        max-width: none;
+        text-wrap: balance;
+      }
+      .title span {
+        display: block;
+      }
+      .sub {
+        font-size: calc(var(--c) * 16);
+        line-height: 1.45;
+        max-width: none;
+        text-wrap: balance;
+      }
+      .sub span {
+        display: block;
+      }
+
+      .cta {
+        font-size: calc(var(--c) * 16.5);
+        padding: calc(var(--c) * 15) calc(var(--c) * 28);
+        gap: calc(var(--c) * 12);
+      }
+      .cta .arrow {
+        width: calc(var(--c) * 17);
+        height: calc(var(--c) * 12);
+      }
+
+      .feats {
+        grid-template-columns: repeat(2, max-content);
+        justify-content: center;
+        width: auto;
+        max-width: none;
+        gap: calc(var(--c) * 16) calc(var(--c) * 16);
+        margin-top: calc(var(--c) * 22);
+      }
+      .feats li {
+        font-size: calc(var(--c) * 13);
+        gap: calc(var(--c) * 10);
+      }
+      .feats .chev {
+        width: calc(var(--c) * 10);
+        height: calc(var(--c) * 18);
+      }
+
+      .rule {
+        height: calc(var(--c) * 30);
+        margin: calc(var(--c) * 28) auto 0;
+      }
+      .foot {
+        font-size: calc(var(--c) * 13.5);
+        line-height: 1.65;
+        text-wrap: balance;
+      }
+    }
+
+    /* --- LANDSCAPE PHONES --- */
+    @media (max-height: 429px) and (min-aspect-ratio: 1/1) {
+      :root {
+        --c: min(calc(100vw / 760), calc(100vh / 430));
+      }
+      .hero {
+        gap: calc(var(--c) * 12);
+      }
+      .title {
+        font-size: calc(var(--c) * 31);
+        line-height: 1.2;
+        max-width: 26ch;
+      }
+      .sub {
+        font-size: calc(var(--c) * 16);
+        max-width: 44ch;
+      }
+      .sub span {
+        display: inline;
+      }
+      .cta {
+        font-size: calc(var(--c) * 15.5);
+        padding: calc(var(--c) * 12) calc(var(--c) * 24);
+      }
+      .feats {
+        grid-template-columns: repeat(4, max-content);
+        justify-content: center;
+        max-width: none;
+        gap: calc(var(--c) * 24);
+        margin-top: calc(var(--c) * 2);
+      }
+      .feats li {
+        font-size: calc(var(--c) * 13.5);
+      }
+      .rule {
+        height: calc(var(--c) * 20);
+        margin: calc(var(--c) * 10) auto 0;
+      }
+      .foot {
+        font-size: calc(var(--c) * 13);
+      }
+    }
+
+    /* --- B2. TABLET CANVAS: min-width 600px, min-height 430px --- */
+    @media (min-width: 600px) and (min-height: 430px) and (max-width: 1199px) {
+      :root {
+        --c: min(calc(100vw / 860), calc(100vh / 1120));
+      }
+
+      body {
+        padding: calc(env(safe-area-inset-top) + calc(var(--c) * 40))
+                 calc(var(--c) * 44)
+                 calc(env(safe-area-inset-bottom) + calc(var(--c) * 36));
+      }
+
+      .brand svg {
+        width: calc(var(--c) * 34);
+      }
+      #word {
+        font-size: calc(var(--c) * 30);
+      }
+
+      .burger {
+        width: calc(var(--c) * 60);
+        height: calc(var(--c) * 44);
+      }
+      .burger svg {
+        width: calc(var(--c) * 27);
+        stroke-width: 1.2;
+      }
+
+      .navpanel {
+        width: min(calc(var(--c) * 330), 56vw);
+        padding: calc(var(--c) * 16);
+        border-radius: calc(var(--c) * 26);
+        gap: calc(var(--c) * 4);
+      }
+      .navpanel .menu a, .navpanel .login {
+        font-size: calc(var(--c) * 20);
+        padding: calc(var(--c) * 13) calc(var(--c) * 15);
+        border-radius: calc(var(--c) * 15);
+        gap: calc(var(--c) * 10);
+      }
+      .navpanel .caret {
+        width: calc(var(--c) * 13);
+      }
+      .navpanel .navarrow {
+        width: calc(var(--c) * 14);
+      }
+      .navpanel .pill {
+        margin-top: calc(var(--c) * 10);
+        padding: calc(var(--c) * 14) calc(var(--c) * 20);
+        font-size: calc(var(--c) * 19);
+      }
+
+      .hero {
+        gap: calc(var(--c) * 26);
+      }
+      .title {
+        font-size: calc(var(--c) * 46);
+        line-height: 1.15;
+        max-width: none;
+      }
+      .title span {
+        display: block;
+      }
+      .sub {
+        font-size: calc(var(--c) * 21);
+        line-height: 1.34;
+        max-width: none;
+      }
+      .sub span {
+        display: block;
+      }
+
+      .cta {
+        gap: calc(var(--c) * 14);
+        padding: calc(var(--c) * 18) calc(var(--c) * 34);
+        font-size: calc(var(--c) * 21);
+      }
+      .cta .arrow {
+        width: calc(var(--c) * 20);
+        height: calc(var(--c) * 14);
+      }
+
+      .feats {
+        grid-template-columns: repeat(2, max-content);
+        justify-content: center;
+        gap: calc(var(--c) * 22) calc(var(--c) * 54);
+        max-width: none;
+        margin-top: calc(var(--c) * 12);
+      }
+      .feats li {
+        gap: calc(var(--c) * 12);
+        font-size: calc(var(--c) * 16);
+      }
+      .feats .chev {
+        width: calc(var(--c) * 12);
+        height: calc(var(--c) * 21);
+      }
+
+      .rule {
+        height: calc(var(--c) * 46);
+        margin: calc(var(--c) * 30) auto 0;
+      }
+      .foot {
+        font-size: calc(var(--c) * 16);
+      }
+
+      @media (min-aspect-ratio: 1/1) {
+        :root {
+          --c: min(calc(100vw / 1040), calc(100vh / 780));
+        }
+        .feats {
+          grid-template-columns: repeat(4, max-content);
+          gap: calc(var(--c) * 40);
+        }
+      }
+    }
+
+    /* =======================================================================
+       8. DYNAMIC VIEWPORT OVERRIDE (100dvh for Mobile Chrome)
+       ======================================================================= */
+    @supports (height: 100dvh) {
+      @media (max-width: 1199px), (max-height: 559px), (max-aspect-ratio: 100/95) {
+        :root {
+          --c: min(calc(100vw / 430), calc(100dvh / 860));
+        }
+        body {
+          height: 100dvh;
+        }
+
+        @media (max-width: 599px), (max-height: 429px) {
+          :root {
+            --c: min(calc(100vw / 360), calc(100dvh / 770), 1px);
+          }
+        }
+
+        @media (max-height: 429px) and (min-aspect-ratio: 1/1) {
+          :root {
+            --c: min(calc(100vw / 760), calc(100dvh / 430));
+          }
+        }
+
+        @media (min-width: 600px) and (min-height: 430px) and (max-width: 1199px) {
+          :root {
+            --c: min(calc(100vw / 860), calc(100dvh / 1120));
+          }
+          @media (min-aspect-ratio: 1/1) {
+            :root {
+              --c: min(calc(100vw / 1040), calc(100dvh / 780));
+            }
+          }
+        }
+      }
+    }
+
+    /* =======================================================================
+       9. REDUCED MOTION OVERRIDE
+       ======================================================================= */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. Background Video Layer (Looping underwater / abyssal visual) -->
+  <video class="art" autoplay muted loop playsinline preload="auto" aria-hidden="true"
+         poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/130837c4-0244-4f37-9c61-8d801d93fd29.jpg"
+         src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260912_104303_0c6d60b2-9353-408e-9449-585108a22fb5.mp4"></video>
+
+  <!-- High-Performance GPU Canvas: Living Coral Reefs, Tropical Fish, Sea Turtle, Manta Ray & Bioluminescence -->
+  <canvas class="art" id="ocean-canvas" aria-hidden="true"></canvas>
+
+  <!-- 2. Volumetric Oceanic Scrim Veil -->
+  <div class="veil"></div>
+
+  <!-- 3. Navigation Header Bar -->
+  <header class="bar">
+    <a class="brand" href="#">
+      <!-- Stylised Emblem (viewBox 0 0 23 17, four paths) -->
+      <svg viewBox="0 0 23 17" aria-hidden="true">
+        <path d="M8.15 0.9 L4.55 0.9 L0.5 9.3 L4.1 9.3 Z"/>
+        <path d="M17.0 0 L13.4 0 L6.15 16.4 L9.75 16.4 Z"/>
+        <path d="M22.9 0 L19.3 0 L15.0 7.6 L18.6 7.6 Z"/>
+        <path d="M22.6 6.9 L19.0 6.9 L14.05 16.4 L17.65 16.4 Z"/>
+      </svg>
+      <span id="word">NEURAL</span>
+    </a>
+
+    <input class="navtoggle" type="checkbox" id="nav-open">
+    <label class="scrim" for="nav-open" aria-hidden="true"></label>
+    <label class="burger" for="nav-open" aria-label="Menu">
+      <svg viewBox="0 0 22 14">
+        <path class="b1" d="M1 1 H21"/>
+        <path class="b2" d="M1 7 H21"/>
+        <path class="b3" d="M1 13 H21"/>
+      </svg>
+    </label>
+
+    <div class="navpanel">
+      <nav class="menu">
+        <a href="#"><span id="about">Sanctuaries</span></a>
+        <a href="#"><span id="product">Reef Atlas</span></a>
+        <a href="#"><span id="solutions">Ecosystems</span>
+          <svg class="caret" viewBox="0 0 9 6" aria-hidden="true">
+            <path d="M0.7 1.1 L4.5 4.6 L8.3 1.1"/>
+          </svg>
+        </a>
+      </nav>
+      <a class="login" href="#"><span id="login">Expedition access</span>
+        <svg class="navarrow" viewBox="0 0 10 9" aria-hidden="true">
+          <path d="M0 4.5 H9.1 M5.4 0.9 L9.2 4.5 L5.4 8.1"/>
+        </svg>
+      </a>
+      <a class="pill" href="#"><span id="contact">Dive with us</span></a>
+    </div>
+  </header>
+
+  <!-- 4. Hero Content Section -->
+  <main class="hero">
+    <h1 class="title">
+      <span id="h1a">Living Coral Sanctuaries</span>
+      <span id="h1b">Deep Wonders, Beyond the Surface.</span>
+    </h1>
+    <p class="sub">
+      <span id="sub1">Exploring Earth's most breathtaking coral reefs</span>
+      <span id="sub2">and majestic marine kingdoms.</span>
+    </p>
+    <a class="cta" href="#">
+      <span id="cta">Descend into the reef</span>
+      <svg class="arrow" viewBox="0 0 16 11" aria-hidden="true">
+        <path d="M0 5.5 H14.6 M10.3 1.2 L14.9 5.5 L10.3 9.8"/>
+      </svg>
+    </a>
+    <ul class="feats">
+      <li>
+        <svg class="chev" viewBox="0 0 11 20" aria-hidden="true"><path d="M1.15 1.15 L9.6 10 L1.15 18.85"/></svg>
+        <span id="f1">Bioluminescent corals</span>
+      </li>
+      <li>
+        <svg class="chev" viewBox="0 0 11 20" aria-hidden="true"><path d="M1.15 1.15 L9.6 10 L1.15 18.85"/></svg>
+        <span id="f2">Pelagic biodiversity</span>
+      </li>
+      <li>
+        <svg class="chev" viewBox="0 0 11 20" aria-hidden="true"><path d="M1.15 1.15 L9.6 10 L1.15 18.85"/></svg>
+        <span id="f3">Pristine barrier reefs</span>
+      </li>
+      <li>
+        <svg class="chev" viewBox="0 0 11 20" aria-hidden="true"><path d="M1.15 1.15 L9.6 10 L1.15 18.85"/></svg>
+        <span id="f4">Marine conservation</span>
+      </li>
+    </ul>
+    <span class="rule" aria-hidden="true"></span>
+  </main>
+
+  <!-- 5. Footer -->
+  <footer class="foot">
+    <span id="foot1">Preserving vital marine ecosystems and living reefs across the oceans.</span>
+    <span id="foot2">2026</span>
+  </footer>
+
+  <!-- SCRIPT BLOCK: Reduced motion video control, entrance retirement, and living coral ocean simulation -->
+  <script>
+    // =======================================================================
+    // (a) Reduced Motion Listener (Pauses/Plays background video and canvas)
+    // =======================================================================
+    (function() {
+      var q = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)'),
+          v = document.querySelector('video.art');
+      if (!q) return;
+      function sync() {
+        if (q.matches) {
+          if (v) v.pause();
+          window.__oceanReducedMotion = true;
+        } else {
+          window.__oceanReducedMotion = false;
+          if (v) {
+            var p = v.play();
+            if (p) p.catch(function() {});
+          }
+        }
+      }
+      sync();
+      q.addEventListener ? q.addEventListener('change', sync) : q.addListener(sync);
+    })();
+
+    // =======================================================================
+    // (b) Entrance Sequence Retirement (Guarantees no re-trigger on resize)
+    // =======================================================================
+    (function() {
+      var f = document.getElementById('foot2'),
+          timer = setTimeout(done, 4000);
+      function done() {
+        clearTimeout(timer);
+        if (f) f.removeEventListener('animationend', done);
+        document.documentElement.classList.add('is-entered');
+      }
+      if (f) f.addEventListener('animationend', done);
+    })();
+
+    // =======================================================================
+    // (c) High-Performance 60fps Living Coral Reef & Marine Life Simulation
+    //     (Branching Corals, Sea Turtle, Manta Ray, Schooling Fish, Caustics)
+    // =======================================================================
+    (function() {
+      var canvas = document.getElementById('ocean-canvas');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      var width = 0, height = 0, dpr = 1;
+      function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        ctx.scale(dpr, dpr);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      // Schooling Fish Class
+      var FishSchool = function(count, color, size, speed, yRange) {
+        this.fishes = [];
+        for (var i = 0; i < count; i++) {
+          this.fishes.push({
+            x: Math.random() * width,
+            y: height * yRange[0] + Math.random() * (height * (yRange[1] - yRange[0])),
+            vx: speed * (0.8 + Math.random() * 0.4),
+            vy: (Math.random() - 0.5) * 0.4,
+            size: size * (0.85 + Math.random() * 0.3),
+            phase: Math.random() * Math.PI * 2,
+            color: color
+          });
+        }
+      };
+      FishSchool.prototype.update = function(time) {
+        for (var i = 0; i < this.fishes.length; i++) {
+          var f = this.fishes[i];
+          f.x += f.vx;
+          f.y += Math.sin(time * 0.003 + f.phase) * 0.45;
+          if (f.x > width + 40) f.x = -40;
+        }
+      };
+      FishSchool.prototype.draw = function(c) {
+        for (var i = 0; i < this.fishes.length; i++) {
+          var f = this.fishes[i];
+          c.save();
+          c.translate(f.x, f.y);
+          c.fillStyle = f.color;
+          // Sleek aquatic fish body
+          c.beginPath();
+          c.moveTo(f.size * 2, 0);
+          c.quadraticCurveTo(0, -f.size, -f.size * 1.8, 0);
+          c.quadraticCurveTo(0, f.size, f.size * 2, 0);
+          c.fill();
+          // Animated tail fin
+          var tailWiggle = Math.sin(f.phase + f.x * 0.08) * 4;
+          c.beginPath();
+          c.moveTo(-f.size * 1.6, 0);
+          c.lineTo(-f.size * 2.8, -f.size * 0.8 + tailWiggle);
+          c.lineTo(-f.size * 2.4, tailWiggle * 0.5);
+          c.lineTo(-f.size * 2.8, f.size * 0.8 + tailWiggle);
+          c.closePath();
+          c.fill();
+          c.restore();
+        }
+      };
+
+      // Sea Turtle (Paddles gracefully through mid-depth)
+      var Turtle = {
+        x: -120, y: height * 0.38, vx: 0.42,
+        draw: function(c, time) {
+          this.x += this.vx;
+          if (this.x > width + 140) this.x = -140;
+          var flap = Math.sin(time * 0.002) * 0.35;
+          c.save();
+          c.translate(this.x, this.y + Math.sin(time * 0.0015) * 8);
+          c.scale(0.85, 0.85);
+
+          // Shell
+          c.fillStyle = 'rgba(15, 76, 92, 0.75)';
+          c.beginPath();
+          c.ellipse(0, 0, 36, 26, 0, 0, Math.PI * 2);
+          c.fill();
+          c.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+          c.lineWidth = 1.5;
+          c.stroke();
+
+          // Flippers
+          c.fillStyle = 'rgba(20, 90, 110, 0.65)';
+          // Front Right flipper
+          c.save();
+          c.translate(14, -18);
+          c.rotate(-0.4 + flap);
+          c.beginPath();
+          c.ellipse(12, -4, 22, 7, 0.4, 0, Math.PI * 2);
+          c.fill();
+          c.restore();
+          // Front Left flipper
+          c.save();
+          c.translate(14, 18);
+          c.rotate(0.4 - flap);
+          c.beginPath();
+          c.ellipse(12, 4, 22, 7, -0.4, 0, Math.PI * 2);
+          c.fill();
+          c.restore();
+          // Head
+          c.beginPath();
+          c.ellipse(44, 0, 10, 7, 0, 0, Math.PI * 2);
+          c.fill();
+          c.restore();
+        }
+      };
+
+      // Manta Ray (Glides smoothly in the upper deep)
+      var Manta = {
+        x: width + 180, y: height * 0.24, vx: -0.65,
+        draw: function(c, time) {
+          this.x += this.vx;
+          if (this.x < -200) this.x = width + 200;
+          var wingWave = Math.sin(time * 0.0025) * 12;
+          c.save();
+          c.translate(this.x, this.y);
+          c.fillStyle = 'rgba(8, 47, 73, 0.65)';
+          c.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+          c.beginPath();
+          c.moveTo(-45, 0); // Head
+          c.quadraticCurveTo(0, -50 + wingWave, 35, -5);
+          c.lineTo(75, 0); // Tail base
+          c.lineTo(35, 5);
+          c.quadraticCurveTo(0, 50 - wingWave, -45, 0);
+          c.fill();
+          c.stroke();
+          // Long tail
+          c.beginPath();
+          c.moveTo(75, 0);
+          c.quadraticCurveTo(110, Math.sin(time * 0.003) * 6, 160, 0);
+          c.lineWidth = 1.2;
+          c.stroke();
+          c.restore();
+        }
+      };
+
+      // Bioluminescent Jellyfish
+      var Jellyfish = function(x, y, scale, speed, color) {
+        this.x = x; this.y = y; this.scale = scale;
+        this.speed = speed; this.color = color;
+        this.phase = Math.random() * Math.PI * 2;
+      };
+      Jellyfish.prototype.draw = function(c, time) {
+        this.y -= this.speed;
+        if (this.y < -60) this.y = height + 60;
+        var pulse = Math.sin(time * 0.0035 + this.phase);
+        var open = Math.max(0, pulse);
+        c.save();
+        c.translate(this.x + Math.sin(time * 0.002 + this.phase) * 15, this.y);
+        c.scale(this.scale, this.scale * (0.8 + open * 0.3));
+
+        // Bell
+        var g = c.createRadialGradient(0, -6, 2, 0, 0, 24);
+        g.addColorStop(0, this.color);
+        g.addColorStop(0.7, 'rgba(56, 189, 248, 0.25)');
+        g.addColorStop(1, 'rgba(56, 189, 248, 0)');
+        c.fillStyle = g;
+        c.beginPath();
+        c.arc(0, 0, 24, Math.PI, 0, false);
+        c.quadraticCurveTo(0, 8, 0, 0);
+        c.fill();
+
+        // Tentacles
+        c.strokeStyle = 'rgba(186, 230, 253, 0.45)';
+        c.lineWidth = 1;
+        for (var t = -16; t <= 16; t += 8) {
+          c.beginPath();
+          c.moveTo(t, 2);
+          c.quadraticCurveTo(t + Math.sin(time * 0.004 + t) * 6, 22, t, 42);
+          c.stroke();
+        }
+        c.restore();
+      };
+
+      // Rising Ocean Bubbles
+      var bubbles = [];
+      for (var b = 0; b < 45; b++) {
+        bubbles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: 1 + Math.random() * 3.5,
+          speed: 0.4 + Math.random() * 0.8,
+          wobble: Math.random() * 6
+        });
+      }
+
+      // Coral Reef Silhouette Formations (Bottom)
+      function drawCorals(c, time) {
+        var coralBaseY = height;
+        // Coral Shelf Left
+        c.save();
+        var g1 = c.createLinearGradient(0, coralBaseY - 180, 0, coralBaseY);
+        g1.addColorStop(0, 'rgba(14, 116, 144, 0.45)');
+        g1.addColorStop(1, 'rgba(2, 6, 15, 0.95)');
+        c.fillStyle = g1;
+
+        // Draw branching staghorn coral mounds
+        c.beginPath();
+        c.moveTo(0, coralBaseY);
+        c.lineTo(0, coralBaseY - 140);
+        c.quadraticCurveTo(width * 0.08, coralBaseY - 180, width * 0.16, coralBaseY - 110);
+        c.quadraticCurveTo(width * 0.24, coralBaseY - 160, width * 0.32, coralBaseY - 80);
+        c.quadraticCurveTo(width * 0.40, coralBaseY - 120, width * 0.48, coralBaseY);
+        c.closePath();
+        c.fill();
+
+        // Coral Shelf Right
+        var g2 = c.createLinearGradient(0, coralBaseY - 200, 0, coralBaseY);
+        g2.addColorStop(0, 'rgba(125, 39, 110, 0.40)');
+        g2.addColorStop(1, 'rgba(2, 6, 15, 0.95)');
+        c.fillStyle = g2;
+        c.beginPath();
+        c.moveTo(width, coralBaseY);
+        c.lineTo(width, coralBaseY - 160);
+        c.quadraticCurveTo(width * 0.90, coralBaseY - 220, width * 0.80, coralBaseY - 130);
+        c.quadraticCurveTo(width * 0.72, coralBaseY - 170, width * 0.62, coralBaseY - 90);
+        c.quadraticCurveTo(width * 0.54, coralBaseY - 130, width * 0.46, coralBaseY);
+        c.closePath();
+        c.fill();
+
+        // Swaying Sea Anemone & Fan Corals
+        c.lineWidth = 2.2;
+        var anemoneColors = ['rgba(244, 63, 94, 0.65)', 'rgba(251, 191, 36, 0.65)', 'rgba(56, 189, 248, 0.65)'];
+        for (var i = 0; i < 18; i++) {
+          var ax = (i * (width / 18)) + (Math.sin(i * 9) * 20);
+          var sway = Math.sin(time * 0.002 + i) * 12;
+          c.strokeStyle = anemoneColors[i % anemoneColors.length];
+          c.beginPath();
+          c.moveTo(ax, coralBaseY - 10);
+          c.quadraticCurveTo(ax + sway * 0.5, coralBaseY - 50, ax + sway, coralBaseY - 85);
+          c.stroke();
+          // Glowing polyp tip
+          c.fillStyle = c.strokeStyle;
+          c.beginPath();
+          c.arc(ax + sway, coralBaseY - 85, 2.5, 0, Math.PI * 2);
+          c.fill();
+        }
+        c.restore();
+      }
+
+      // Initialize Fauna
+      var schoolGold = new FishSchool(14, 'rgba(251, 191, 36, 0.82)', 3.6, 1.1, [0.35, 0.65]);
+      var schoolCyan = new FishSchool(20, 'rgba(56, 189, 248, 0.80)', 3.0, 1.4, [0.45, 0.80]);
+      var jellies = [
+        new Jellyfish(width * 0.22, height * 0.6, 0.9, 0.35, 'rgba(244, 63, 94, 0.55)'),
+        new Jellyfish(width * 0.78, height * 0.75, 1.1, 0.42, 'rgba(56, 189, 248, 0.55)'),
+        new Jellyfish(width * 0.52, height * 0.85, 0.75, 0.28, 'rgba(168, 85, 247, 0.55)')
+      ];
+
+      // Volumetric Ocean Sunbeams (God Rays)
+      function drawSunbeams(c, time) {
+        c.save();
+        c.globalCompositeOperation = 'screen';
+        var beamCount = 6;
+        for (var i = 0; i < beamCount; i++) {
+          var beamX = width * 0.5 + Math.sin(time * 0.0006 + i * 1.3) * (width * 0.28);
+          var g = c.createLinearGradient(width * 0.5, 0, beamX, height);
+          g.addColorStop(0, 'rgba(186, 230, 253, 0.12)');
+          g.addColorStop(0.4, 'rgba(56, 189, 248, 0.05)');
+          g.addColorStop(1, 'rgba(56, 189, 248, 0)');
+          c.fillStyle = g;
+          c.beginPath();
+          c.moveTo(width * 0.5 - 20, 0);
+          c.lineTo(width * 0.5 + 20, 0);
+          c.lineTo(beamX + 110, height);
+          c.lineTo(beamX - 110, height);
+          c.closePath();
+          c.fill();
+        }
+        c.restore();
+      }
+
+      // Main Loop
+      function loop(t) {
+        if (!window.__oceanReducedMotion) {
+          ctx.clearRect(0, 0, width, height);
+
+          // Deep Sea Ambient Lighting
+          var oceanGrad = ctx.createLinearGradient(0, 0, 0, height);
+          oceanGrad.addColorStop(0, 'rgba(2, 12, 27, 0.35)');
+          oceanGrad.addColorStop(0.5, 'rgba(3, 18, 38, 0.50)');
+          oceanGrad.addColorStop(1, 'rgba(1, 4, 10, 0.85)');
+          ctx.fillStyle = oceanGrad;
+          ctx.fillRect(0, 0, width, height);
+
+          // Sunbeams streaming from surface
+          drawSunbeams(ctx, t);
+
+          // Marine Creatures Swimming
+          Manta.draw(ctx, t);
+          Turtle.draw(ctx, t);
+          schoolGold.update(t);
+          schoolGold.draw(ctx);
+          schoolCyan.update(t);
+          schoolCyan.draw(ctx);
+
+          for (var j = 0; j < jellies.length; j++) {
+            jellies[j].draw(ctx, t);
+          }
+
+          // Living Corals at the bottom
+          drawCorals(ctx, t);
+
+          // Rising Bubbles
+          ctx.save();
+          ctx.fillStyle = 'rgba(224, 242, 254, 0.45)';
+          ctx.strokeStyle = 'rgba(186, 230, 253, 0.75)';
+          ctx.lineWidth = 0.8;
+          for (var k = 0; k < bubbles.length; k++) {
+            var b = bubbles[k];
+            b.y -= b.speed;
+            b.x += Math.sin(t * 0.002 + b.wobble) * 0.3;
+            if (b.y < -10) {
+              b.y = height + 10;
+              b.x = Math.random() * width;
+            }
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
