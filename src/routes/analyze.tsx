@@ -47,6 +47,13 @@ import { prepareImageForAnalysis, formatBytes } from "@/lib/imageResize";
 import sampleFishImg from "@/assets/fish-sample.jpg";
 
 export const Route = createFileRoute("/analyze")({
+  validateSearch: (search: Record<string, unknown>): { type?: SeafoodTypeId } => {
+    const valid: SeafoodTypeId[] = ["fish", "shrimp", "shellfish", "squid"];
+    const t = search.type as SeafoodTypeId;
+    return {
+      type: valid.includes(t) ? t : undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "ระบบตรวจวัดความสดอาหารทะเลระดับสากล · FreshScan Marine™" },
@@ -71,7 +78,8 @@ const gradeColor = (id: string) =>
   FRESHNESS_GRADES.find((g) => g.id === id)?.colorHex ?? "#0ea5e9";
 
 function AnalyzePage() {
-  const [type, setType] = useState<SeafoodTypeId>("fish");
+  const search = Route.useSearch();
+  const [type, setType] = useState<SeafoodTypeId>(search.type || "fish");
   const [image, setImage] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<"idle" | "compressing" | "analyzing" | "done">("idle");

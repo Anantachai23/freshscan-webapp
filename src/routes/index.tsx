@@ -1,15 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Navbar, Footer } from "@/components/layout";
-import { Hero, QIMStandards, HowItWorks, Tech, Stats, About } from "@/components/home";
+import {
+  DepthMeter,
+  OceanAmbience,
+  Hero,
+  OceanRealms,
+  AbyssalScanner,
+  ColdChainVault,
+  OceanAbyssCTA,
+} from "@/components/home";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "FreshScan Marine™ — มาตรฐานตรวจวัดความสดอาหารทะเลระดับสากลด้วย AI & QIM" },
+      { title: "FreshScan Marine™ — ดำดิ่งสู่มาตรฐานตรวจวัดความสดอาหารทะเลระดับสากลด้วย AI" },
       {
         name: "description",
         content:
-          "ระบบประเมินความสดอาหารทะเลระดับมืออาชีพตามมาตรฐาน Quality Index Method (QIM) และ TAS 7001-2550 ประมวลผลภาพถ่ายแบบ Edge Computer Vision ภายในเสี้ยววินาที",
+          "ดำดิ่งสู่โลกใต้สมุทรกับระบบตรวจวัดความสดอาหารทะเลระดับมืออาชีพสำหรับ ปลา กุ้ง หมึก หอย ด้วย AI & QIM ประมวลผลรวดเร็ว แม่นยำใน 1 วินาที",
       },
     ],
   }),
@@ -18,16 +26,33 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="relative min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
+      {/* Underwater Atmosphere: Floating bubbles & sunlight rays */}
+      <OceanAmbience />
+
+      {/* Interactive Depth Gauge HUD (Tracks scroll from 0m to 3000m) */}
+      <DepthMeter />
+
+      {/* Navigation Header */}
       <Navbar />
-      <main>
+
+      <main className="relative z-10">
+        {/* Depth 0m – 50m: The Sunlight Ocean Surface */}
         <Hero />
-        <QIMStandards />
-        <HowItWorks />
-        <Tech />
-        <Stats />
-        <About />
+
+        {/* Depth 100m – 600m: The 4 Oceanic Realms (ปลา, กุ้ง, หมึก, หอย) */}
+        <OceanRealms />
+
+        {/* Depth 800m – 1,500m: The Abyssal Edge Scanning Chamber */}
+        <AbyssalScanner />
+
+        {/* Depth 2,000m – 2,800m: The Cold-Chain & Safety Vault */}
+        <ColdChainVault />
+
+        {/* Depth 3,000m: The Hadal Trench Launch Portal */}
+        <OceanAbyssCTA />
       </main>
+
       <Footer />
     </div>
   );

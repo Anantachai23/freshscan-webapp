@@ -3,11 +3,10 @@ import { Fish, Camera, ShieldCheck, Compass, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 
 const navItems = [
-  { href: "/analyze", label: "วิเคราะห์ความสด", isRoute: true },
-  { href: "/species", label: "ฐานข้อมูลสายพันธุ์", isRoute: true },
-  { href: "/dataset", label: "เกณฑ์มาตรฐาน QIM", isRoute: true },
-  { href: "/#qim-standards", label: "หลักการตรวจวัด", isRoute: false },
-  { href: "/#tech-architecture", label: "สถาปัตยกรรมระบบ", isRoute: false },
+  { href: "/analyze", label: "สแกนความสด", isRoute: true },
+  { href: "/#realms", label: "4 สัตว์น้ำใต้ทะเล", isRoute: false },
+  { href: "/species", label: "คู่มือสายพันธุ์", isRoute: true },
+  { href: "/dataset", label: "มาตรฐาน QIM", isRoute: true },
 ];
 
 export function Navbar() {
