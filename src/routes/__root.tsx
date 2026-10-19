@@ -73,23 +73,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FreshScan AI — Seafood Freshness Assessment" },
+      { title: "FreshScan AI — ระบบประเมินความสดอาหารทะเลอัจฉริยะ" },
       {
         name: "description",
         content:
-          "FreshScan AI — Seafood Freshness Assessment service. Know how fresh, before it reaches your table.",
+          "FreshScan AI — ระบบประเมินความสดอาหารทะเลด้วยปัญญาประดิษฐ์ มาตรฐานการตรวจวัดระดับสากล",
       },
-      { property: "og:title", content: "FreshScan AI — Seafood Freshness Assessment" },
+      { property: "og:title", content: "FreshScan AI — ระบบประเมินความสดอาหารทะเลอัจฉริยะ" },
       {
         property: "og:description",
-        content: "AI-powered seafood freshness grading from ocean surface to coral depth.",
+        content: "ระบบประเมินและตรวจสอบความสดของอาหารทะเลด้วยปัญญาประดิษฐ์ตามเกณฑ์มาตรฐาน QIM",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "FreshScan AI — Seafood Freshness Assessment" },
+      { name: "twitter:title", content: "FreshScan AI — ระบบประเมินความสดอาหารทะเลอัจฉริยะ" },
       {
         name: "twitter:description",
-        content: "AI-powered seafood freshness grading from ocean surface to coral depth.",
+        content: "ระบบประเมินและตรวจสอบความสดของอาหารทะเลด้วยปัญญาประดิษฐ์ตามเกณฑ์มาตรฐาน QIM",
       },
     ],
     links: [
@@ -98,15 +98,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://db.onlinewebfonts.com/c/95cecf452d3208890088a5b4c19c7ecf?family=Helvetica+Neue+ME",
-      },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap",
-      },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap",
       },
     ],
   }),
@@ -114,11 +106,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
-});
+  });
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="th">
       <head>
         <HeadContent />
       </head>
