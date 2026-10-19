@@ -103,7 +103,13 @@ export function App() {
 
   const navColor = isLight ? DARK : "#ffffff";
 
-  // Coral & Marine Life Background Simulation (Active when themeMode === 'seafood')
+  // Scroll Progress ref for 60fps canvas simulation
+  const progressRef = useRef(0);
+  useEffect(() => {
+    progressRef.current = scrollProgress;
+  }, [scrollProgress]);
+
+  // Seamless Continuous Vertical Descent Simulation (Active when themeMode === 'seafood')
   useEffect(() => {
     const canvas = coralCanvasRef.current;
     if (!canvas || themeMode !== "seafood") return;
@@ -120,57 +126,288 @@ export function App() {
     };
     window.addEventListener("resize", onResize);
 
-    // Schooling fish
-    const fishes: { x: number; y: number; vx: number; size: number; phase: number; color: string }[] = [];
-    for (let i = 0; i < 18; i++) {
-      fishes.push({
+    // 1. Schools of Small Silver Fish (Teleostei)
+    const silverFish: { x: number; y: number; vx: number; size: number; phase: number }[] = [];
+    for (let i = 0; i < 28; i++) {
+      silverFish.push({
         x: Math.random() * w,
-        y: h * 0.3 + Math.random() * (h * 0.45),
-        vx: 0.8 + Math.random() * 0.8,
-        size: 3 + Math.random() * 2,
+        y: h * 0.35 + Math.random() * (h * 0.4),
+        vx: 0.9 + Math.random() * 0.7,
+        size: 3 + Math.random() * 2.2,
         phase: Math.random() * Math.PI * 2,
-        color: i % 2 === 0 ? "rgba(56, 189, 248, 0.45)" : "rgba(251, 191, 36, 0.45)",
       });
     }
+
+    // 2. Rising Bubbles from Surface Plunge
+    const bubbles: { x: number; y: number; r: number; speed: number; wobble: number }[] = [];
+    for (let b = 0; b < 35; b++) {
+      bubbles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: 1.2 + Math.random() * 3.5,
+        speed: 0.6 + Math.random() * 1.2,
+        wobble: Math.random() * 10,
+      });
+    }
+
+    // 3. Deep Marine Snow Particles (Hadal / Deep Reef Base)
+    const marineSnow: { x: number; y: number; r: number; vy: number; vx: number; opacity: number }[] = [];
+    for (let s = 0; s < 60; s++) {
+      marineSnow.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: 0.8 + Math.random() * 1.8,
+        vy: 0.2 + Math.random() * 0.4,
+        vx: (Math.random() - 0.5) * 0.2,
+        opacity: 0.2 + Math.random() * 0.6,
+      });
+    }
+
+    // 4. Sea Turtle passing through the vibrant reef
+    const turtle = {
+      x: -160,
+      y: h * 0.48,
+      vx: 0.5,
+      draw(c: CanvasRenderingContext2D, t: number, alpha: number) {
+        if (alpha <= 0.02) return;
+        this.x += this.vx;
+        if (this.x > w + 200) this.x = -200;
+
+        c.save();
+        c.globalAlpha = alpha;
+        c.translate(this.x, this.y + Math.sin(t * 1.5) * 6);
+        c.scale(0.85, 0.85);
+
+        const flap = Math.sin(t * 2) * 0.3;
+
+        // Shell (Carapace)
+        c.fillStyle = "rgba(15, 76, 92, 0.65)";
+        c.beginPath();
+        c.ellipse(0, 0, 38, 28, 0, 0, Math.PI * 2);
+        c.fill();
+        c.strokeStyle = "rgba(56, 189, 248, 0.45)";
+        c.lineWidth = 1.5;
+        c.stroke();
+
+        // Flippers
+        c.fillStyle = "rgba(20, 90, 110, 0.55)";
+        c.save();
+        c.translate(14, -18);
+        c.rotate(-0.4 + flap);
+        c.beginPath();
+        c.ellipse(12, -4, 22, 7, 0.4, 0, Math.PI * 2);
+        c.fill();
+        c.restore();
+
+        c.save();
+        c.translate(14, 18);
+        c.rotate(0.4 - flap);
+        c.beginPath();
+        c.ellipse(12, 4, 22, 7, -0.4, 0, Math.PI * 2);
+        c.fill();
+        c.restore();
+
+        // Head
+        c.beginPath();
+        c.ellipse(44, 0, 10, 7, 0, 0, Math.PI * 2);
+        c.fill();
+        c.restore();
+      },
+    };
 
     let time = 0;
     const render = () => {
       time += 0.016;
+      const p = progressRef.current; // 0 (surface) -> 1 (deep reef base)
+
       ctx.clearRect(0, 0, w, h);
 
-      // Swaying Corals at bottom (subtle translucent silhouette)
-      const base = h;
-      ctx.save();
-      ctx.lineWidth = 2;
-      for (let i = 0; i < 20; i++) {
-        const x = i * (w / 20) + 20;
-        const sway = Math.sin(time * 1.5 + i) * 12;
-        ctx.strokeStyle = i % 2 === 0 ? "rgba(14, 116, 144, 0.28)" : "rgba(244, 63, 94, 0.22)";
-        ctx.beginPath();
-        ctx.moveTo(x, base);
-        ctx.quadraticCurveTo(x + sway * 0.5, base - 45, x + sway, base - 80);
-        ctx.stroke();
-        ctx.fillStyle = ctx.strokeStyle;
-        ctx.beginPath();
-        ctx.arc(x + sway, base - 80, 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
+      // =====================================================================
+      // STAGE 1: SURFACE (p < 0.25) — Sunlit ripples & pale aqua highlights
+      // =====================================================================
+      if (p < 0.35) {
+        const surfaceAlpha = Math.max(0, 1 - p / 0.35);
+        ctx.save();
+        ctx.globalAlpha = surfaceAlpha * 0.4;
+        ctx.globalCompositeOperation = "screen";
 
-      // Fish swimming
-      for (const f of fishes) {
-        f.x += f.vx;
-        f.y += Math.sin(time * 2 + f.phase) * 0.3;
-        if (f.x > w + 30) f.x = -30;
+        // Gentle surface ripple lines
+        ctx.strokeStyle = "rgba(224, 242, 254, 0.5)";
+        ctx.lineWidth = 1.5;
+        for (let r = 0; r < 4; r++) {
+          const yOffset = (r * 35) + Math.sin(time * 1.5 + r) * 10;
+          ctx.beginPath();
+          ctx.moveTo(0, yOffset);
+          for (let x = 0; x < w; x += 50) {
+            ctx.quadraticCurveTo(
+              x + 25,
+              yOffset + Math.sin(x * 0.01 + time * 2) * 8,
+              x + 50,
+              yOffset
+            );
+          }
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // =====================================================================
+      // STAGE 2: PLUNGE & GOD RAYS (p 0.15 - 0.70)
+      // =====================================================================
+      if (p > 0.1 && p < 0.8) {
+        const rayAlpha = Math.sin(((p - 0.1) / 0.7) * Math.PI) * 0.25;
+        ctx.save();
+        ctx.globalAlpha = rayAlpha;
+        ctx.globalCompositeOperation = "screen";
+
+        for (let i = 0; i < 5; i++) {
+          const beamX = w * 0.45 + Math.sin(time * 0.4 + i * 1.4) * (w * 0.3);
+          const g = ctx.createLinearGradient(w * 0.5, 0, beamX, h);
+          g.addColorStop(0, "rgba(224, 242, 254, 0.22)");
+          g.addColorStop(0.5, "rgba(56, 189, 248, 0.08)");
+          g.addColorStop(1, "rgba(56, 189, 248, 0)");
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.moveTo(w * 0.5 - 30, 0);
+          ctx.lineTo(w * 0.5 + 30, 0);
+          ctx.lineTo(beamX + 130, h);
+          ctx.lineTo(beamX - 130, h);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Rising bubbles during plunge
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, rayAlpha * 3.5);
+        ctx.fillStyle = "rgba(224, 242, 254, 0.45)";
+        ctx.strokeStyle = "rgba(186, 230, 253, 0.8)";
+        ctx.lineWidth = 0.8;
+        for (const b of bubbles) {
+          b.y -= b.speed;
+          b.x += Math.sin(time * 2 + b.wobble) * 0.4;
+          if (b.y < -10) {
+            b.y = h + 10;
+            b.x = Math.random() * w;
+          }
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // =====================================================================
+      // STAGE 3: VIBRANT CORAL REEF & FISH (p 0.28 - 0.85)
+      // =====================================================================
+      if (p > 0.2) {
+        const reefAlpha = Math.min(1, (p - 0.2) / 0.25);
+        const depthDescent = p * 60; // Parallax vertical rise as camera descends
 
         ctx.save();
-        ctx.translate(f.x, f.y);
-        ctx.fillStyle = f.color;
-        ctx.beginPath();
-        ctx.moveTo(f.size * 2, 0);
-        ctx.quadraticCurveTo(0, -f.size, -f.size * 1.8, 0);
-        ctx.quadraticCurveTo(0, f.size, f.size * 2, 0);
-        ctx.fill();
+        ctx.globalAlpha = reefAlpha * 0.75;
+
+        // Sea Anemones & Colorful Coral Polyps
+        const coralBase = h + 20 - depthDescent * 0.4;
+        const coralColors = [
+          "rgba(244, 63, 94, 0.55)",  // Coral Rose
+          "rgba(251, 191, 36, 0.55)", // Golden Fan
+          "rgba(56, 189, 248, 0.65)", // Cyan Sea Fan
+          "rgba(168, 85, 247, 0.5)",  // Purple Anemone
+        ];
+
+        ctx.lineWidth = 2.2;
+        for (let i = 0; i < 24; i++) {
+          const x = i * (w / 24) + 18;
+          const sway = Math.sin(time * 1.8 + i) * 14;
+          ctx.strokeStyle = coralColors[i % coralColors.length];
+          ctx.beginPath();
+          ctx.moveTo(x, coralBase);
+          ctx.quadraticCurveTo(x + sway * 0.5, coralBase - 50, x + sway, coralBase - 90);
+          ctx.stroke();
+
+          // Bioluminescent polyp tip
+          ctx.fillStyle = ctx.strokeStyle;
+          ctx.beginPath();
+          ctx.arc(x + sway, coralBase - 90, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Schools of Silver Fish Swimming
+        ctx.save();
+        ctx.globalAlpha = reefAlpha * 0.85;
+        for (const f of silverFish) {
+          f.x += f.vx;
+          f.y += Math.sin(time * 2.5 + f.phase) * 0.35;
+          if (f.x > w + 40) f.x = -40;
+
+          ctx.save();
+          ctx.translate(f.x, f.y);
+
+          // Gleaming Silver body with iridescent highlight
+          const fishGrad = ctx.createLinearGradient(-f.size * 2, 0, f.size * 2, 0);
+          fishGrad.addColorStop(0, "rgba(224, 242, 254, 0.7)");
+          fishGrad.addColorStop(0.5, "rgba(255, 255, 255, 0.95)");
+          fishGrad.addColorStop(1, "rgba(56, 189, 248, 0.6)");
+          ctx.fillStyle = fishGrad;
+
+          ctx.beginPath();
+          ctx.moveTo(f.size * 2, 0);
+          ctx.quadraticCurveTo(0, -f.size * 0.8, -f.size * 1.8, 0);
+          ctx.quadraticCurveTo(0, f.size * 0.8, f.size * 2, 0);
+          ctx.fill();
+
+          // Fin wiggle
+          const tailWiggle = Math.sin(time * 8 + f.phase) * 3;
+          ctx.beginPath();
+          ctx.moveTo(-f.size * 1.6, 0);
+          ctx.lineTo(-f.size * 2.8, -f.size * 0.6 + tailWiggle);
+          ctx.lineTo(-f.size * 2.4, tailWiggle * 0.5);
+          ctx.lineTo(-f.size * 2.8, f.size * 0.6 + tailWiggle);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.restore();
+
+        // Sea Turtle passing gracefully
+        turtle.draw(ctx, time, reefAlpha * 0.8);
+      }
+
+      // =====================================================================
+      // STAGE 4: DEEPER BLUE WATER & MARINE SNOW (p > 0.60)
+      // =====================================================================
+      if (p > 0.55) {
+        const deepAlpha = Math.min(1, (p - 0.55) / 0.35);
+
+        // Deeper ambient dark veil overlay
+        ctx.save();
+        ctx.globalAlpha = deepAlpha * 0.45;
+        const deepGrad = ctx.createLinearGradient(0, 0, 0, h);
+        deepGrad.addColorStop(0, "rgba(1, 10, 25, 0)");
+        deepGrad.addColorStop(1, "rgba(2, 6, 23, 0.85)");
+        ctx.fillStyle = deepGrad;
+        ctx.fillRect(0, 0, w, h);
+        ctx.restore();
+
+        // Soft floating marine snow particles
+        ctx.save();
+        ctx.globalAlpha = deepAlpha * 0.7;
+        for (const s of marineSnow) {
+          s.y += s.vy;
+          s.x += s.vx + Math.sin(time * 0.8 + s.y * 0.01) * 0.2;
+          if (s.y > h + 10) {
+            s.y = -10;
+            s.x = Math.random() * w;
+          }
+
+          ctx.fillStyle = `rgba(186, 230, 253, ${s.opacity})`;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
         ctx.restore();
       }
 
