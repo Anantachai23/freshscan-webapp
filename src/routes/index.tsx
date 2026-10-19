@@ -3,7 +3,7 @@ import { Navbar, Footer } from "@/components/layout";
 import {
   DepthMeter,
   OceanAmbience,
-  Hero,
+  OceanicPortalExperience,
   OceanRealms,
   AbyssalScanner,
   ColdChainVault,
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "ดำดิ่งสู่โลกใต้สมุทรกับระบบตรวจวัดความสดอาหารทะเลระดับมืออาชีพสำหรับ ปลา กุ้ง หมึก หอย ด้วย AI & QIM ประมวลผลรวดเร็ว แม่นยำใน 1 วินาที",
+          "สัมผัสประสบการณ์ดำดิ่งใต้สมุทรและระบบตรวจวัดความสดอาหารทะเลระดับสากลสำหรับ ปลา กุ้ง หมึก หอย ด้วย AI & QIM ประมวลผลรวดเร็ว แม่นยำใน 1 วินาที",
       },
     ],
   }),
@@ -37,11 +37,12 @@ function Index() {
       <Navbar />
 
       <main className="relative z-10">
-        {/* Depth 0m – 50m: The Sunlight Ocean Surface */}
-        <Hero />
+        {/* Depth 0m: The 3D Oceanic Portal Landing Experience */}
+        <OceanicPortalExperience />
 
         {/* Depth 100m – 600m: The 4 Oceanic Realms (ปลา, กุ้ง, หมึก, หอย) */}
         <OceanRealms />
+
 
         {/* Depth 800m – 1,500m: The Abyssal Edge Scanning Chamber */}
         <AbyssalScanner />
