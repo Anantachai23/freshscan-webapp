@@ -7,5 +7,6 @@ export { OceanRealms } from "./OceanRealms";
 export { AbyssalScanner } from "./AbyssalScanner";
 export { ColdChainVault } from "./ColdChainVault";
 export { OceanAbyssCTA } from "./OceanAbyssCTA";
+export { FoldcraftHero } from "./FoldcraftHero";
 
 

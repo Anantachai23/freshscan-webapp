@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap");
 
 @custom-variant dark (&:is(.dark *));
 
@@ -40,6 +41,7 @@
   --color-grade-c: var(--grade-c);
   --font-display: "Prompt", "Sarabun", system-ui, sans-serif;
   --font-sans: "Sarabun", system-ui, sans-serif;
+  --font-geist: "Geist", system-ui, sans-serif;
 }
 
 :root {
@@ -1737,4 +1739,44 @@ body:not(.intro-ready) .portal-planet-content .portal-fact {
     transition: none !important;
   }
 }
+
+/* =======================================================================
+   FOLDCRAFT HERO SPECIFICATIONS & KEYFRAME ANIMATIONS
+   ======================================================================= */
+.font-geist {
+  font-family: 'Geist', sans-serif;
+}
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide-up {
+  opacity: 0;
+  animation: fadeSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+.delay-400 {
+  animation-delay: 0.4s;
+}
+
+.delay-700 {
+  animation-delay: 0.7s;
+}
+
+.delay-900 {
+  animation-delay: 0.9s;
+}
+
 

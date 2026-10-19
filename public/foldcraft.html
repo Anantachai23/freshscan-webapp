@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Foldcraft — Creative Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            geist: ['Geist', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: #000;
+      color: #fff;
+    }
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-fade-slide-up {
+      opacity: 0;
+      animation: fadeSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="bg-black">
+  <div class="relative h-screen w-full overflow-hidden bg-black font-geist select-none">
+    <!-- Looping Background Video -->
+    <video
+      autoplay
+      muted
+      loop
+      playsinline
+      class="absolute inset-0 h-full w-full object-cover object-[70%_center] pointer-events-none"
+    >
+      <source
+        src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260622_204221_5339e40b-e73d-4ab0-9c65-79c18c66fd50.mp4"
+        type="video/mp4"
+      >
+    </video>
+
+    <!-- Overlay -->
+    <div class="absolute inset-0 bg-black/25 pointer-events-none"></div>
+
+    <!-- Navbar (z-30) -->
+    <header class="relative z-30 flex items-center justify-between px-6 py-5 md:px-12 lg:px-16">
+      <div class="flex items-center gap-10">
+        <a href="#home" class="text-lg font-semibold tracking-tight text-white sm:text-xl">
+          Foldcraft
+        </a>
+        <nav class="hidden items-center gap-8 md:flex">
+          <a href="#home" class="text-sm text-white/80 transition-colors hover:text-white">Home</a>
+          <a href="#projects" class="text-sm text-white/80 transition-colors hover:text-white">Projects</a>
+          <a href="#studio" class="text-sm text-white/80 transition-colors hover:text-white">Studio</a>
+          <a href="#reach-us" class="text-sm text-white/80 transition-colors hover:text-white">Reach Us</a>
+        </nav>
+      </div>
+
+      <!-- Right Desktop CTA -->
+      <div class="hidden md:block">
+        <button
+          type="button"
+          class="rounded-lg bg-white px-5 py-2 text-sm font-medium text-black transition-transform hover:scale-105 active:scale-95"
+        >
+          Let's Talk
+        </button>
+      </div>
+
+      <!-- Right Mobile Hamburger Button (40x40, z-50) -->
+      <button
+        id="menu-btn"
+        type="button"
+        aria-label="Toggle Menu"
+        class="relative z-50 flex h-10 w-10 items-center justify-center rounded-lg text-white transition-transform active:scale-90 md:hidden focus:outline-none"
+      >
+        <div class="relative h-6 w-6">
+          <!-- Menu Icon -->
+          <svg
+            id="icon-menu"
+            class="absolute inset-0 h-6 w-6 transition-all duration-300"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <!-- X Icon -->
+          <svg
+            id="icon-close"
+            class="absolute inset-0 h-6 w-6 -rotate-90 scale-75 opacity-0 pointer-events-none transition-all duration-300"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+      </button>
+    </header>
+
+    <!-- Mobile Menu Overlay (z-20) -->
+    <div
+      id="mobile-overlay"
+      class="absolute inset-x-0 top-0 z-20 h-0 overflow-hidden bg-black/98 opacity-0 backdrop-blur-xl pointer-events-none transition-[height,opacity] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+    >
+      <div
+        id="mobile-menu-inner"
+        class="flex h-full flex-col justify-center px-8 translate-y-8 opacity-0 transition-all duration-500 delay-100 ease-[cubic-bezier(0.16,1,0.3,1)]"
+      >
+        <div class="flex flex-col gap-6">
+          <a href="#home" class="mobile-link text-3xl font-medium text-white/90 transition-colors hover:text-white">Home</a>
+          <a href="#projects" class="mobile-link text-3xl font-medium text-white/90 transition-colors hover:text-white">Projects</a>
+          <a href="#studio" class="mobile-link text-3xl font-medium text-white/90 transition-colors hover:text-white">Studio</a>
+          <a href="#reach-us" class="mobile-link text-3xl font-medium text-white/90 transition-colors hover:text-white">Reach Us</a>
+        </div>
+        <button
+          type="button"
+          class="mobile-link mt-6 w-fit rounded-full bg-white px-8 py-3.5 text-base font-medium text-black transition-transform hover:scale-105 active:scale-95"
+        >
+          Let's Talk
+        </button>
+      </div>
+    </div>
+
+    <!-- Hero Content (z-10) -->
+    <main class="relative z-10 flex h-[calc(100vh-80px)] flex-col justify-between px-6 pb-8 md:px-12 md:pb-12 lg:px-16">
+      <!-- Top Section -->
+      <div class="pt-6 sm:pt-10 md:pt-14">
+        <span
+          class="inline-block text-xs font-medium uppercase tracking-widest text-white/70 md:text-sm animate-fade-slide-up"
+          style="animation-delay: 0.2s"
+        >
+          Brand &amp; Visual Storytelling
+        </span>
+        <h1
+          class="mt-4 text-4xl font-light tracking-tight text-white leading-[1.1] sm:text-5xl md:text-6xl lg:text-7xl animate-fade-slide-up"
+          style="animation-delay: 0.4s"
+        >
+          Shaping visual<br>
+          narratives,<br>
+          one pixel at a time.
+        </h1>
+      </div>
+
+      <!-- Bottom Section -->
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <p
+          class="max-w-md text-sm leading-relaxed text-white/70 md:text-base animate-fade-slide-up"
+          style="animation-delay: 0.7s"
+        >
+          We are an independent creative studio crafting high-fidelity digital products, tactile brand expressions, and bespoke motion systems.
+        </p>
+
+        <div>
+          <button
+            type="button"
+            class="group inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-medium text-black transition-transform hover:scale-105 active:scale-95 animate-fade-slide-up"
+            style="animation-delay: 0.9s"
+          >
+            <span>Explore Work</span>
+            <svg
+              class="h-4 w-4 transition-transform group-hover:translate-x-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const menuBtn = document.getElementById('menu-btn');
+    const overlay = document.getElementById('mobile-overlay');
+    const menuInner = document.getElementById('mobile-menu-inner');
+    const iconMenu = document.getElementById('icon-menu');
+    const iconClose = document.getElementById('icon-close');
+    const mobileLinks = document.querySelectorAll('.mobile-link');
+    let isOpen = false;
+
+    function toggleMenu(open) {
+      isOpen = typeof open === 'boolean' ? open : !isOpen;
+      if (isOpen) {
+        overlay.classList.remove('h-0', 'opacity-0', 'pointer-events-none');
+        overlay.classList.add('h-screen', 'opacity-100');
+        menuInner.classList.remove('translate-y-8', 'opacity-0');
+        menuInner.classList.add('translate-y-0', 'opacity-100');
+
+        iconMenu.classList.add('rotate-90', 'scale-75', 'opacity-0', 'pointer-events-none');
+        iconMenu.classList.remove('rotate-0', 'scale-100', 'opacity-100');
+
+        iconClose.classList.remove('-rotate-90', 'scale-75', 'opacity-0', 'pointer-events-none');
+        iconClose.classList.add('rotate-0', 'scale-100', 'opacity-100');
+      } else {
+        overlay.classList.remove('h-screen', 'opacity-100');
+        overlay.classList.add('h-0', 'opacity-0', 'pointer-events-none');
+        menuInner.classList.remove('translate-y-0', 'opacity-100');
+        menuInner.classList.add('translate-y-8', 'opacity-0');
+
+        iconMenu.classList.remove('rotate-90', 'scale-75', 'opacity-0', 'pointer-events-none');
+        iconMenu.classList.add('rotate-0', 'scale-100', 'opacity-100');
+
+        iconClose.classList.add('-rotate-90', 'scale-75', 'opacity-0', 'pointer-events-none');
+        iconClose.classList.remove('rotate-0', 'scale-100', 'opacity-100');
+      }
+    }
+
+    menuBtn.addEventListener('click', () => toggleMenu());
+    mobileLinks.forEach(link => {
+      link.addEventListener('click', () => toggleMenu(false));
+    });
+  </script>
+</body>
+</html>
