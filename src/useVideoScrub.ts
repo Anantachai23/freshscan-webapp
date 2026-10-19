@@ -315,12 +315,12 @@ export function useVideoScrub(videoSrc: string) {
             clearInterval(readinessChecker);
             return;
           }
-          if (s.bank.length > 30) {
+          if (s.bank.length > 0 && (s.bank.length >= 15 || (pendingSamples.length === 0 && !processing))) {
             s.bank.sort((a, b) => a.ts - b.ts);
             s.ready = true;
             clearInterval(readinessChecker);
           }
-        }, 300);
+        }, 150);
       } catch (err) {
         console.warn("Frame extraction fallback active:", err);
         s.reverted = true;
