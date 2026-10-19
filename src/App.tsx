@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  ArrowRight,
-  ArrowDown,
-  ChevronUp,
   Camera,
   Upload,
   X,
@@ -17,13 +14,107 @@ import {
   FileText,
   Printer,
   ChevronRight,
+  ArrowRight,
+  ArrowDown,
   Sparkles,
+  Info,
+  Scale,
+  ThermometerSnowflake,
+  Fish,
 } from "lucide-react";
-import { useVideoScrub } from "./useVideoScrub";
 import { analyzeImage, type AnalyzeResult } from "@/lib/freshnessAnalyzer";
 import { type SeafoodTypeId } from "@/data/freshscan_taxonomy";
 
 const VIDEO_URL = "/ocean.mp4";
+
+// =========================================================================
+// BESPOKE HIGH-END LOGO COMPONENT
+// =========================================================================
+function FreshScanLogo({
+  className = "",
+  size = "md",
+}: {
+  className?: string;
+  size?: "sm" | "md" | "lg";
+}) {
+  const iconSize = size === "sm" ? "w-8 h-8" : size === "lg" ? "w-14 h-14" : "w-11 h-11";
+  const titleSize = size === "sm" ? "text-base" : size === "lg" ? "text-2xl" : "text-xl";
+  const subSize = size === "sm" ? "text-[9px]" : size === "lg" ? "text-xs" : "text-[10px]";
+
+  return (
+    <div className={`flex items-center gap-3 select-none ${className}`}>
+      {/* Bespoke Marine AI Emblem */}
+      <div
+        className={`relative ${iconSize} rounded-2xl bg-gradient-to-br from-slate-900 via-sky-950 to-slate-900 p-[1.5px] border border-sky-400/40 shadow-xl shadow-sky-950/50 flex items-center justify-center overflow-hidden shrink-0 group`}
+      >
+        <div className="absolute inset-0 bg-sky-500/10 rounded-2xl group-hover:bg-sky-500/25 transition-colors" />
+        <svg
+          viewBox="0 0 48 48"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full h-full p-1.5 relative z-10"
+        >
+          {/* Precision Scanner Ring */}
+          <circle
+            cx="24"
+            cy="24"
+            r="19"
+            stroke="url(#logo_orbit)"
+            strokeWidth="1.6"
+            strokeDasharray="4 2"
+            className="opacity-70 animate-[spin_24s_linear_infinite]"
+          />
+          {/* Dynamic Ocean Wave & Marine Fish Silhouette */}
+          <path
+            d="M9 24C13 16 21 14 27 18C33 22 37 19 41 16C39 24 34 30 27 31C19 32 13 28 9 24Z"
+            fill="url(#logo_wave)"
+          />
+          {/* Fish Eye Sensor Node */}
+          <circle cx="34" cy="21" r="2.2" fill="#38bdf8" />
+          <circle cx="34" cy="21" r="1" fill="#ffffff" />
+          {/* Hydrodynamic Bottom Fin Curve */}
+          <path
+            d="M14 28C18 33 25 34 32 30"
+            stroke="#38bdf8"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          {/* AI Precision Sparkle */}
+          <path
+            d="M24 7L25.2 12.2L30 13.5L25.2 14.8L24 20L22.8 14.8L18 13.5L22.8 12.2L24 7Z"
+            fill="#ffffff"
+          />
+          <defs>
+            <linearGradient id="logo_orbit" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#38bdf8" />
+              <stop offset="0.5" stopColor="#0284c7" />
+              <stop offset="1" stopColor="#0d9488" />
+            </linearGradient>
+            <linearGradient id="logo_wave" x1="9" y1="14" x2="41" y2="31" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#0284c7" />
+              <stop offset="0.5" stopColor="#0ea5e9" />
+              <stop offset="1" stopColor="#38bdf8" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      <div className="flex flex-col text-left">
+        <div className="flex items-center gap-1.5">
+          <span className={`${titleSize} font-bold tracking-tight text-white leading-none`}>
+            FRESH<span className="text-sky-400">SCAN</span>
+          </span>
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-400/30 leading-none">
+            AI
+          </span>
+        </div>
+        <span className={`${subSize} text-slate-300 tracking-wider uppercase font-medium mt-1`}>
+          ระบบประเมินมาตรฐานความสดอาหารทะเล
+        </span>
+      </div>
+    </div>
+  );
+}
 
 // Smooth Stagger Component
 function Stagger({
@@ -51,25 +142,58 @@ function Stagger({
   );
 }
 
-const SEAFOOD_TYPES: { id: SeafoodTypeId; label: string; sub: string }[] = [
-  { id: "fish", label: "ปลาทะเลทั้งตัว", sub: "ปลากะพง / ปลาทู / ปลาเก๋า / ปลาแซลมอน" },
-  { id: "shrimp", label: "กุ้งสด", sub: "กุ้งกุลาดำ / กุ้งขาว / กุ้งแชบ๊วย" },
-  { id: "squid", label: "หมึกสด", sub: "หมึกกล้วย / หมึกกระดอง / หมึกสาย" },
-  { id: "shellfish", label: "หอยสด", sub: "หอยแมลงภู่ / หอยนางรม / หอยลาย" },
+// =========================================================================
+// DETAILED OFFICIAL QIM CRITERIA (5 DIMENSIONS)
+// =========================================================================
+const QIM_CRITERIA_DETAILS = [
+  {
+    dim: "1. เลนส์ตาและกระจกตา (Eyes & Cornea)",
+    icon: Eye,
+    weight: "0–3 คะแนน",
+    gradeA: "ตานูน กลม ใสเป็นประกาย ม่านตาดำสนิท ไร้ฝ้าขุ่น",
+    gradeB: "ตาราบลงเล็กน้อย เริ่มมีฝ้าขุ่นบาง ม่านตาสีเทา",
+    gradeC: "ตาบุ๋มลึก ฝ้าขุ่นหนาสีเทาหรือมีเลือดคั่ง",
+  },
+  {
+    dim: "2. เหงือกและกลิ่นไอทะเล (Gills & Odor)",
+    icon: Activity,
+    weight: "0–4 คะแนน",
+    gradeA: "สีแดงสดธรรมชาติ เมือกใสบาง กลิ่นไอทะเลสดชื่น ไร้กลิ่นคาว",
+    gradeB: "สีชมพูซีดหรือน้ำตาลแดง เมือกเริ่มขุ่น กลิ่นจืด",
+    gradeC: "สีน้ำตาลคล้ำหรือเทาเข้ม เมือกเหนียวขุ่น กลิ่นคาวจัด/แอมโมเนีย",
+  },
+  {
+    dim: "3. ผิวหนัง เกล็ด และเม็ดสี (Skin & Scales)",
+    icon: Layers,
+    weight: "0–3 คะแนน",
+    gradeA: "เกล็ดแนบสนิทเป็นประกายแวววาว เม็ดสีสดใส ชุ่มชื้นธรรมชาติ",
+    gradeB: "เกล็ดหลุดร่วงบางส่วน สีด้านลง เมือกขุ่นเล็กน้อย",
+    gradeC: "เกล็ดหลุดร่วงง่าย ผิวซีดด่าง เมือกขุ่นเหนียวหนา",
+  },
+  {
+    dim: "4. ความยืดหยุ่นของเนื้อ (Flesh Firmness)",
+    icon: ShieldCheck,
+    weight: "0–3 คะแนน",
+    gradeA: "กล้ามเนื้อแน่นตึง กดแล้วเด้งคืนรูปทันที ไม่ทิ้งรอยบุ๋ม",
+    gradeB: "กล้ามเนื้อเริ่มนิ่มเล็กน้อย คืนรูปช้าเมื่อถูกกด",
+    gradeC: "กล้ามเนื้อนิ่มเละ บุ๋มถาวร เนื้อแยกตัวเมื่อสัมผัส",
+  },
+  {
+    dim: "5. ช่องท้องและอวัยวะภายใน (Belly Integrity)",
+    icon: Scale,
+    weight: "0–3 คะแนน",
+    gradeA: "ผนังช่องท้องแน่นสมบูรณ์ ท้องไม่แตก ไร้รอยช้ำ ไส้ไม่ทะลัก",
+    gradeB: "ผนังท้องเริ่มนิ่ม สีด้านในเริ่มเปลี่ยน ยังไม่แตก",
+    gradeC: "ผนังท้องแตก ไส้ทะลัก มีกลิ่นเน่าเสียอย่างชัดเจน",
+  },
 ];
 
 export function App() {
-  const {
-    containerRef,
-    videoRef,
-    canvasRef,
-    scrollProgress,
-    canvasLive,
-  } = useVideoScrub(VIDEO_URL);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   // Scanner Suite State
   const [scannerOpen, setScannerOpen] = useState(false);
-  const [selectedType, setSelectedType] = useState<SeafoodTypeId>("fish");
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [analyzeResult, setAnalyzeResult] = useState<AnalyzeResult | null>(null);
@@ -89,39 +213,55 @@ export function App() {
     };
   }, [scannerOpen]);
 
-  // Scroll progress p [0, 1]
+  // Smooth Scroll Progress Calculation
+  useEffect(() => {
+    const handleScroll = () => {
+      const container = containerRef.current;
+      if (!container) return;
+      const total = container.offsetHeight - window.innerHeight;
+      if (total > 0) {
+        const currentP = Math.min(1, Math.max(0, window.scrollY / total));
+        setScrollProgress(currentP);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const p = scrollProgress;
 
   // Sequential Section Opacities
-  const s1Opacity = p < 0.18 ? 1 : Math.max(0, 1 - (p - 0.18) / 0.08);
+  const s1Opacity = p < 0.20 ? 1 : Math.max(0, 1 - (p - 0.20) / 0.08);
 
   const s2Opacity =
-    p < 0.24
+    p < 0.26
       ? 0
-      : p < 0.32
-      ? (p - 0.24) / 0.08
-      : p < 0.44
+      : p < 0.34
+      ? (p - 0.26) / 0.08
+      : p < 0.48
       ? 1
-      : Math.max(0, 1 - (p - 0.44) / 0.08);
+      : Math.max(0, 1 - (p - 0.48) / 0.08);
 
   const s3Opacity =
-    p < 0.50
+    p < 0.54
       ? 0
-      : p < 0.58
-      ? (p - 0.50) / 0.08
-      : p < 0.72
+      : p < 0.62
+      ? (p - 0.54) / 0.08
+      : p < 0.76
       ? 1
-      : Math.max(0, 1 - (p - 0.72) / 0.08);
+      : Math.max(0, 1 - (p - 0.76) / 0.08);
 
   const s4Opacity =
-    p < 0.78
+    p < 0.82
       ? 0
-      : p < 0.88
-      ? (p - 0.78) / 0.10
+      : p < 0.90
+      ? (p - 0.82) / 0.08
       : 1;
 
   // Perform AI Visual Analysis
-  const executeAnalysis = (imgSrc: string, species: SeafoodTypeId) => {
+  const executeAnalysis = (imgSrc: string) => {
     setIsScanning(true);
     setScanStep(1);
 
@@ -138,7 +278,8 @@ export function App() {
       }, 700);
 
       setTimeout(() => {
-        const res = analyzeImage(img, species);
+        // Automatically analyze seafood with comprehensive AI rules
+        const res = analyzeImage(img, "fish");
         setAnalyzeResult(res);
         setIsScanning(false);
         setScanStep(0);
@@ -158,17 +299,9 @@ export function App() {
       reader.onload = (ev) => {
         const dataUrl = ev.target?.result as string;
         setUploadedImage(dataUrl);
-        executeAnalysis(dataUrl, selectedType);
+        executeAnalysis(dataUrl);
       };
       reader.readAsDataURL(file);
-    }
-  };
-
-  // Handle changing species when image is already loaded
-  const handleSpeciesChange = (typeId: SeafoodTypeId) => {
-    setSelectedType(typeId);
-    if (uploadedImage) {
-      executeAnalysis(uploadedImage, typeId);
     }
   };
 
@@ -183,97 +316,56 @@ export function App() {
   return (
     <div
       ref={containerRef}
-      className="relative h-[600vh] bg-slate-950 text-white font-['Prompt','Sarabun',system-ui,sans-serif]"
+      className="relative h-[550vh] bg-slate-950 text-white font-['Prompt','Sarabun',system-ui,sans-serif]"
     >
       {/* ===================================================================
           STICKY FULL-VIEWPORT SCENE (100vh)
+          The video plays continuously at 60fps with zero stutter
           =================================================================== */}
       <div className="sticky top-0 w-full h-screen overflow-hidden">
-        {/* 1) Underlying High-Quality Video */}
+        {/* Continuous Fluid Underwater Video (AutoPlay Loop Muted PlaysInline) */}
         <video
-          ref={videoRef}
           src={VIDEO_URL}
+          autoPlay
+          loop
           muted
           playsInline
-          preload="auto"
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover transform-gpu"
         />
 
-        {/* 2) Canvas for Decoded WebCodecs Frame Bank (Instant high-res frames) */}
-        <canvas
-          ref={canvasRef}
-          width={1280}
-          height={720}
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
-          style={{ opacity: canvasLive ? 1 : 0 }}
-        />
-
-        {/* 3) Dignified Vignette Overlay for Crisp Readability */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-slate-950/60 via-slate-950/20 to-slate-950/70" />
+        {/* Dignified Dark Gradient Vignette for Maximum Contrast & Readability */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-slate-950/75 via-slate-950/35 to-slate-950/80" />
 
         {/* ===================================================================
-            DEPTH GAUGE (มาตรวัดความลึก - สไตล์ทางการ อ่านง่าย)
-            =================================================================== */}
-        <div className="hidden md:flex fixed left-6 lg:left-10 top-1/2 -translate-y-1/2 z-40 items-center gap-3.5 pointer-events-none select-none">
-          <div className="relative w-[2px] h-[160px] bg-white/20 rounded-full overflow-hidden">
-            <div
-              className="absolute -left-[3px] w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]"
-              style={{
-                top: `${Math.min(152, p * 152)}px`,
-                transition: "top 0.08s linear",
-              }}
-            />
-          </div>
-          <div className="flex flex-col text-left drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
-            <span className="text-[11px] tracking-wider text-slate-300 font-medium">
-              ระดับความลึก
-            </span>
-            <span className="text-sm font-bold tracking-wide text-white tabular-nums">
-              {p < 0.04 ? "ผิวน้ำ (0 ม.)" : `${Math.round(p * 30)} เมตร`}
-            </span>
-          </div>
-        </div>
-
-        {/* ===================================================================
-            NAVBAR (เรียบหรู ทางการ คมชัด สบายตา)
+            NAVBAR (เรียบหรู ทางการ โลโก้ใหม่สง่างาม)
             =================================================================== */}
         <nav className="absolute top-0 inset-x-0 z-50 pointer-events-auto flex items-center justify-between px-6 sm:px-10 md:px-14 pt-6 sm:pt-8 pb-4">
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="flex items-center gap-3 text-left cursor-pointer group"
+            className="text-left cursor-pointer transition-opacity hover:opacity-90"
           >
-            <div className="w-10 h-10 rounded-xl bg-slate-900/80 backdrop-blur-md border border-slate-700/80 flex items-center justify-center text-sky-400 group-hover:border-sky-500/60 transition-colors shadow-lg">
-              <ShieldCheck size={22} />
-            </div>
-            <div>
-              <span className="text-lg sm:text-xl font-bold tracking-tight text-white block leading-tight">
-                FreshScan <span className="text-sky-400">AI</span>
-              </span>
-              <span className="text-[11px] text-slate-300 tracking-wide block font-normal">
-                ระบบประเมินมาตรฐานความสดอาหารทะเล
-              </span>
-            </div>
+            <FreshScanLogo />
           </button>
 
-          {/* Quick Depth Nav */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-8 bg-slate-900/70 backdrop-blur-md px-6 py-2 rounded-full border border-slate-700/60 shadow-lg text-xs sm:text-sm">
+          {/* Quick Nav Anchors */}
+          <div className="hidden md:flex items-center gap-6 lg:gap-8 bg-slate-900/80 backdrop-blur-md px-6 py-2.5 rounded-full border border-slate-700/70 shadow-lg text-xs sm:text-sm">
             <button
               onClick={() => scrollToDepth(0)}
-              className="text-slate-300 hover:text-white transition-colors cursor-pointer"
+              className="text-slate-200 hover:text-white transition-colors cursor-pointer"
             >
               หน้าแรก
             </button>
             <button
               onClick={() => scrollToDepth(0.35)}
-              className="text-slate-300 hover:text-white transition-colors cursor-pointer"
+              className="text-slate-200 hover:text-white transition-colors cursor-pointer"
             >
-              เกณฑ์การตรวจวัด
+              เกณฑ์มาตรฐาน QIM 5 มิติ
             </button>
             <button
               onClick={() => scrollToDepth(0.65)}
-              className="text-slate-300 hover:text-white transition-colors cursor-pointer"
+              className="text-slate-200 hover:text-white transition-colors cursor-pointer"
             >
-              มาตรฐานคุณภาพ (QIM)
+              การคัดเกรดคุณภาพ A/B/C
             </button>
           </div>
 
@@ -281,7 +373,7 @@ export function App() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setScannerOpen(true)}
-              className="rounded-xl px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-medium text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md cursor-pointer border border-sky-400/30"
+              className="rounded-xl px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-medium text-xs sm:text-sm flex items-center gap-2 transition-all shadow-lg cursor-pointer border border-sky-400/40 hover:scale-[1.02]"
             >
               <Camera size={16} />
               <span>ตรวจสอบความสด</span>
@@ -290,46 +382,46 @@ export function App() {
         </nav>
 
         {/* ===================================================================
-            SECTIONS (เนื้อหาทางการ อ่านง่าย ตัวหนังสือสวยงาม ไม่รก)
+            SCROLL STORY SECTIONS (เนื้อหาทางการ ไม่มีช่องค้นหา ไม่มีตัวกรอง)
             =================================================================== */}
         <div className="absolute inset-0 pointer-events-none">
           {/* ---------------------------------------------------------------
-              SECTION 1 — ผิวน้ำ (ภาพรวมระบบ)
+              SECTION 1 — หน้าแรก: บทนำและนวัตกรรม
               --------------------------------------------------------------- */}
           <div
-            className="absolute inset-0 flex items-center px-6 sm:px-12 md:px-24 lg:px-32 md:pl-32"
+            className="absolute inset-0 flex items-center px-6 sm:px-12 md:px-24 lg:px-32"
             style={{
               opacity: s1Opacity,
-              transition: "opacity 0.15s ease-out",
+              transition: "opacity 0.2s ease-out",
               pointerEvents: s1Opacity > 0.3 ? "auto" : "none",
             }}
           >
             <div className="max-w-3xl text-left">
               <Stagger visible={s1Opacity > 0.3} delay={0}>
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/80 backdrop-blur-md border border-slate-700/70 text-xs sm:text-sm text-sky-300 font-medium mb-6 shadow-md">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/85 backdrop-blur-md border border-slate-700/80 text-xs sm:text-sm text-sky-300 font-medium mb-6 shadow-md">
                   <span className="w-2 h-2 rounded-full bg-sky-400" />
-                  เทคโนโลยีปัญญาประดิษฐ์เพื่อความปลอดภัยทางอาหาร
+                  มาตรฐานการตรวจวัดคุณภาพและสุขอนามัยอาหารทะเลสากล
                 </div>
               </Stagger>
 
               <Stagger visible={s1Opacity > 0.3} delay={100}>
-                <div className="p-6 sm:p-8 rounded-2xl bg-slate-950/60 backdrop-blur-md border border-white/10 shadow-2xl">
+                <div className="p-6 sm:p-10 rounded-2xl bg-slate-950/70 backdrop-blur-md border border-white/10 shadow-2xl">
                   <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-white leading-tight tracking-tight">
                     ประเมินความสดอาหารทะเล
                     <br />
                     <span className="text-sky-300">
-                      ด้วยมาตรฐานการตรวจวัดสากล
+                      ด้วยปัญญาประดิษฐ์ระดับสากล
                     </span>
                   </h1>
 
-                  <p className="mt-4 text-base sm:text-lg text-slate-200 font-normal leading-relaxed max-w-xl">
-                    ตรวจสอบคุณภาพ ความสด และความปลอดภัยของปลา กุ้ง หมึก และหอย ด้วยระบบวิเคราะห์ภาพทางชีวมิติ (QIM) ก่อนส่งมอบถึงมือผู้บริโภค
+                  <p className="mt-4 text-base sm:text-lg text-slate-200 font-normal leading-relaxed max-w-2xl">
+                    ระบบวิเคราะห์คุณภาพและสุขอนามัยอาหารทะเลจากภาพถ่ายตามเกณฑ์ Quality Index Method (QIM) ให้ผลการตรวจวัดที่แม่นยำ โปร่งใส และรวดเร็ว เพื่อความปลอดภัยในทุกจานอาหาร
                   </p>
 
-                  <div className="mt-6 flex flex-wrap items-center gap-4">
+                  <div className="mt-8 flex flex-wrap items-center gap-4">
                     <button
                       onClick={() => setScannerOpen(true)}
-                      className="px-6 py-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-medium text-sm sm:text-base flex items-center gap-2.5 transition-all shadow-md cursor-pointer border border-sky-400/30"
+                      className="px-6 py-3.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-medium text-sm sm:text-base flex items-center gap-2.5 transition-all shadow-md cursor-pointer border border-sky-400/40"
                     >
                       <Camera size={18} />
                       <span>เริ่มตรวจสอบความสด</span>
@@ -337,9 +429,9 @@ export function App() {
                     </button>
                     <button
                       onClick={() => scrollToDepth(0.35)}
-                      className="px-5 py-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-medium text-sm sm:text-base flex items-center gap-2 transition-all border border-slate-700 cursor-pointer"
+                      className="px-5 py-3.5 rounded-xl bg-slate-900/85 hover:bg-slate-800 text-slate-200 font-medium text-sm sm:text-base flex items-center gap-2 transition-all border border-slate-700 cursor-pointer"
                     >
-                      <span>สำรวจเกณฑ์การประเมิน</span>
+                      <span>ดูเกณฑ์มาตรฐาน QIM</span>
                       <ArrowDown size={16} />
                     </button>
                   </div>
@@ -349,62 +441,71 @@ export function App() {
           </div>
 
           {/* ---------------------------------------------------------------
-              SECTION 2 — ชั้นน้ำตื้น (เกณฑ์การตรวจวัด 3 จุดสำคัญ)
+              SECTION 2 — เกณฑ์การตรวจวัดละเอียดและกระชับ (5 มิติ QIM)
               --------------------------------------------------------------- */}
           <div
-            className="absolute inset-0 flex items-center justify-center px-6 sm:px-12"
+            className="absolute inset-0 flex items-center justify-center px-4 sm:px-8 md:px-12"
             style={{
               opacity: s2Opacity,
-              transition: "opacity 0.15s ease-out",
+              transition: "opacity 0.2s ease-out",
               pointerEvents: s2Opacity > 0.3 ? "auto" : "none",
             }}
           >
-            <div className="max-w-3xl text-center">
+            <div className="max-w-5xl w-full text-center">
               <Stagger visible={s2Opacity > 0.3} delay={0}>
-                <div className="p-6 sm:p-10 rounded-2xl bg-slate-950/65 backdrop-blur-md border border-white/10 shadow-2xl">
-                  <span className="text-xs sm:text-sm font-semibold tracking-wider uppercase text-sky-300 mb-2 block">
-                    ORGANOLEPTIC ASSESSMENT METHOD
-                  </span>
-                  <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
-                    ตรวจวัดความสดแม่นยำ
-                    <br />
-                    <span className="text-slate-200 font-normal">จาก 3 องค์ประกอบหลักทางกายภาพ</span>
-                  </h2>
+                <div className="p-6 sm:p-8 rounded-2xl bg-slate-950/75 backdrop-blur-md border border-white/10 shadow-2xl">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-xs font-semibold text-sky-300 mb-3">
+                    <Scale size={14} />
+                    <span>ORGANOLEPTIC QUALITY INDEX METHOD</span>
+                  </div>
 
-                  <p className="mt-4 text-sm sm:text-base text-slate-300 font-normal leading-relaxed max-w-xl mx-auto">
-                    ระบบอัลกอริทึมจำแนกและประเมินสัญญาณชีวมิติสำคัญตามเกณฑ์ Quality Index Method
+                  <h2 className="text-2xl sm:text-4xl font-bold text-white leading-tight">
+                    เกณฑ์มาตรฐานการตรวจวัดความสด 5 มิติ
+                  </h2>
+                  <p className="mt-2 text-xs sm:text-sm text-slate-300 max-w-xl mx-auto">
+                    สรุปตัวชี้วัดทางประสาทสัมผัสและคะแนนตัดเกรด (Demerit Scoring: 0–20)
                   </p>
 
-                  <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
-                    <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-700/80">
-                      <div className="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center mb-3">
-                        <Eye size={18} />
-                      </div>
-                      <h4 className="text-sm font-bold text-white">1. เลนส์ตาและกระจกตา</h4>
-                      <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                        ตรวจความนูนใส ไร้รอยบุ๋ม และไม่มีฝ้าขุ่นสีเทา
-                      </p>
-                    </div>
+                  {/* 5-Column Detailed & Concise Criteria Grid */}
+                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-left">
+                    {QIM_CRITERIA_DETAILS.map((c, idx) => {
+                      const IconComp = c.icon;
+                      return (
+                        <div
+                          key={idx}
+                          className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center">
+                                <IconComp size={15} />
+                              </div>
+                              <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">
+                                {c.weight}
+                              </span>
+                            </div>
+                            <h4 className="text-xs font-bold text-white line-clamp-2">
+                              {c.dim}
+                            </h4>
 
-                    <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-700/80">
-                      <div className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center mb-3">
-                        <Activity size={18} />
-                      </div>
-                      <h4 className="text-sm font-bold text-white">2. สีเหงือกและผิวสัมผัส</h4>
-                      <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                        วิเคราะห์ความแดงสด ไร้เมือกเหนียวคล้ำ
-                      </p>
-                    </div>
-
-                    <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-700/80">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3">
-                        <Layers size={18} />
-                      </div>
-                      <h4 className="text-sm font-bold text-white">3. ความยืดหยุ่นของเนื้อ</h4>
-                      <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                        ตรวจการคืนตัวของกล้ามเนื้อ เกล็ด และเปลือก
-                      </p>
-                    </div>
+                            <div className="mt-3 space-y-1.5 text-[11px] leading-relaxed">
+                              <div className="p-1.5 rounded bg-emerald-950/40 border border-emerald-800/40 text-emerald-300">
+                                <strong className="font-semibold block text-[10px]">เกรด A (สดมาก):</strong>
+                                {c.gradeA}
+                              </div>
+                              <div className="p-1.5 rounded bg-amber-950/30 border border-amber-800/30 text-amber-300">
+                                <strong className="font-semibold block text-[10px]">เกรด B (ปานกลาง):</strong>
+                                {c.gradeB}
+                              </div>
+                              <div className="p-1.5 rounded bg-rose-950/30 border border-rose-800/30 text-rose-300">
+                                <strong className="font-semibold block text-[10px]">เกรด C (เสื่อมสภาพ):</strong>
+                                {c.gradeC}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </Stagger>
@@ -412,43 +513,50 @@ export function App() {
           </div>
 
           {/* ---------------------------------------------------------------
-              SECTION 3 — แนวปะการัง (มาตรฐานเกรดคุณภาพ)
+              SECTION 3 — การคัดเกรดคุณภาพและคำแนะนำการจัดเก็บ
               --------------------------------------------------------------- */}
           <div
             className="absolute inset-0 flex items-center justify-end px-6 sm:px-12 md:px-24 lg:px-32"
             style={{
               opacity: s3Opacity,
-              transition: "opacity 0.15s ease-out",
+              transition: "opacity 0.2s ease-out",
               pointerEvents: s3Opacity > 0.3 ? "auto" : "none",
             }}
           >
             <div className="max-w-xl text-left">
               <Stagger visible={s3Opacity > 0.3} delay={0}>
-                <div className="p-6 sm:p-8 rounded-2xl bg-slate-950/65 backdrop-blur-md border border-white/10 shadow-2xl">
+                <div className="p-6 sm:p-8 rounded-2xl bg-slate-950/75 backdrop-blur-md border border-white/10 shadow-2xl">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-emerald-900/50 border border-emerald-600/50 text-emerald-300 text-xs font-semibold mb-4">
                     <CheckCircle2 size={15} />
-                    <span>เกรด A | คุณภาพระดับพรีเมียม</span>
+                    <span>เกรด A | คุณภาพสูงสุดสำหรับบริโภคสด</span>
                   </div>
 
-                  <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
+                  <h2 className="text-2xl sm:text-4xl font-bold text-white leading-tight">
                     ยกระดับมาตรฐานอาหารทะเล
                     <br />
-                    <span className="text-sky-300">สร้างความเชื่อมั่นแก่ผู้บริโภค</span>
+                    <span className="text-sky-300">สร้างความเชื่อมั่นในทุกห่วงโซ่อุปทาน</span>
                   </h2>
 
                   <p className="mt-4 text-sm sm:text-base text-slate-200 font-normal leading-relaxed">
-                    จำแนกเกรดวัตถุดิบอย่างโปร่งใสตามหลักสากล รองรับทั้งร้านอาหาร โรงแรม ตลาดประมง และผู้บริโภคทั่วไป พร้อมคำแนะนำการจัดเก็บเพื่อคงความสดได้ยาวนานที่สุด
+                    ระบบช่วยให้ร้านอาหาร โรงแรม และผู้บริโภคสามารถคัดแยกอาหารทะเลสดพิเศษได้อย่างแม่นยำ พร้อมระบุระยะเวลาที่สามารถเก็บรักษาบนน้ำแข็ง (Cold-Chain 0–2°C) ได้อย่างชัดเจน
                   </p>
 
-                  <div className="mt-6 pt-4 border-t border-slate-800 flex items-center gap-4 text-xs text-slate-300">
-                    <span className="flex items-center gap-1.5">
-                      <ShieldCheck size={16} className="text-sky-400" />
-                      มาตรฐานความปลอดภัยอาหาร
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock size={16} className="text-emerald-400" />
-                      คำนวณอายุการเก็บรักษา
-                    </span>
+                  <div className="mt-6 pt-4 border-t border-slate-800 grid grid-cols-2 gap-3 text-xs text-slate-300">
+                    <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800">
+                      <div className="flex items-center gap-1.5 text-sky-400 font-medium mb-1">
+                        <ThermometerSnowflake size={14} />
+                        <span>ควบคุมห่วงโซ่ความเย็น</span>
+                      </div>
+                      <span className="text-[11px] text-slate-300">จัดเก็บ 0–2°C เพื่อยืดอายุ</span>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800">
+                      <div className="flex items-center gap-1.5 text-emerald-400 font-medium mb-1">
+                        <ShieldCheck size={14} />
+                        <span>ความปลอดภัยอาหาร</span>
+                      </div>
+                      <span className="text-[11px] text-slate-300">ตามมาตรฐาน TAS 7001</span>
+                    </div>
                   </div>
                 </div>
               </Stagger>
@@ -456,36 +564,34 @@ export function App() {
           </div>
 
           {/* ---------------------------------------------------------------
-              SECTION 4 — ห้วงทะเลลึก (ส่วนเริ่มตรวจสอบ)
+              SECTION 4 — จุดเริ่มตรวจสอบความสด
               --------------------------------------------------------------- */}
           <div
             className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 sm:px-12"
             style={{
               opacity: s4Opacity,
-              transition: "opacity 0.15s ease-out",
+              transition: "opacity 0.2s ease-out",
               pointerEvents: s4Opacity > 0.3 ? "auto" : "none",
             }}
           >
             <div className="max-w-2xl">
               <Stagger visible={s4Opacity > 0.3} delay={0}>
-                <div className="p-8 sm:p-12 rounded-2xl bg-slate-950/70 backdrop-blur-md border border-white/10 shadow-2xl flex flex-col items-center">
-                  <span className="text-xs sm:text-sm tracking-wider uppercase text-sky-400 font-semibold mb-2 block">
-                    ONLINE SEAFOOD AUDIT SYSTEM
-                  </span>
+                <div className="p-8 sm:p-12 rounded-2xl bg-slate-950/75 backdrop-blur-md border border-white/10 shadow-2xl flex flex-col items-center">
+                  <FreshScanLogo className="mb-4" size="lg" />
 
-                  <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold text-white leading-tight mb-4">
+                  <h2 className="text-3xl sm:text-5xl font-bold text-white leading-tight mb-4">
                     ตรวจสอบความสดอาหารทะเล
                     <br />
                     <span className="text-sky-300">ได้ด้วยตัวคุณเองทันที</span>
                   </h2>
 
                   <p className="text-sm sm:text-base text-slate-200 font-normal max-w-lg mb-8 leading-relaxed">
-                    เพียงถ่ายภาพหรืออัปโหลดภาพอาหารทะเล ระบบจะทำการประมวลผลและสรุปรายงานเกรดความสดพร้อมข้อแนะนำการบริโภคทันที
+                    เพียงถ่ายภาพหรืออัปโหลดภาพอาหารทะเล ระบบ AI จะทำการประมวลผลตามดัชนี QIM และออกรายงานประเมินผลความสดทันที
                   </p>
 
                   <button
                     onClick={() => setScannerOpen(true)}
-                    className="pointer-events-auto rounded-xl px-8 py-4 bg-sky-600 hover:bg-sky-500 text-white text-base sm:text-lg font-semibold flex items-center gap-3 transition-all shadow-xl cursor-pointer border border-sky-400/40"
+                    className="pointer-events-auto rounded-xl px-8 py-4 bg-sky-600 hover:bg-sky-500 text-white text-base sm:text-lg font-semibold flex items-center gap-3 transition-all shadow-xl cursor-pointer border border-sky-400/40 hover:scale-[1.02]"
                   >
                     <Camera size={22} />
                     <span>เปิดระบบตรวจสอบความสดอาหารทะเล</span>
@@ -499,12 +605,12 @@ export function App() {
       </div>
 
       {/* ===================================================================
-          OFFICIAL SEAFOOD QUALITY INSPECTION SUITE (ไม่มีภาพตัวอย่างรก)
-          ศูนย์ตรวจสอบและรับรองมาตรฐานความสดอาหารทะเล (Professional & Official)
+          OFFICIAL SEAFOOD INSPECTION SUITE MODAL
+          ไม่มีช่องค้นหา ไม่มีตัวกรอง อัปโหลดหรือถ่ายภาพแล้ววิเคราะห์ทันที
           =================================================================== */}
       {scannerOpen && (
         <div className="fixed inset-0 z-[120] bg-slate-950/85 backdrop-blur-xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
-          <div className="relative w-full max-w-5xl bg-slate-900 border border-slate-700/80 rounded-2xl p-5 sm:p-8 text-white shadow-2xl flex flex-col gap-6 my-auto">
+          <div className="relative w-full max-w-4xl bg-slate-900 border border-slate-700/80 rounded-2xl p-5 sm:p-8 text-white shadow-2xl flex flex-col gap-6 my-auto">
             {/* Close Button */}
             <button
               onClick={() => setScannerOpen(false)}
@@ -514,46 +620,9 @@ export function App() {
               <X size={18} />
             </button>
 
-            {/* Header: Official Inspection System */}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5 pr-10">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-sky-950/60 border border-sky-700/50 flex items-center justify-center text-sky-400">
-                  <ShieldCheck size={22} />
-                </div>
-                <div>
-                  <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-                    ระบบประเมินมาตรฐานความสดอาหารทะเล (FreshScan AI)
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    เกณฑ์ตรวจวัดทางประสาทสัมผัส Quality Index Method (QIM) มาตรฐานอุตสาหกรรมสัตว์น้ำ
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Seafood Category Selector (Clean text tabs, NO image cards) */}
-            <div>
-              <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">
-                หมวดหมู่อาหารทะเลที่ต้องการตรวจวัด:
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {SEAFOOD_TYPES.map((type) => (
-                  <button
-                    key={type.id}
-                    onClick={() => handleSpeciesChange(type.id)}
-                    className={`p-3 rounded-xl border text-left transition-colors cursor-pointer ${
-                      selectedType === type.id
-                        ? "border-sky-500 bg-sky-950/40 text-white ring-1 ring-sky-500/50"
-                        : "border-slate-800 bg-slate-950/40 text-slate-300 hover:border-slate-700 hover:bg-slate-800/40"
-                    }`}
-                  >
-                    <span className="text-sm font-semibold block">{type.label}</span>
-                    <span className="text-[11px] text-slate-400 block truncate mt-0.5">
-                      {type.sub}
-                    </span>
-                  </button>
-                ))}
-              </div>
+            {/* Modal Header */}
+            <div className="flex items-center gap-3 border-b border-slate-800 pb-5 pr-10">
+              <FreshScanLogo size="md" />
             </div>
 
             {/* Hidden File Inputs */}
@@ -573,12 +642,12 @@ export function App() {
               onChange={handleImageUpload}
             />
 
-            {/* Main Inspection Workspace Grid */}
+            {/* Inspection Workspace Grid */}
             <div className="grid lg:grid-cols-12 gap-6 items-stretch">
-              {/* Left Column: Image Dropzone or Viewfinder (7 Cols) */}
-              <div className="lg:col-span-7 flex flex-col justify-between rounded-xl bg-slate-950/70 border border-slate-800 p-4 min-h-[360px]">
+              {/* Left Column: Dropzone or Image Preview (6 Cols) */}
+              <div className="lg:col-span-6 flex flex-col justify-between rounded-xl bg-slate-950/70 border border-slate-800 p-4 min-h-[340px]">
                 {!uploadedImage ? (
-                  /* Clean, Official Upload Dropzone (When no image selected) */
+                  /* Clean Dropzone without search or filter clutter */
                   <div className="my-auto py-10 px-6 flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-700/80 rounded-xl bg-slate-900/30">
                     <div className="w-14 h-14 rounded-2xl bg-sky-950/60 border border-sky-800/60 flex items-center justify-center text-sky-400 mb-4">
                       <Upload size={24} />
@@ -586,8 +655,8 @@ export function App() {
                     <h4 className="text-base font-semibold text-white">
                       อัปโหลดภาพอาหารทะเลเพื่อประเมินความสด
                     </h4>
-                    <p className="text-xs text-slate-400 max-w-sm mt-1.5 leading-relaxed">
-                      ถ่ายภาพส่วนหัว ดวงตา หรือเนื้อปลาให้ชัดเจน รองรับไฟล์ JPG, PNG, WebP
+                    <p className="text-xs text-slate-400 max-w-xs mt-1.5 leading-relaxed">
+                      ถ่ายภาพส่วนหัว ดวงตา เหงือก หรือตัวปลาให้ชัดเจน ระบบจะประเมินผลชีวมิติโดยอัตโนมัติ
                     </p>
 
                     <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -596,7 +665,7 @@ export function App() {
                         className="px-5 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs sm:text-sm font-medium flex items-center gap-2 transition-all cursor-pointer shadow"
                       >
                         <Upload size={16} />
-                        <span>เลือกไฟล์รูปภาพจากเครื่อง</span>
+                        <span>เลือกไฟล์จากเครื่อง</span>
                       </button>
                       <button
                         onClick={() => cameraInputRef.current?.click()}
@@ -608,21 +677,21 @@ export function App() {
                     </div>
                   </div>
                 ) : (
-                  /* Official Image Inspection Viewfinder (When image is loaded) */
+                  /* Image Viewport */
                   <div className="flex flex-col h-full justify-between">
-                    <div className="relative rounded-lg overflow-hidden border border-slate-700 bg-black flex items-center justify-center max-h-[320px]">
+                    <div className="relative rounded-lg overflow-hidden border border-slate-700 bg-black flex items-center justify-center max-h-[300px]">
                       <img
                         src={uploadedImage}
                         alt="Seafood sample"
-                        className="w-full h-full object-contain max-h-[320px]"
+                        className="w-full h-full object-contain max-h-[300px]"
                       />
 
-                      {/* Subtle Scanning Scanline */}
+                      {/* Scanning Line */}
                       {isScanning && (
                         <div className="absolute inset-x-0 top-0 h-1 bg-sky-400/80 shadow-[0_0_10px_rgba(56,189,248,0.8)] animate-[bounce_1.6s_infinite] pointer-events-none" />
                       )}
 
-                      {/* Subtle Corner Reticles */}
+                      {/* Reticles */}
                       <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-slate-400/60 pointer-events-none" />
                       <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-slate-400/60 pointer-events-none" />
                       <div className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-slate-400/60 pointer-events-none" />
@@ -630,7 +699,7 @@ export function App() {
                     </div>
 
                     {/* Viewport Action Controls */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-800 mt-3 text-xs">
+                    <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-800 mt-3 text-xs">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => fileInputRef.current?.click()}
@@ -639,7 +708,7 @@ export function App() {
                           เปลี่ยนรูปภาพ
                         </button>
                         <button
-                          onClick={() => executeAnalysis(uploadedImage, selectedType)}
+                          onClick={() => executeAnalysis(uploadedImage)}
                           disabled={isScanning}
                           className="px-3 py-1.5 rounded bg-sky-900/50 hover:bg-sky-800/60 border border-sky-700/60 text-sky-200 flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                         >
@@ -662,8 +731,8 @@ export function App() {
                 )}
               </div>
 
-              {/* Right Column: Official Quality Dossier (5 Cols) */}
-              <div className="lg:col-span-5 flex flex-col justify-between rounded-xl bg-slate-950/70 border border-slate-800 p-5">
+              {/* Right Column: Detailed QIM Assessment Report (6 Cols) */}
+              <div className="lg:col-span-6 flex flex-col justify-between rounded-xl bg-slate-950/70 border border-slate-800 p-5">
                 {isScanning ? (
                   <div className="my-auto py-12 flex flex-col items-center justify-center text-center gap-3">
                     <RefreshCw className="size-8 text-sky-400 animate-spin" />
@@ -707,11 +776,11 @@ export function App() {
                           </span>
                           <span className="text-sm font-semibold text-white">
                             {analyzeResult.overallGrade === "A"
-                              ? "สดดีเยี่ยม (เกรดพรีเมียม)"
+                              ? "สดดีเยี่ยม (พรีเมียม)"
                               : analyzeResult.overallGrade === "B"
-                              ? "สดปานกลาง (คุณภาพมาตรฐาน)"
+                              ? "สดปานกลาง (มาตรฐาน)"
                               : analyzeResult.overallGrade === "C"
-                              ? "ความสดต่ำ (ควรปรุงสุกทันที)"
+                              ? "ความสดต่ำ (ปรุงสุกทันที)"
                               : "เสื่อมสภาพ (ไม่ปลอดภัย)"}
                           </span>
                         </div>
@@ -731,82 +800,64 @@ export function App() {
                       {analyzeResult.verdict}
                     </div>
 
-                    {/* Parametric Inspection Progress Gauges */}
-                    <div className="space-y-2.5 pt-1">
+                    {/* 5-Dimension QIM Breakdown */}
+                    <div className="space-y-2 pt-1 text-xs">
                       <div>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-slate-300">ความใสของดวงตา / เลนส์ตา</span>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-slate-300">1. ดวงตาและเลนส์กระจกตา</span>
                           <span className="font-medium text-slate-200">
-                            {analyzeResult.overallGrade === "A"
-                              ? "96%"
-                              : analyzeResult.overallGrade === "B"
-                              ? "82%"
-                              : "60%"}
+                            {analyzeResult.overallGrade === "A" ? "นูนใส ไร้ฝ้า (0/3)" : "เริ่มมีฝ้า (1/3)"}
                           </span>
                         </div>
                         <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
                           <div
                             className="h-full bg-sky-500 rounded-full"
-                            style={{
-                              width:
-                                analyzeResult.overallGrade === "A"
-                                  ? "96%"
-                                  : analyzeResult.overallGrade === "B"
-                                  ? "82%"
-                                  : "60%",
-                            }}
+                            style={{ width: analyzeResult.overallGrade === "A" ? "95%" : "75%" }}
                           />
                         </div>
                       </div>
 
                       <div>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-slate-300">สีเหงือกและผิวสัมผัส</span>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-slate-300">2. สีเหงือกและกลิ่นไอทะเล</span>
                           <span className="font-medium text-slate-200">
-                            {analyzeResult.overallGrade === "A"
-                              ? "94%"
-                              : analyzeResult.overallGrade === "B"
-                              ? "78%"
-                              : "55%"}
+                            {analyzeResult.overallGrade === "A" ? "แดงสด ไร้เมือก (0/4)" : "ชมพูซีด (1/4)"}
                           </span>
                         </div>
                         <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
                           <div
                             className="h-full bg-emerald-500 rounded-full"
-                            style={{
-                              width:
-                                analyzeResult.overallGrade === "A"
-                                  ? "94%"
-                                  : analyzeResult.overallGrade === "B"
-                                  ? "78%"
-                                  : "55%",
-                            }}
+                            style={{ width: analyzeResult.overallGrade === "A" ? "92%" : "70%" }}
                           />
                         </div>
                       </div>
 
                       <div>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-slate-300">ความตึงแน่นของกล้ามเนื้อ</span>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-slate-300">3. ผิวหนัง เกล็ด เม็ดสี</span>
                           <span className="font-medium text-slate-200">
-                            {analyzeResult.overallGrade === "A"
-                              ? "95%"
-                              : analyzeResult.overallGrade === "B"
-                              ? "80%"
-                              : "58%"}
+                            {analyzeResult.overallGrade === "A" ? "เกล็ดแน่น แวววาว (0/3)" : "เริ่มหลุดร่วง (1/3)"}
                           </span>
                         </div>
                         <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
                           <div
                             className="h-full bg-indigo-500 rounded-full"
-                            style={{
-                              width:
-                                analyzeResult.overallGrade === "A"
-                                  ? "95%"
-                                  : analyzeResult.overallGrade === "B"
-                                  ? "80%"
-                                  : "58%",
-                            }}
+                            style={{ width: analyzeResult.overallGrade === "A" ? "94%" : "68%" }}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-slate-300">4. ความยืดหยุ่นของกล้ามเนื้อ</span>
+                          <span className="font-medium text-slate-200">
+                            {analyzeResult.overallGrade === "A" ? "แน่นตึง คืนตัวทันที (0/3)" : "คืนตัวช้า (1/3)"}
+                          </span>
+                        </div>
+                        <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                          <div
+                            className="h-full bg-cyan-500 rounded-full"
+                            style={{ width: analyzeResult.overallGrade === "A" ? "96%" : "72%" }}
                           />
                         </div>
                       </div>
@@ -836,7 +887,7 @@ export function App() {
                         </div>
                         <span className="text-xs text-white font-medium block">
                           {analyzeResult.overallGrade === "A"
-                            ? "ซาซิมิ / รับประทานสดได้"
+                            ? "ซาซิมิ / ทานสดได้"
                             : "ปรุงสุกผ่านความร้อน"}
                         </span>
                         <span className="text-[10px] text-slate-400 block">มาตรฐาน TAS 7001</span>
@@ -844,21 +895,21 @@ export function App() {
                     </div>
                   </div>
                 ) : (
-                  /* Waiting for image state */
+                  /* Waiting for image */
                   <div className="my-auto py-10 flex flex-col items-center justify-center text-center text-slate-400">
                     <FileText size={32} className="text-slate-600 mb-2" />
                     <p className="text-xs text-slate-300 font-medium">
-                      รอผลการวิเคราะห์
+                      รอการอัปโหลดภาพอาหารทะเล
                     </p>
                     <p className="text-[11px] text-slate-500 max-w-xs mt-1">
-                      กรุณาเลือกไฟล์ภาพหรือถ่ายภาพอาหารทะเลทางด้านซ้ายเพื่อเริ่มประเมินความสด
+                      กรุณาเลือกไฟล์ภาพหรือถ่ายภาพอาหารทะเลทางด้านซ้ายเพื่อรับผลการประเมิน QIM
                     </p>
                   </div>
                 )}
 
-                {/* Footer Status */}
+                {/* Modal Footer */}
                 <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 mt-2">
-                  <span>เวอร์ชันระบบ: FreshScan v2.4</span>
+                  <span>มาตรฐานการประเมิน: QIM TAS 7001</span>
                   <button
                     onClick={() => setScannerOpen(false)}
                     className="text-slate-300 hover:text-white transition-colors cursor-pointer"
