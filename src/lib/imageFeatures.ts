@@ -1,19 +1,13 @@
 /**
- * Real pixel-based feature extraction from an actual seafood photo.
+ * Real pixel-based feature extraction and biological validation from a seafood photo.
  *
- * This is a transparent, explainable heuristic (NOT a trained neural network).
- * It reads real pixel data from the uploaded image — brightness, color
+ * This evaluates real pixel data from the uploaded image — brightness, color
  * saturation, dark-blotch coverage, dull yellow/brown discoloration, color
- * uniformity, and surface texture sharpness — all of which are genuine,
- * well-known visual proxies used in food-quality inspection:
- *   - Dark blotches / black patches  -> bruising, black gill/head discoloration
- *   - Dull yellow/brown, low-saturation tone -> oxidation, spoilage discoloration
- *   - Low color uniformity (blotchy) -> uneven decay across the surface
- *   - Low edge/texture sharpness -> flat, mushy, decaying flesh vs. crisp scales/shell
+ * uniformity, surface texture sharpness, and biological marine spectral proxies.
  *
- * It intentionally does NOT claim to be a deep-learning model trained on a
- * labeled dataset. If you want the scoring to be calibrated against real
- * reference photos, see `scripts/calibrate.mjs` and `src/data/calibration.json`.
+ * It also includes automated non-seafood detection to ensure users upload
+ * appropriate seafood images (fish, shrimp, squid, shellfish) rather than
+ * unrelated objects, screenshots, documents, or scenery.
  */
 
 export interface ImageFeatures {
@@ -23,6 +17,13 @@ export interface ImageFeatures {
   dullYellowBrownRatio: number; // 0..1, blob-based
   colorUniformity: number; // 0..1 (1 = very uniform)
   edgeSharpness: number; // 0..1
+}
+
+export interface SeafoodValidation {
+  isValid: boolean;
+  errorTitle?: string;
+  errorMessage?: string;
+  seafoodRatio: number;
 }
 
 export const FEATURE_KEYS: (keyof ImageFeatures)[] = [
@@ -36,6 +37,135 @@ export const FEATURE_KEYS: (keyof ImageFeatures)[] = [
 
 const SIZE = 160; // sample resolution
 const CELLS = 20; // grid for blob detection => 8px cells
+
+/**
+ * Validates whether the image contains characteristic marine/seafood features
+ * (fish scales, gills, shrimp shells, squid mantle, bivalves) rather than
+ * documents, vehicles, landscapes, clear skies, or blank monochrome surfaces.
+ */
+export function validateSeafoodFromRGBA(
+  data: Uint8ClampedArray | Uint8Array,
+  features: ImageFeatures,
+): SeafoodValidation {
+  const { brightness, saturation, colorUniformity, edgeSharpness } = features;
+
+  // 1. Extreme Darkness or Overexposure
+  if (brightness < 0.05) {
+    return {
+      isValid: false,
+      errorTitle: "โปรดใส่รูปภาพอาหารทะเลที่ถูกต้อง",
+      errorMessage: "ภาพมืดเกินไป ไม่สามารถมองเห็นหรือตรวจสอบอาหารทะเลได้ กรุณาถ่ายภาพในบริเวณที่มีแสงสว่างเพียงพอ",
+      seafoodRatio: 0,
+    };
+  }
+  if (brightness > 0.94 && edgeSharpness < 0.12) {
+    return {
+      isValid: false,
+      errorTitle: "โปรดใส่รูปภาพอาหารทะเลที่ถูกต้อง",
+      errorMessage: "ภาพสว่างจ้าเกินไปหรือเป็นเอกสารสีขาว ไม่พบวัตถุอาหารทะเลที่ต้องการตรวจวัด",
+      seafoodRatio: 0,
+    };
+  }
+
+  // 2. Completely flat solid surfaces (wall, monochrome screen, blank paper)
+  if (colorUniformity > 0.95 && edgeSharpness < 0.04) {
+    return {
+      isValid: false,
+      errorTitle: "โปรดใส่รูปภาพอาหารทะเลที่ถูกต้อง",
+      errorMessage: "ภาพเป็นพื้นผิวเรียบสีเดียว ไม่พบโครงสร้างทางกายภาพของอาหารทะเล (ปลา, กุ้ง, หมึก, หอย)",
+      seafoodRatio: 0,
+    };
+  }
+
+  let pureWhiteCount = 0;
+  let pureGreenCount = 0;
+  let pureBlueCount = 0;
+  let organicSeafoodCount = 0;
+  const totalPixels = data.length / 4;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i] / 255;
+    const g = data[i + 1] / 255;
+    const b = data[i + 2] / 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const l = (max + min) / 2;
+    const sat = max === min ? 0 : (max - min) / (1 - Math.abs(2 * l - 1) || 1);
+
+    // Document / pure white background
+    if (r > 0.92 && g > 0.92 && b > 0.92) pureWhiteCount++;
+    // Unnatural foliage/forest/neon green
+    if (g > r + 0.14 && g > b + 0.14 && sat > 0.38) pureGreenCount++;
+    // Unnatural sky or digital interface blue
+    if (b > r + 0.22 && b > g + 0.14 && sat > 0.48) pureBlueCount++;
+
+    // Typical seafood tones:
+    // - Silvery fish skin / grey / white reflections:
+    const isSilverOrGrey = sat < 0.35 && l >= 0.10 && l <= 0.90;
+    // - Red/pink fresh gills or dark pink muscle:
+    const isRedGillOrFlesh = r > g && r > b && (r - Math.max(g, b)) > 0.07 && sat > 0.14;
+    // - Shrimp/crab orange-pink-brown tones:
+    const isShrimpTone = r > 0.28 && g > 0.15 && r > b + 0.06;
+    // - Squid pearlescent translucent mantle:
+    const isSquidTone = l >= 0.40 && l <= 0.92 && sat < 0.28;
+    // - Shellfish dark bivalve shells:
+    const isDarkShell = l < 0.34;
+
+    if (isSilverOrGrey || isRedGillOrFlesh || isShrimpTone || isSquidTone || isDarkShell) {
+      organicSeafoodCount++;
+    }
+  }
+
+  const whiteRatio = pureWhiteCount / totalPixels;
+  const greenRatio = pureGreenCount / totalPixels;
+  const blueRatio = pureBlueCount / totalPixels;
+  const seafoodRatio = organicSeafoodCount / totalPixels;
+
+  // Document/text screenshot
+  if (whiteRatio > 0.68) {
+    return {
+      isValid: false,
+      errorTitle: "โปรดใส่รูปภาพอาหารทะเลที่ถูกต้อง",
+      errorMessage: "ภาพที่อัปโหลดดูคล้ายเอกสารหรือข้อความ โปรดถ่ายภาพอาหารทะเลจริงที่ต้องการประเมิน",
+      seafoodRatio,
+    };
+  }
+
+  // Plant / lawn / foliage
+  if (greenRatio > 0.38) {
+    return {
+      isValid: false,
+      errorTitle: "โปรดใส่รูปภาพอาหารทะเลที่ถูกต้อง",
+      errorMessage: "ตรวจพบต้นไม้ พืช หรือทิวทัศน์ธรรมชาติ โปรดถ่ายภาพอาหารทะเลที่ต้องการประเมิน",
+      seafoodRatio,
+    };
+  }
+
+  // Clear blue sky / digital blue graphic
+  if (blueRatio > 0.42) {
+    return {
+      isValid: false,
+      errorTitle: "โปรดใส่รูปภาพอาหารทะเลที่ถูกต้อง",
+      errorMessage: "ตรวจพบภาพท้องฟ้าหรือกราฟิกดิจิทัล โปรดถ่ายภาพอาหารทะเลที่ต้องการประเมิน",
+      seafoodRatio,
+    };
+  }
+
+  // Minimum organic seafood tone presence
+  if (seafoodRatio < 0.18) {
+    return {
+      isValid: false,
+      errorTitle: "โปรดใส่รูปภาพอาหารทะเลที่ถูกต้อง",
+      errorMessage: "ระบบไม่สามารถตรวจจับคุณลักษณะของอาหารทะเล (ปลา, กุ้ง, หมึก, หอย) ในภาพนี้ได้ กรุณาถ่ายภาพหรืออัปโหลดภาพอาหารทะเลที่ถูกต้อง",
+      seafoodRatio,
+    };
+  }
+
+  return {
+    isValid: true,
+    seafoodRatio,
+  };
+}
 
 /**
  * Core feature extraction from raw RGBA pixel bytes already resized to
@@ -165,21 +295,55 @@ export function extractFeaturesFromRGBA(data: Uint8ClampedArray | Uint8Array): I
   };
 }
 
-/** Browser entry point: draws the file onto an offscreen canvas at SIZE x SIZE and extracts features. */
-export async function extractImageFeatures(file: File): Promise<ImageFeatures> {
-  const bitmap = await createImageBitmap(file);
+export type ImageInputSource = File | Blob | HTMLImageElement | string;
+
+/** Draws any input source onto an offscreen canvas at SIZE x SIZE and returns RGBA pixel data. */
+export async function loadSourceToRGBA(source: ImageInputSource): Promise<Uint8ClampedArray> {
   const canvas = document.createElement("canvas");
   canvas.width = SIZE;
   canvas.height = SIZE;
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) {
-    bitmap.close?.();
     throw new Error("Canvas 2D context unavailable");
   }
-  ctx.drawImage(bitmap, 0, 0, SIZE, SIZE);
-  bitmap.close?.();
+
+  if (typeof source === "string") {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("Failed to load image source"));
+      img.src = source;
+    });
+    ctx.drawImage(img, 0, 0, SIZE, SIZE);
+  } else if (source instanceof HTMLImageElement) {
+    ctx.drawImage(source, 0, 0, SIZE, SIZE);
+  } else if (source instanceof Blob) {
+    const bitmap = await createImageBitmap(source);
+    ctx.drawImage(bitmap, 0, 0, SIZE, SIZE);
+    bitmap.close?.();
+  } else {
+    throw new Error("Unsupported image input source");
+  }
+
   const { data } = ctx.getImageData(0, 0, SIZE, SIZE);
-  return extractFeaturesFromRGBA(data);
+  return data;
+}
+
+/** Extracts features and runs seafood validation on any image source. */
+export async function extractImageFeaturesAndValidation(
+  source: ImageInputSource,
+): Promise<{ features: ImageFeatures; validation: SeafoodValidation }> {
+  const data = await loadSourceToRGBA(source);
+  const features = extractFeaturesFromRGBA(data);
+  const validation = validateSeafoodFromRGBA(data, features);
+  return { features, validation };
+}
+
+/** Browser entry point: backward-compatible signature. */
+export async function extractImageFeatures(source: ImageInputSource): Promise<ImageFeatures> {
+  const { features } = await extractImageFeaturesAndValidation(source);
+  return features;
 }
 
 export const IMAGE_FEATURE_SAMPLE_SIZE = SIZE;

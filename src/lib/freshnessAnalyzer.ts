@@ -8,8 +8,25 @@ import {
   type FreshnessGrade,
   type QimCriterion,
 } from "@/data/freshscan_taxonomy";
-import { extractImageFeatures, FEATURE_KEYS, type ImageFeatures } from "@/lib/imageFeatures";
+import {
+  extractImageFeaturesAndValidation,
+  type ImageFeatures,
+  type ImageInputSource,
+  FEATURE_KEYS,
+} from "@/lib/imageFeatures";
 import calibrationData from "@/data/calibration.json";
+
+export class InvalidSeafoodImageError extends Error {
+  public title: string;
+  constructor(
+    message: string = "ระบบไม่สามารถตรวจจับคุณลักษณะของอาหารทะเล (ปลา, กุ้ง, หมึก, หอย) ในภาพนี้ได้ กรุณาถ่ายภาพหรืออัปโหลดภาพอาหารทะเลที่ถูกต้อง",
+    title: string = "โปรดใส่รูปภาพอาหารทะเลที่ถูกต้อง",
+  ) {
+    super(message);
+    this.name = "InvalidSeafoodImageError";
+    this.title = title;
+  }
+}
 
 export interface CriterionDemerit {
   id: string;
@@ -31,10 +48,12 @@ export interface AnalyzeResult {
   scientificFamily: string;
   standardDoc: string;
   grade: FreshnessGrade;
+  overallGrade: FreshnessGrade; // Alias for grade
   gradeTh: string;
   gradeEn: string;
   freshnessIndex: number; // 0..100% (100% = freshest)
   totalDemerit: number; // 0..20 points (0 = zero defects)
+  qimScore: number; // Alias for totalDemerit
   maxDemerit: number; // 20
   confidence: number; // 0..1
   criteriaScores: CriterionDemerit[];
@@ -44,6 +63,7 @@ export interface AnalyzeResult {
     descriptionTh: string;
   }[];
   recommendationTh: string;
+  verdict: string; // Alias for recommendationTh
   culinaryUseTh: string;
   storageRecommendationTh: string;
   safetyWarning?: string;
@@ -171,12 +191,31 @@ function calculateDegradationSignal(
 }
 
 export async function analyzeImage(
-  seafoodType: SeafoodTypeId,
-  file: File,
+  sourceOrType: SeafoodTypeId | ImageInputSource,
+  maybeSourceOrType?: ImageInputSource | SeafoodTypeId,
   opts?: { imageWasResized?: boolean },
 ): Promise<AnalyzeResult> {
+  let seafoodType: SeafoodTypeId = "fish";
+  let source: ImageInputSource;
+
+  if (typeof sourceOrType === "string" && ["fish", "shrimp", "squid", "shellfish"].includes(sourceOrType)) {
+    seafoodType = sourceOrType as SeafoodTypeId;
+    source = maybeSourceOrType as ImageInputSource;
+  } else {
+    source = sourceOrType as ImageInputSource;
+    if (typeof maybeSourceOrType === "string" && ["fish", "shrimp", "squid", "shellfish"].includes(maybeSourceOrType)) {
+      seafoodType = maybeSourceOrType as SeafoodTypeId;
+    }
+  }
+
+  const { features, validation } = await extractImageFeaturesAndValidation(source);
+
+  // Biological validation: if non-seafood is uploaded, throw InvalidSeafoodImageError
+  if (!validation.isValid) {
+    throw new InvalidSeafoodImageError(validation.errorMessage, validation.errorTitle);
+  }
+
   const typeDef = SEAFOOD_TYPES.find((t) => t.id === seafoodType) ?? SEAFOOD_TYPES[0];
-  const features = await extractImageFeatures(file);
   const { degradation, qualityScore } = calculateDegradationSignal(seafoodType, features);
 
   // Evaluate each QIM criterion
@@ -314,15 +353,18 @@ export async function analyzeImage(
     scientificFamily: typeDef.scientificFamily,
     standardDoc: typeDef.standardDoc,
     grade,
+    overallGrade: grade,
     gradeTh: gradeMeta.labelTh,
     gradeEn: gradeMeta.labelEn,
     freshnessIndex,
     totalDemerit,
+    qimScore: totalDemerit,
     maxDemerit: 20,
     confidence,
     criteriaScores,
     biologicalCues,
     recommendationTh: gradeMeta.actionTh,
+    verdict: gradeMeta.actionTh,
     culinaryUseTh: gradeMeta.culinaryUseTh,
     storageRecommendationTh: gradeMeta.storageRecommendationTh,
     safetyWarning,
