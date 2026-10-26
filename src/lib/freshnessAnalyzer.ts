@@ -42,7 +42,10 @@ export interface CriterionDemerit {
 }
 
 export interface AnalyzeResult {
+  certificateId: string;
   seafoodType: SeafoodTypeId;
+  detectedTypeGuess?: SeafoodTypeId;
+  detectedSpeciesConfidence?: number;
   seafoodTypeTh: string;
   seafoodTypeEn: string;
   scientificFamily: string;
@@ -66,6 +69,8 @@ export interface AnalyzeResult {
   verdict: string; // Alias for recommendationTh
   culinaryUseTh: string;
   storageRecommendationTh: string;
+  storageDaysRemaining: string;
+  hazardRiskLevel: string;
   safetyWarning?: string;
   gradeProbabilities: { grade: FreshnessGrade; prob: number; labelTh: string }[];
   speciesGuess: {
@@ -138,48 +143,55 @@ function calculateDegradationSignal(
     dullYellowBrownRatio,
     colorUniformity,
     edgeSharpness,
+    gillHemeIndex,
+    corneaClarityScore,
+    skinGlossSheen,
+    melanosisCoverage,
   } = features;
 
   let degradation = 0;
 
-  // Type-specific sensitivity weighting
+  // Type-specific biological sensitivity weighting
   switch (seafoodType) {
-    case "shrimp":
-      // Melanosis (blackening) & dull brown oxidation are primary failure indicators in shrimp
+    case "fish":
+      // Gill erythema (oxyhemoglobin), eye clarity, skin luster & scale sheen
       degradation =
-        darkSpotRatio * 2.8 +
-        dullYellowBrownRatio * 2.2 +
-        Math.max(0, 0.45 - brightness) * 1.2 +
-        Math.max(0, 0.28 - edgeSharpness) * 0.8 +
-        (1 - colorUniformity) * 0.6;
+        dullYellowBrownRatio * 1.8 +
+        Math.max(0, 0.72 - gillHemeIndex) * 1.6 +
+        Math.max(0, 0.65 - corneaClarityScore) * 1.4 +
+        Math.max(0, 0.60 - skinGlossSheen) * 1.2 +
+        Math.max(0, 0.32 - edgeSharpness) * 0.9 +
+        darkSpotRatio * 1.2;
       break;
 
-    case "fish":
-      // Gill erythema, eye clarity (contrast/edge), and skin luster
+    case "shrimp":
+      // Melanosis (PPO enzymatic blackening), cuticle gloss, and dark joints
       degradation =
-        dullYellowBrownRatio * 2.5 +
+        melanosisCoverage * 2.2 +
         darkSpotRatio * 1.8 +
-        Math.max(0, 0.3 - saturation) * 1.5 +
-        Math.max(0, 0.3 - edgeSharpness) * 1.1 +
-        Math.max(0, 0.4 - brightness) * 0.9;
+        dullYellowBrownRatio * 1.7 +
+        Math.max(0, 0.55 - skinGlossSheen) * 1.2 +
+        Math.max(0, 0.30 - edgeSharpness) * 0.8 +
+        (1 - colorUniformity) * 0.5;
       break;
 
     case "squid":
-      // Chromatophore clarity (sharpness) and absence of discolored yellow/brown patches
+      // Chromatophore clarity, mantle firmness, and yellow-pink discoloration
       degradation =
-        dullYellowBrownRatio * 2.6 +
-        (1 - colorUniformity) * 1.4 +
-        Math.max(0, 0.32 - edgeSharpness) * 1.3 +
-        Math.max(0, 0.42 - brightness) * 0.9;
+        dullYellowBrownRatio * 2.1 +
+        (1 - colorUniformity) * 1.3 +
+        Math.max(0, 0.58 - skinGlossSheen) * 1.2 +
+        Math.max(0, 0.32 - edgeSharpness) * 1.0 +
+        melanosisCoverage * 1.1;
       break;
 
     case "shellfish":
-      // Cloudiness, dry dull shell, dark decaying fluid
+      // Bivalve gaping, dry shell surface, and dark fluid accumulation
       degradation =
-        darkSpotRatio * 2.2 +
-        dullYellowBrownRatio * 2.0 +
-        Math.max(0, 0.25 - saturation) * 1.2 +
-        (1 - colorUniformity) * 0.8;
+        darkSpotRatio * 2.0 +
+        dullYellowBrownRatio * 1.8 +
+        Math.max(0, 0.55 - skinGlossSheen) * 1.3 +
+        (1 - colorUniformity) * 0.7;
       break;
   }
 
@@ -220,18 +232,24 @@ export async function analyzeImage(
 
   // Evaluate each QIM criterion
   const criteriaScores: CriterionDemerit[] = typeDef.qimCriteria.map((criterion, idx) => {
-    // Staggered weighting across spectral and texture proxies
+    // Precise biological weighting across spectral and texture biomarkers
     let criterionDegradation = degradation;
 
     if (criterion.anatomicalRegion === "gill" || criterion.anatomicalRegion === "mantle_skin") {
       criterionDegradation =
-        0.5 * degradation + 0.3 * features.dullYellowBrownRatio * 2 + 0.2 * (1 - features.saturation);
+        0.4 * degradation + 0.35 * Math.max(0, 0.75 - features.gillHemeIndex) + 0.25 * features.dullYellowBrownRatio * 2;
     } else if (criterion.anatomicalRegion === "eye" || criterion.anatomicalRegion === "head") {
       criterionDegradation =
-        0.5 * degradation + 0.3 * (1 - features.edgeSharpness) + 0.2 * features.darkSpotRatio * 2;
-    } else if (criterion.anatomicalRegion === "joints" || criterion.anatomicalRegion === "shell_valves") {
+        0.4 * degradation + 0.35 * Math.max(0, 0.70 - features.corneaClarityScore) + 0.25 * (1 - features.edgeSharpness);
+    } else if (criterion.anatomicalRegion === "skin" || criterion.anatomicalRegion === "shell") {
       criterionDegradation =
-        0.5 * degradation + 0.35 * features.darkSpotRatio * 2.5 + 0.15 * (1 - features.colorUniformity);
+        0.4 * degradation + 0.35 * Math.max(0, 0.65 - features.skinGlossSheen) + 0.25 * (1 - features.colorUniformity);
+    } else if (criterion.anatomicalRegion === "joints" || criterion.id === "melanosis_index") {
+      criterionDegradation =
+        0.4 * degradation + 0.45 * features.melanosisCoverage * 1.5 + 0.15 * features.darkSpotRatio * 2;
+    } else if (criterion.anatomicalRegion === "flesh" || criterion.anatomicalRegion === "mantle") {
+      criterionDegradation =
+        0.45 * degradation + 0.35 * (1 - features.edgeSharpness) + 0.20 * (1 - features.colorUniformity);
     }
 
     const norm = Math.max(0, Math.min(1, criterionDegradation));
@@ -346,8 +364,31 @@ export async function analyzeImage(
       "⚠️ คำแนะนำพิเศษ: วัตถุดิบอยู่ในเกณฑ์ใกล้หมดอายุความสด หากต้องการบริโภคต้องล้างด้วยน้ำเกลือสะอาดและปรุงสุกผ่านความร้อนสูง (>100°C) ภายในทันที ห้ามรับประทานดิบ";
   }
 
+  const storageDaysRemaining =
+    grade === "A"
+      ? "4 – 5 วัน (บนน้ำแข็ง 0–2°C)"
+      : grade === "B"
+      ? "2 – 3 วัน (บนน้ำแข็ง 0–2°C)"
+      : grade === "C"
+      ? "ควรปรุงสุกทันที (ไม่เกิน 24 ชม.)"
+      : "0 วัน (ไม่ปลอดภัยสำหรับการบริโภค)";
+
+  const hazardRiskLevel =
+    grade === "A"
+      ? "ต่ำมาก (บริโภคสดได้ ปลอดภัยสูงสุด)"
+      : grade === "B"
+      ? "ต่ำ (ปลอดภัยเมื่อปรุงสุกทั่วถึง)"
+      : grade === "C"
+      ? "ปานกลาง (ห้ามบริโภคดิบเด็ดขาด)"
+      : "สูงมาก (อันตราย มีสารฮิสตามีน/แบคทีเรีย)";
+
+  const certificateId = `TAS-FS-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+
   return {
+    certificateId,
     seafoodType,
+    detectedTypeGuess: validation.detectedTypeGuess,
+    detectedSpeciesConfidence: validation.confidenceScore,
     seafoodTypeTh: typeDef.labelTh,
     seafoodTypeEn: typeDef.labelEn,
     scientificFamily: typeDef.scientificFamily,
@@ -367,6 +408,8 @@ export async function analyzeImage(
     verdict: gradeMeta.actionTh,
     culinaryUseTh: gradeMeta.culinaryUseTh,
     storageRecommendationTh: gradeMeta.storageRecommendationTh,
+    storageDaysRemaining,
+    hazardRiskLevel,
     safetyWarning,
     gradeProbabilities: allGrades.map((g, i) => ({
       grade: g,

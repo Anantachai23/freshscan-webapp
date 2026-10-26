@@ -17,6 +17,11 @@ export interface ImageFeatures {
   dullYellowBrownRatio: number; // 0..1, blob-based
   colorUniformity: number; // 0..1 (1 = very uniform)
   edgeSharpness: number; // 0..1
+  // Advanced biological biomarkers for marine freshness:
+  gillHemeIndex: number; // 0..1, oxyhemoglobin redness proxy (high = vibrant fresh blood/flesh)
+  corneaClarityScore: number; // 0..1, pupil contrast and specular highlight sharpness (high = clear eye)
+  skinGlossSheen: number; // 0..1, specular gloss reflections from mucus/scales (high = moist fresh sheen)
+  melanosisCoverage: number; // 0..1, localized enzymatic blackspot coverage (high = degraded shrimp/spoilage)
 }
 
 export interface SeafoodValidation {
@@ -24,6 +29,8 @@ export interface SeafoodValidation {
   errorTitle?: string;
   errorMessage?: string;
   seafoodRatio: number;
+  detectedTypeGuess?: "fish" | "shrimp" | "squid" | "shellfish";
+  confidenceScore?: number;
 }
 
 export const FEATURE_KEYS: (keyof ImageFeatures)[] = [
@@ -33,6 +40,10 @@ export const FEATURE_KEYS: (keyof ImageFeatures)[] = [
   "dullYellowBrownRatio",
   "colorUniformity",
   "edgeSharpness",
+  "gillHemeIndex",
+  "corneaClarityScore",
+  "skinGlossSheen",
+  "melanosisCoverage",
 ];
 
 const SIZE = 160; // sample resolution
@@ -50,7 +61,7 @@ export function validateSeafoodFromRGBA(
   const { brightness, saturation, colorUniformity, edgeSharpness } = features;
 
   // 1. Extreme Darkness or Overexposure
-  if (brightness < 0.05) {
+  if (brightness < 0.04) {
     return {
       isValid: false,
       errorTitle: "โปรดใส่รูปภาพอาหารทะเลที่ถูกต้อง",
@@ -58,7 +69,7 @@ export function validateSeafoodFromRGBA(
       seafoodRatio: 0,
     };
   }
-  if (brightness > 0.94 && edgeSharpness < 0.12) {
+  if (brightness > 0.95 && edgeSharpness < 0.08) {
     return {
       isValid: false,
       errorTitle: "โปรดใส่รูปภาพอาหารทะเลที่ถูกต้อง",
@@ -68,7 +79,7 @@ export function validateSeafoodFromRGBA(
   }
 
   // 2. Completely flat solid surfaces (wall, monochrome screen, blank paper)
-  if (colorUniformity > 0.95 && edgeSharpness < 0.04) {
+  if (colorUniformity > 0.96 && edgeSharpness < 0.035) {
     return {
       isValid: false,
       errorTitle: "โปรดใส่รูปภาพอาหารทะเลที่ถูกต้อง",
@@ -81,6 +92,13 @@ export function validateSeafoodFromRGBA(
   let pureGreenCount = 0;
   let pureBlueCount = 0;
   let organicSeafoodCount = 0;
+
+  // Species-specific spectral accumulators
+  let fishScore = 0;
+  let shrimpScore = 0;
+  let squidScore = 0;
+  let shellfishScore = 0;
+
   const totalPixels = data.length / 4;
 
   for (let i = 0; i < data.length; i += 4) {
@@ -93,9 +111,9 @@ export function validateSeafoodFromRGBA(
     const sat = max === min ? 0 : (max - min) / (1 - Math.abs(2 * l - 1) || 1);
 
     // Document / pure white background
-    if (r > 0.92 && g > 0.92 && b > 0.92) pureWhiteCount++;
+    if (r > 0.93 && g > 0.93 && b > 0.93) pureWhiteCount++;
     // Unnatural foliage/forest/neon green
-    if (g > r + 0.14 && g > b + 0.14 && sat > 0.38) pureGreenCount++;
+    if (g > r + 0.16 && g > b + 0.16 && sat > 0.38) pureGreenCount++;
     // Unnatural sky or digital interface blue
     if (b > r + 0.22 && b > g + 0.14 && sat > 0.48) pureBlueCount++;
 
@@ -114,6 +132,16 @@ export function validateSeafoodFromRGBA(
     if (isSilverOrGrey || isRedGillOrFlesh || isShrimpTone || isSquidTone || isDarkShell) {
       organicSeafoodCount++;
     }
+
+    // Accumulate species signatures
+    if (isShrimpTone && sat > 0.22) shrimpScore += 1.4;
+    if (isSquidTone && l > 0.60 && sat < 0.20) squidScore += 1.3;
+    if (isDarkShell && l < 0.25) shellfishScore += 1.2;
+    if (isSilverOrGrey && sat < 0.24) fishScore += 1.1;
+    if (isRedGillOrFlesh) {
+      fishScore += 1.5;
+      shrimpScore += 0.8;
+    }
   }
 
   const whiteRatio = pureWhiteCount / totalPixels;
@@ -121,8 +149,8 @@ export function validateSeafoodFromRGBA(
   const blueRatio = pureBlueCount / totalPixels;
   const seafoodRatio = organicSeafoodCount / totalPixels;
 
-  // Document/text screenshot
-  if (whiteRatio > 0.68) {
+  // Document/text screenshot: reject if mostly white and lacks seafood presence
+  if (whiteRatio > 0.84 || (whiteRatio > 0.68 && seafoodRatio < 0.12)) {
     return {
       isValid: false,
       errorTitle: "โปรดใส่รูปภาพอาหารทะเลที่ถูกต้อง",
@@ -132,7 +160,7 @@ export function validateSeafoodFromRGBA(
   }
 
   // Plant / lawn / foliage
-  if (greenRatio > 0.38) {
+  if (greenRatio > 0.38 && seafoodRatio < 0.18) {
     return {
       isValid: false,
       errorTitle: "โปรดใส่รูปภาพอาหารทะเลที่ถูกต้อง",
@@ -142,7 +170,7 @@ export function validateSeafoodFromRGBA(
   }
 
   // Clear blue sky / digital blue graphic
-  if (blueRatio > 0.42) {
+  if (blueRatio > 0.42 && seafoodRatio < 0.18) {
     return {
       isValid: false,
       errorTitle: "โปรดใส่รูปภาพอาหารทะเลที่ถูกต้อง",
@@ -152,7 +180,7 @@ export function validateSeafoodFromRGBA(
   }
 
   // Minimum organic seafood tone presence
-  if (seafoodRatio < 0.18) {
+  if (seafoodRatio < 0.14) {
     return {
       isValid: false,
       errorTitle: "โปรดใส่รูปภาพอาหารทะเลที่ถูกต้อง",
@@ -161,9 +189,23 @@ export function validateSeafoodFromRGBA(
     };
   }
 
+  // Determine most likely seafood species group
+  const scores = [
+    { type: "fish" as const, score: fishScore },
+    { type: "shrimp" as const, score: shrimpScore },
+    { type: "squid" as const, score: squidScore },
+    { type: "shellfish" as const, score: shellfishScore },
+  ].sort((a, b) => b.score - a.score);
+
+  const topSpecies = scores[0];
+  const totalScore = scores.reduce((sum, s) => sum + s.score, 0) || 1;
+  const confidenceScore = Math.min(0.98, Math.max(0.65, topSpecies.score / totalScore));
+
   return {
     isValid: true,
     seafoodRatio,
+    detectedTypeGuess: topSpecies.type,
+    confidenceScore: Math.round(confidenceScore * 100) / 100,
   };
 }
 
@@ -269,21 +311,71 @@ export function extractFeaturesFromRGBA(data: Uint8ClampedArray | Uint8Array): I
 
   let gradSum = 0;
   let gradWeight = 0;
+  let corneaGlints = 0;
+  let specularGlints = 0;
+  let freshHemePixels = 0;
+  let oxidizedBrownPixels = 0;
+  let melanosisClusterWeight = 0;
+
   for (let y = 0; y < SIZE; y++) {
     for (let x = 0; x < SIZE; x++) {
       const p = y * SIZE + x;
       const w = weights[p];
+      const i = p * 4;
+      const r = data[i] / 255;
+      const g = data[i + 1] / 255;
+      const b = data[i + 2] / 255;
+      const l = luminances[p];
+
+      // Biological Biomarker: Oxyhemoglobin (fresh red/pink) vs Metmyoglobin (oxidized brown)
+      if (r > 0.35 && r > g + 0.08 && r > b + 0.08) {
+        freshHemePixels += w;
+      } else if (r > 0.26 && g > 0.18 && r > b + 0.04 && l < 0.45) {
+        oxidizedBrownPixels += w;
+      }
+
+      // Specular sheen / moisture glint (smooth scales / moist cuticle reflection)
+      if (l > 0.82 && r > 0.75 && g > 0.75 && b > 0.75) {
+        specularGlints += w;
+      }
+
       if (x < SIZE - 1) {
-        gradSum += Math.abs(luminances[p] - luminances[p + 1]) * w;
+        const diffX = Math.abs(luminances[p] - luminances[p + 1]);
+        gradSum += diffX * w;
         gradWeight += w;
+
+        // Cornea / Pupil contrast edge (black pupil next to bright corneal specular reflection)
+        if (
+          (luminances[p] < 0.22 && luminances[p + 1] > 0.65) ||
+          (luminances[p] > 0.65 && luminances[p + 1] < 0.22)
+        ) {
+          corneaGlints += w;
+        }
+
+        // Melanosis sharp dark boundary
+        if (
+          (luminances[p] < 0.16 && luminances[p + 1] > 0.42) ||
+          (luminances[p] > 0.42 && luminances[p + 1] < 0.16)
+        ) {
+          melanosisClusterWeight += w;
+        }
       }
       if (y < SIZE - 1) {
-        gradSum += Math.abs(luminances[p] - luminances[p + SIZE]) * w;
+        const diffY = Math.abs(luminances[p] - luminances[p + SIZE]);
+        gradSum += diffY * w;
         gradWeight += w;
       }
     }
   }
+
   const edgeSharpness = Math.min(1, (gradSum / gradWeight) * 8);
+
+  // Normalized Biomarkers
+  const totalHeme = freshHemePixels + oxidizedBrownPixels;
+  const gillHemeIndex = totalHeme > 15 ? Math.min(1, (freshHemePixels / totalHeme) * 1.35) : 0.65;
+  const corneaClarityScore = Math.min(1, (corneaGlints / (sumWeight * 0.035)) * 1.2);
+  const skinGlossSheen = Math.min(1, (specularGlints / (sumWeight * 0.04)) * 1.1);
+  const melanosisCoverage = Math.min(1, (melanosisClusterWeight / (sumWeight * 0.05)) * 1.4);
 
   return {
     brightness,
@@ -292,6 +384,10 @@ export function extractFeaturesFromRGBA(data: Uint8ClampedArray | Uint8Array): I
     dullYellowBrownRatio,
     colorUniformity,
     edgeSharpness,
+    gillHemeIndex: Math.round(gillHemeIndex * 100) / 100,
+    corneaClarityScore: Math.round(corneaClarityScore * 100) / 100,
+    skinGlossSheen: Math.round(skinGlossSheen * 100) / 100,
+    melanosisCoverage: Math.round(melanosisCoverage * 100) / 100,
   };
 }
 
